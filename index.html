@@ -3,80 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>আজকের ফুটবল প্রেডিকশন | PredictPro - নির্ভুল স্পোর্টস টিপস</title>
-    <meta name="description" content="সেরা এবং নির্ভুল ফুটবল ও ক্রিকেট প্রেডিকশন পান। আমাদের বিশেষজ্ঞরা প্রতিদিনের ম্যাচের বিশ্লেষণ এবং টিপস প্রদান করে।">
-    <meta name="keywords" content="sports prediction, football tips, cricket prediction, today match analysis, PredictPro">
-    
-    <meta property="og:title" content="আজকের সেরা স্পোর্টস প্রেডিকশন">
-    <meta property="og:description" content="ফ্রি এবং ভিআইপি টিপস নিয়ে আজই জিতুন।">
-    <meta property="og:type" content="website">
+    <title>Sports Look - আজকের খেলার প্রেডিকশন এবং টিপস</title>
+    <meta name="description" content="সেরা স্পোর্টস প্রেডিকশন এবং ম্যাচ অ্যানালাইসিস পান আমাদের এখানে।">
     
     <link rel="stylesheet" href="assets/css/style.css">
-
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SportsEvent",
-      "name": "Football Match Prediction",
-      "description": "Daily football tips and expert analysis.",
-      "organizer": {
-        "@type": "Organization",
-        "name": "PredictPro"
-      }
-    }
-    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <header id="main-header">
-        </header>
+    <div id="header-placeholder"></div>
 
-    <main>
-        <section class="hero">
-            <h1>আজকের স্পোর্টস প্রেডিকশন ও বিশ্লেষণ</h1>
-            <p>আমাদের বিশেষজ্ঞ প্যানেলের সেরা টিপসগুলো দেখে নিন।</p>
+    <main class="container">
+        <div class="ads-container">
+            <p style="color:#ccc; font-size: 12px;">Advertisement</p>
+        </div>
+
+        <section class="prediction-hero">
+            <h1>আজকের সেরা প্রেডিকশন</h1>
+            <p>আমাদের বিশেষজ্ঞ প্যানেলের বিশ্লেষণ দেখুন</p>
         </section>
 
-        <section class="prediction-container">
-            <h2>সাম্প্রতিক ম্যাচ টিপস</h2>
-            
-            <article class="match-card">
-                <div class="match-info">
-                    <span class="league-name">Premier League</span>
-                    <span class="match-time">রাত ৯:০০ PM</span>
-                </div>
-                
-                <div class="teams">
-                    <div class="team-home">
-                        <img src="assets/img/team1.png" alt="Team A Logo" loading="lazy">
-                        <span>দল এ</span>
-                    </div>
-                    <div class="vs">VS</div>
-                    <div class="team-away">
-                        <img src="assets/img/team2.png" alt="Team B Logo" loading="lazy">
-                        <span>দল বি</span>
-                    </div>
-                </div>
-
-                <div class="prediction-box">
-                    <strong>প্রেডিকশন:</strong> <span class="tip-text">Home Win (1)</span>
-                </div>
-                
-                <a href="blog-details.html" class="btn-analysis">বিস্তারিত বিশ্লেষণ পড়ুন</a>
+        <div class="grid">
+            <article class="card">
+                <span class="badge">Cricket</span>
+                <h3>IND vs AUS - ২য় টেস্ট</h3>
+                <p>পিচ রিপোর্ট এবং জয়ী দলের সম্ভাবনা বিশ্লেষণ করুন...</p>
+                <a href="#" class="btn">বিস্তারিত পড়ুন</a>
             </article>
 
-            </section>
+            <article class="card">
+                <span class="badge live">Live</span>
+                <h3>Real Madrid vs Barcelona</h3>
+                <p>এল ক্লাসিকো স্পেশাল টিপস এবং উইনিং প্রোবাবিলিটি।</p>
+                <a href="#" class="btn">বিস্তারিত পড়ুন</a>
+            </article>
+        </div>
 
-        <section class="seo-content">
-            <h3>কেন আমাদের প্রেডিকশন সেরা?</h3>
-            <p>আমরা ডাটা অ্যানালাইসিস, প্লেয়ার ইনজুরি আপডেট এবং পূর্বের হেড-টু-হেড রেকর্ডের ওপর ভিত্তি করে টিপস প্রদান করি। আমাদের লক্ষ্য আপনাকে সঠিক সিদ্ধান্ত নিতে সাহায্য করা।</p>
-        </section>
+        <div class="ads-container">
+            <p style="color:#ccc; font-size: 12px;">Advertisement</p>
+        </div>
     </main>
 
-    <footer id="main-footer">
-        </footer>
+    <div id="footer-placeholder"></div>
 
-    <script src="assets/js/app.js"></script>
-    <script src="assets/js/auth.js"></script>
+    <script>
+        // হেডার লোড করার ফাংশন
+        fetch('components/header.js')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('header-placeholder').innerHTML = data;
+            });
+
+        // ফুটার লোড করার ফাংশন
+        fetch('components/footer.js')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('footer-placeholder').innerHTML = data;
+            });
+    </script>
 </body>
 </html>
