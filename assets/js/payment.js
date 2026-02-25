@@ -30,6 +30,49 @@ async function checkUnlockAccess(predictionId){
     return false;
 }
 
+async function submitPayment(){
+
+    const user = await supabase.auth.getUser();
+
+    if(!user.data.user){
+        alert("Login Required");
+        return;
+    }
+
+    const method = document.getElementById("paymentMethod").value;
+    const amount = document.getElementById("amount").value;
+    const transaction = document.getElementById("transaction").value;
+
+    const screenshot = document.getElementById("screenshot").files[0];
+
+    let screenshotURL = "";
+
+    if(screenshot){
+
+        const fileName = Date.now()+"_"+screenshot.name;
+
+        const { data } = await supabase.storage
+        .from("payment-proof")
+        .upload(fileName, screenshot);
+
+        screenshotURL = data.path;
+    }
+
+    await supabase.from("payments").insert([
+        {
+            user_id:user.data.user.id,
+            method:method,
+            amount:amount,
+            transaction_id:transaction,
+            screenshot_url:screenshotURL,
+            status:"pending"
+        }
+    ]);
+
+    alert("Payment submitted. Wait for admin approval.");
+
+    loadPage("profile");
+}
 /* ===== Unlock Prediction Engine ===== */
 
 async function unlockPrediction(predictionId){
