@@ -1,194 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আজকের ফুটবল প্রেডিকশন | PredictPro - নির্ভুল স্পোর্টস টিপস</title>
+    <meta name="description" content="সেরা এবং নির্ভুল ফুটবল ও ক্রিকেট প্রেডিকশন পান। আমাদের বিশেষজ্ঞরা প্রতিদিনের ম্যাচের বিশ্লেষণ এবং টিপস প্রদান করে।">
+    <meta name="keywords" content="sports prediction, football tips, cricket prediction, today match analysis, PredictPro">
+    
+    <meta property="og:title" content="আজকের সেরা স্পোর্টস প্রেডিকশন">
+    <meta property="og:description" content="ফ্রি এবং ভিআইপি টিপস নিয়ে আজই জিতুন।">
+    <meta property="og:type" content="website">
+    
+    <link rel="stylesheet" href="assets/css/style.css">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>PredictPro | Automated Sports Prediction</title>
-
-<meta name="description" content="Best automated sports prediction platform. Free and VIP prediction available.">
-
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-<!-- Supabase SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-<style>
-
-body{
-    font-family: 'Poppins', sans-serif;
-    background:#0f172a;
-    color:white;
-}
-
-.card{
-    background:#1e293b;
-    border-radius:24px;
-    padding:24px;
-    transition:0.3s;
-}
-
-.card:hover{
-    transform: translateY(-6px);
-}
-
-.btn-gold{
-    background:#fbbf24;
-    color:#0f172a;
-    padding:12px 28px;
-    border-radius:999px;
-    font-weight:600;
-    transition:0.3s;
-    border:none;
-    cursor:pointer;
-}
-
-.btn-gold:hover{
-    background:#f59e0b;
-}
-
-header{
-    backdrop-filter: blur(12px);
-    background:rgba(2,6,23,0.85);
-}
-
-</style>
-
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SportsEvent",
+      "name": "Football Match Prediction",
+      "description": "Daily football tips and expert analysis.",
+      "organizer": {
+        "@type": "Organization",
+        "name": "PredictPro"
+      }
+    }
+    </script>
 </head>
-
 <body>
 
-<header class="sticky top-0 z-50 p-4 flex justify-between items-center">
+    <header id="main-header">
+        </header>
 
-<h2 class="text-xl font-bold text-yellow-400">PredictPro</h2>
+    <main>
+        <section class="hero">
+            <h1>আজকের স্পোর্টস প্রেডিকশন ও বিশ্লেষণ</h1>
+            <p>আমাদের বিশেষজ্ঞ প্যানেলের সেরা টিপসগুলো দেখে নিন।</p>
+        </section>
 
-<button onclick="openAuthModal()" class="btn-gold">
-Login / Register
-</button>
+        <section class="prediction-container">
+            <h2>সাম্প্রতিক ম্যাচ টিপস</h2>
+            
+            <article class="match-card">
+                <div class="match-info">
+                    <span class="league-name">Premier League</span>
+                    <span class="match-time">রাত ৯:০০ PM</span>
+                </div>
+                
+                <div class="teams">
+                    <div class="team-home">
+                        <img src="assets/img/team1.png" alt="Team A Logo" loading="lazy">
+                        <span>দল এ</span>
+                    </div>
+                    <div class="vs">VS</div>
+                    <div class="team-away">
+                        <img src="assets/img/team2.png" alt="Team B Logo" loading="lazy">
+                        <span>দল বি</span>
+                    </div>
+                </div>
 
-</header>
+                <div class="prediction-box">
+                    <strong>প্রেডিকশন:</strong> <span class="tip-text">Home Win (1)</span>
+                </div>
+                
+                <a href="blog-details.html" class="btn-analysis">বিস্তারিত বিশ্লেষণ পড়ুন</a>
+            </article>
 
-<main class="p-5 max-w-5xl mx-auto">
+            </section>
 
-<section class="text-center py-16">
+        <section class="seo-content">
+            <h3>কেন আমাদের প্রেডিকশন সেরা?</h3>
+            <p>আমরা ডাটা অ্যানালাইসিস, প্লেয়ার ইনজুরি আপডেট এবং পূর্বের হেড-টু-হেড রেকর্ডের ওপর ভিত্তি করে টিপস প্রদান করি। আমাদের লক্ষ্য আপনাকে সঠিক সিদ্ধান্ত নিতে সাহায্য করা।</p>
+        </section>
+    </main>
 
-<h1 class="text-4xl font-bold mb-6">
-Automated Sports Prediction Platform
-</h1>
+    <footer id="main-footer">
+        </footer>
 
-<p class="text-gray-300 mb-8">
-Get free prediction after watching ads. Premium VIP prediction with subscription.
-</p>
-
-<button class="btn-gold text-lg">
-View Prediction
-</button>
-
-</section>
-
-</main>
-
-<!-- ================= Auth Modal ================= -->
-
-<div id="authModal" class="hidden fixed inset-0 flex justify-center items-center z-50 backdrop-blur-lg">
-
-<div class="w-[95%] max-w-md card">
-
-<h2 class="text-2xl font-bold text-yellow-400 mb-6 text-center">
-Account Login
-</h2>
-
-<input id="email" type="email" placeholder="Email"
-class="w-full p-3 mb-4 rounded bg-slate-900 border border-slate-700">
-
-<input id="password" type="password" placeholder="Password"
-class="w-full p-3 mb-6 rounded bg-slate-900 border border-slate-700">
-
-<button onclick="loginUser()" class="btn-gold w-full mb-4">
-Login
-</button>
-
-<button onclick="registerUser()" class="btn-gold w-full">
-Register
-</button>
-
-</div>
-</div>
-
-<!-- ================= Scripts ================= -->
-
-<script>
-
-/* ===== Supabase Client Setup ===== */
-
-const SUPABASE_URL = "YOUR_SUPABASE_URL";
-const SUPABASE_ANON_KEY = "YOUR_PUBLIC_ANON_KEY";
-
-const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-);
-
-/* ===== Modal Control ===== */
-
-function openAuthModal(){
-    document.getElementById("authModal").classList.remove("hidden");
-}
-
-/* ===== Auth System ===== */
-
-async function loginUser(){
-
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    const { error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password
-    });
-
-    if(error){
-        alert(error.message);
-        return;
-    }
-
-    location.reload();
-}
-
-async function registerUser(){
-
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    const { error } = await supabaseClient.auth.signUp({
-        email,
-        password
-    });
-
-    if(error){
-        alert(error.message);
-        return;
-    }
-
-    alert("Registration successful. Check email.");
-}
-
-</script>
-
-<script src="assets/js/auth.js"></script>
-<script src="assets/js/security.js"></script>
-<script src="assets/js/app.js"></script>
-
-<script>
-window.onload = function(){
-    if(typeof checkSession === "function"){
-        checkSession();
-    }
-}
-</script>
-
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/auth.js"></script>
 </body>
 </html>
