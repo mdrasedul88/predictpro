@@ -4,107 +4,126 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIP Predictions | Sports Pro</title>
-    <link rel="stylesheet" href="style.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .vip-locked { text-align: center; padding: 40px 20px; background: #1e293b; border-radius: 15px; margin-top: 20px; border: 1px solid #334155; }
-        .payment-box { border: 1px solid #00ff88; padding: 20px; margin-top: 20px; border-radius: 10px; background: #0f172a; }
-        .btn-pay { background: #00ff88; color: #020617; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
-        .prediction-card { background: #1e293b; padding: 20px; border-radius: 12px; margin-top: 15px; border-left: 4px solid #00ff88; }
+        body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 20px auto; padding: 15px; }
+        
+        /* Lock Screen Style */
+        #lock-screen { 
+            text-align: center; padding: 60px 20px; background: #1e293b; 
+            border-radius: 15px; border: 1px solid #334155; margin-top: 50px;
+        }
+        .lock-icon { font-size: 4rem; color: #facc15; margin-bottom: 20px; }
+        .btn-unlock { 
+            background: #00ff88; color: #020617; border: none; padding: 12px 25px; 
+            border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 1rem;
+        }
+
+        /* VIP Content Card */
+        .match-card { 
+            background: #1e293b; border-radius: 12px; padding: 20px; 
+            margin-bottom: 15px; border-left: 5px solid #facc15; 
+        }
+        .match-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.8rem; color: #94a3b8; }
+        .match-name { font-size: 1.2rem; font-weight: bold; color: #fff; margin: 5px 0; }
+        .prediction-box { background: #0f172a; padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px dashed #334155; }
+        .status-badge { background: #facc15; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
     </style>
 </head>
-<body class="dark-mode">
-    <div id="header-root"></div>
+<body>
 
-    <main class="container">
-        <div id="vip-screen">
-            <div style="text-align: center; padding: 50px;">
-                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #00ff88;"></i>
-                <p style="margin-top: 15px;">Checking access status...</p>
-            </div>
+<div class="container">
+    <h2 style="text-align: center; color: #00ff88;">VIP Predictions</h2>
+
+    <div id="lock-screen">
+        <div class="lock-icon"><i class="fas fa-lock"></i></div>
+        <h3>Content Locked</h3>
+        <p style="color: #94a3b8;">VIP প্রেডিকশন দেখতে হলে আপনাকে অবশ্যই মেম্বার হতে হবে। সাইন-আপ ছাড়া VIP সুবিধা পাওয়া অসম্ভব।</p>
+        <button class="btn-unlock" onclick="redirectToAuth()">Unlock Now / Sign Up</button>
+    </div>
+
+    <div id="vip-content" style="display: none;">
+        <div id="match-list">
+            <p style="text-align: center;">Loading VIP Matches...</p>
         </div>
-    </main>
+    </div>
+</div>
 
-    <script src="js/header.js"></script>
-    <script src="js/footer.js"></script>
+<script>
+    const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
+    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
+    const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    <script>
-        const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
-        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    async function checkAccess() {
+        const { data: { user } } = await _supabase.auth.getUser();
 
-        async function checkAccess() {
-            const screen = document.getElementById('vip-screen');
-            
-            // ১. ইউজার লগইন চেক
-            const { data: { user } } = await _supabase.auth.getUser();
+        // ১. ইউজার লগইন না থাকলে সরাসরি লক স্ক্রিন দেখাবে এবং বাটনে ক্লিক করলে লগইন পেজে নিবে
+        if (!user) {
+            return; 
+        }
 
-            if (!user) {
-                screen.innerHTML = `
-                    <div class="vip-locked">
-                        <i class="fas fa-lock" style="font-size: 3rem; color: #ff4d4d; margin-bottom: 15px;"></i>
-                        <h2>Login Required</h2>
-                        <p>Please login to access VIP predictions.</p>
-                        <button class="btn-pay" onclick="window.location.href='index.html'">Go to Login Page</button>
-                    </div>`;
-                return;
-            }
+        // ২. ইউজার লগইন থাকলে তার VIP স্ট্যাটাস চেক করা
+        const { data: profile } = await _supabase
+            .from('profiles')
+            .select('is_vip, expiry_date')
+            .eq('id', user.id)
+            .single();
 
-            // ২. প্রোফাইল থেকে VIP স্ট্যাটাস চেক
-            const { data: profile, error: profileError } = await _supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .maybeSingle(); // single() এর বদলে maybeSingle() ব্যবহার করা হয়েছে যাতে এরর না দেয়
+        if (profile && profile.is_vip) {
+            // মেয়াদের তারিখ চেক
+            const expiry = new Date(profile.expiry_date);
+            const today = new Date();
 
-            if (profile && profile.is_vip) {
-                loadVIPMatches();
+            if (expiry > today || profile.expiry_date === null) {
+                // ইউজার VIP হলে কন্টেন্ট দেখাও
+                document.getElementById('lock-screen').style.display = 'none';
+                document.getElementById('vip-content').style.display = 'block';
+                loadVipMatches();
             } else {
-                screen.innerHTML = `
-                    <div class="vip-locked">
-                        <i class="fas fa-crown" style="font-size: 3rem; color: #fbbf24; margin-bottom: 15px;"></i>
-                        <h2>VIP Membership Required</h2>
-                        <p>Unlock premium expert analysis and predictions.</p>
-                        <div class="payment-box">
-                            <p>Subscription Status: <span style="color: #ff4d4d;">Inactive</span></p>
-                            <button class="btn-pay" onclick="window.open('https://t.me/yourusername')">
-                                <i class="fab fa-telegram"></i> Contact Admin to Unlock
-                            </button>
-                        </div>
-                    </div>`;
+                alert("আপনার VIP মেয়াদের সময় শেষ হয়ে গেছে!");
+                window.location.href = 'profile.html';
             }
         }
+    }
 
-        async function loadVIPMatches() {
-            const screen = document.getElementById('vip-screen');
-            const { data, error } = await _supabase.from('vip_matches').select('*');
-            
-            if (error) {
-                screen.innerHTML = `
-                    <div class="vip-locked">
-                        <h2>Access Denied</h2>
-                        <p>Your account is not authorized to view this content.</p>
-                    </div>`;
-                return;
-            }
+    async function loadVipMatches() {
+        // আপনার ডাটাবেসের 'vip_matches' টেবিল থেকে ডাটা আনা
+        const { data: matches, error } = await _supabase
+            .from('vip_matches') // আপনার VIP টেবিলের নাম এটি কি না নিশ্চিত করুন
+            .select('*')
+            .order('created_at', { ascending: false });
 
-            if (!data || data.length === 0) {
-                screen.innerHTML = "<h2>No VIP Matches Available Right Now.</h2>";
-                return;
-            }
-
-            screen.innerHTML = "<h1 style='color: #00ff88; margin-bottom: 20px;'>Premium VIP Matches</h1>";
-            data.forEach(match => {
-                screen.innerHTML += `
-                    <div class="prediction-card">
-                        <span style="background: #00ff88; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">${match.category || 'VIP'}</span>
-                        <h3 style="margin: 10px 0;">${match.match_name}</h3>
-                        <p style="color: #94a3b8; font-size: 0.9rem;">${match.description}</p>
-                    </div>`;
-            });
+        const listDiv = document.getElementById('match-list');
+        if (matches && matches.length > 0) {
+            listDiv.innerHTML = matches.map(match => `
+                <div class="match-card">
+                    <div class="match-header">
+                        <span>${match.category}</span>
+                        <span class="status-badge">VIP ONLY</span>
+                    </div>
+                    <div class="match-name">${match.match_name}</div>
+                    <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">
+                        <i class="far fa-clock"></i> ${new Date(match.match_time).toLocaleString()}
+                    </div>
+                    <div class="prediction-box">
+                        <strong>Prediction:</strong><br>
+                        <p style="margin-top: 5px; line-height: 1.5;">${match.description}</p>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            listDiv.innerHTML = "<p style='text-align:center;'>বর্তমানে কোনো VIP প্রেডিকশন নেই।</p>";
         }
+    }
 
-        checkAccess();
-    </script>
+    function redirectToAuth() {
+        window.location.href = 'login.html';
+    }
+
+    checkAccess();
+</script>
 </body>
 </html>
