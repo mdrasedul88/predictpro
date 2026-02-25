@@ -7,14 +7,69 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* আপনার সাইটের সাথে সামঞ্জস্যপূর্ণ প্রিমিয়াম ডিজাইন */
+        #blog-content { display: grid; gap: 20px; margin-top: 20px; }
+        
+        .prediction-card {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .prediction-card:hover { transform: translateY(-5px); border-color: #00ff88; }
+
+        .status-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
+        .live-tag {
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+        }
+
+        .tag-upcoming { background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid #00ff88; }
+        .tag-live { background: rgba(255, 77, 77, 0.1); color: #ff4d4d; border: 1px solid #ff4d4d; animation: blink 1.5s infinite; }
+
+        .match-title { color: #f8fafc; font-size: 1.2rem; margin-bottom: 10px; font-weight: 600; }
+        .match-desc { color: #94a3b8; font-size: 0.85rem; line-height: 1.6; margin-bottom: 15px; }
+
+        .btn-predict {
+            background: #00ff88;
+            color: #020617;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        /* ইন-ফিড অ্যাড ডিজাইন */
+        .in-feed-ad {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed #475569;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+    </style>
 </head>
 <body class="dark-mode">
 
     <div id="header-root"></div>
 
     <main class="container">
-        <div id="banner-ad-container" class="ad-space">
-            <p id="ad-text">Featured Analysis Loading...</p>
+        <div id="banner-ad-container" class="ad-space" style="margin-bottom: 20px;">
+            <p id="ad-text" style="color: #64748b; font-size: 0.8rem;">Featured Analysis Loading...</p>
         </div>
 
         <div id="blog-content">
@@ -28,8 +83,8 @@
     <script src="js/footer.js"></script>
 
     <script>
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_nBp3MOmMuz8KiezUL0hnjQ_Q-H1ScrL';
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function loadBlogData() {
@@ -46,37 +101,53 @@
             const container = document.getElementById('blog-content');
             container.innerHTML = '';
 
-            data.forEach(match => {
+            data.forEach((match, index) => {
                 const matchDate = new Date(match.match_time).getTime();
                 const now = new Date().getTime();
                 const diff = matchDate - now;
 
                 let timeLabel = "";
+                let statusClass = "tag-upcoming";
+
                 if (diff > 0) {
                     const h = Math.floor(diff / 3600000);
                     const m = Math.floor((diff % 3600000) / 60000);
                     timeLabel = `${h}h ${m}m to go`;
                 } else {
                     timeLabel = "Live / Finished";
+                    statusClass = "tag-live";
                 }
 
+                // কার্ড রেন্ডার করা
                 container.innerHTML += `
-                    <article class="prediction-card" style="margin-bottom: 20px; text-align: left;">
-                        <span class="live-tag" style="background: ${diff > 0 ? 'rgba(0,255,136,0.1)' : 'rgba(255,0,0,0.1)'}; color: ${diff > 0 ? '#00ff88' : '#ff4d4d'}; border: 1px solid ${diff > 0 ? '#00ff88' : '#ff4d4d'};">
-                            ${match.category} • ${timeLabel}
-                        </span>
-                        <h2 style="margin: 15px 0 10px; font-size: 1.2rem;">${match.match_name}</h2>
-                        <p style="color: var(--text-gray); font-size: 0.9rem; line-height: 1.6;">${match.description}</p>
-                        <button class="btn-predict" style="width: auto; padding: 8px 20px; font-size: 0.8rem; margin-top: 15px;">Read Full Analysis</button>
+                    <article class="prediction-card">
+                        <div class="status-wrapper">
+                            <span class="live-tag ${statusClass}">${match.category}</span>
+                            <span style="color: #64748b; font-size: 0.75rem;"><i class="fa-regular fa-clock"></i> ${timeLabel}</span>
+                        </div>
+                        <h2 class="match-title">${match.match_name}</h2>
+                        <p class="match-desc">${match.description}</p>
+                        <button class="btn-predict">Read Full Analysis <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; margin-left:5px;"></i></button>
                     </article>
                 `;
+
+                // প্রতি ৩টি পোস্টের পর একটি ইন-ফিড অ্যাড স্লট যোগ করা
+                if ((index + 1) % 3 === 0) {
+                    container.innerHTML += `
+                        <div class="in-feed-ad">
+                            <p>Sponsored Ad Slot</p>
+                        </div>
+                    `;
+                }
             });
         }
 
-        // Ad Rotation (1 Minute)
         const ads = ["Join VIP for Premium Tips", "Get 100% Analysis Today", "Follow us on Telegram"];
         setInterval(() => {
-            document.getElementById('ad-text').innerText = ads[Math.floor(Math.random() * ads.length)];
+            const adTextElement = document.getElementById('ad-text');
+            if(adTextElement) {
+                adTextElement.innerText = ads[Math.floor(Math.random() * ads.length)];
+            }
         }, 60000);
 
         loadBlogData();
