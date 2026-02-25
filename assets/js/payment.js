@@ -29,3 +29,8 @@ async function unlockPrediction(predictionId){
     },30000); // Ad watch simulation
 
 }
+function showRewardAd(){
+
+    alert("Watching Ad... Please wait 30 seconds");
+
+}
