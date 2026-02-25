@@ -1,24 +1,31 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+}
+
 :root {
-    --bg-dark: #0f172a;
-    --card-dark: #1e293b;
-    --primary-gold: #fbbf24;
-    --text-white: #f8fafc;
-    --accent-blue: #38bdf8;
+    --bg-color: #0d1117;
+    --card-color: #161b22;
+    --accent-color: #00ff88;
+    --text-primary: #ffffff;
+    --text-secondary: #8b949e;
+    --border-color: #30363d;
 }
 
 body {
-    margin: 0;
-    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
     font-family: 'Segoe UI', sans-serif;
-    background-color: var(--bg-dark);
-    color: var(--text-white);
+    padding-bottom: 80px; /* ফুটারের জন্য জায়গা */
 }
 
-/* Header Styles */
+/* Header Fix: Notification Left, Name Right */
 .main-header {
-    background: var(--card-dark);
+    background: var(--card-color);
     padding: 15px 20px;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -26,89 +33,77 @@ body {
 
 .header-container {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* এটিই মেইন ম্যাজিক */
     align-items: center;
-}
-
-.site-logo h1 {
-    font-size: 1.2rem;
-    margin: 0;
-    letter-spacing: 1px;
-}
-
-.site-logo span {
-    color: var(--primary-gold);
 }
 
 .notif-icon {
     font-size: 1.4rem;
-    position: relative;
-    cursor: pointer;
 }
 
-.badge {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    height: 8px;
-    width: 8px;
-    background: red;
-    border-radius: 50%;
+.site-logo h1 {
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-transform: uppercase;
 }
 
-/* Prediction Card */
-.container { padding: 20px; margin-bottom: 80px; }
+/* Card & Content */
+.container { padding: 20px; }
 .prediction-card {
-    background: var(--card-dark);
-    border-radius: 15px;
+    background: var(--card-color);
+    border-radius: 12px;
     padding: 20px;
-    text-align: center;
-    border: 1px solid #334155;
+    border: 1px solid var(--border-color);
+    margin-bottom: 15px;
 }
 
 .live-tag {
-    background: #ef4444;
-    padding: 2px 10px;
-    border-radius: 20px;
-    font-size: 0.7rem;
+    color: #ff4d4d;
     font-weight: bold;
+    font-size: 0.8rem;
 }
 
-/* Fixed Footer Navigation */
+.btn-predict {
+    background: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+/* Footer Navigation Fix: Horizontal (পাশাপাশি) */
 .fix-nav {
     position: fixed;
     bottom: 0;
     width: 100%;
-    background: rgba(30, 41, 59, 0.95);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid #334155;
+    background: #161b22;
+    border-top: 1px solid var(--border-color);
     padding: 10px 0;
+    z-index: 1000;
 }
 
 .nav-bar {
-    display: flex;
-    justify-content: space-around;
+    display: flex; /* আইকনগুলো পাশাপাশি দেখাবে */
+    justify-content: space-around; /* সমান দূরত্ব বজায় রাখবে */
     align-items: center;
 }
 
 .nav-item {
-    text-decoration: none;
-    color: #94a3b8;
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    flex: 1; /* প্রত্যেকটি সমান জায়গা নিবে */
 }
 
-.nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
-.nav-item.active { color: var(--primary-gold); }
+.nav-item i {
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+}
 
-/* AdSense Placeholder */
-.ad-space {
-    margin-top: 20px;
-    padding: 40px;
-    background: #1a2233;
-    border: 1px dashed #475569;
-    text-align: center;
-    border-radius: 10px;
+.nav-item.active {
+    color: var(--accent-color);
 }
