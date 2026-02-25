@@ -5,27 +5,90 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>PredictPro | Sports Prediction Platform</title>
+<title>PredictPro | Automated Sports Prediction</title>
 
-<meta name="description" content="Automated sports prediction platform with free and VIP tips">
+<meta name="description" content="Best automated sports prediction platform. Free and VIP prediction available.">
 
-<meta name="robots" content="index, follow">
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
-<link rel="canonical" href="https://yourdomain.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-<meta property="og:title" content="PredictPro Prediction Platform">
-<meta property="og:description" content="Daily sports prediction tips">
+<style>
 
-<!-- CSS -->
-<link rel="stylesheet" href="assets/css/style.css">
+body{
+    font-family: 'Poppins', sans-serif;
+    background:#0f172a;
+    color:white;
+}
+
+/* Premium Card Style */
+
+.card{
+    background:#1e293b;
+    border-radius:24px;
+    padding:24px;
+    transition:0.3s;
+}
+
+.card:hover{
+    transform: translateY(-6px);
+}
+
+/* Golden Button */
+
+.btn-gold{
+    background:#fbbf24;
+    color:#0f172a;
+    padding:12px 28px;
+    border-radius:999px;
+    font-weight:600;
+    transition:0.3s;
+}
+
+.btn-gold:hover{
+    background:#f59e0b;
+}
+
+header{
+    backdrop-filter: blur(12px);
+    background:rgba(2,6,23,0.85);
+}
+
+</style>
 
 </head>
 
 <body>
 
-<h1>PredictPro Loading...</h1>
+<header class="sticky top-0 z-50 p-4 flex justify-between items-center">
 
-<script src="assets/js/app.js"></script>
+<h2 class="text-xl font-bold text-yellow-400">PredictPro</h2>
+
+<button onclick="openAuthModal()" class="btn-gold">
+Login / Register
+</button>
+
+</header>
+
+<main class="p-5 max-w-5xl mx-auto">
+
+<section class="text-center py-16">
+
+<h1 class="text-4xl font-bold mb-6">
+Automated Sports Prediction Platform
+</h1>
+
+<p class="text-gray-300 mb-8">
+Get free prediction after watching ads. Premium VIP prediction with subscription.
+</p>
+
+<button class="btn-gold text-lg">
+View Prediction
+</button>
+
+</section>
+
+</main>
 
 </body>
 </html>
