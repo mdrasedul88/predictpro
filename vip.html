@@ -8,47 +8,61 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; }
         .container { max-width: 600px; margin: 20px auto; padding: 15px; }
         
-        /* Lock Screen */
-        #lock-screen { 
-            text-align: center; padding: 60px 20px; background: #1e293b; 
-            border-radius: 15px; border: 1px solid #334155; margin-top: 50px;
-        }
-        .lock-icon { font-size: 4rem; color: #facc15; margin-bottom: 20px; }
-        .btn-unlock { 
-            background: #00ff88; color: #020617; border: none; padding: 12px 25px; 
-            border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 1rem;
-        }
-
-        /* VIP Match Card */
+        /* Match Card Design */
         .match-card { 
             background: #1e293b; border-radius: 12px; padding: 20px; 
-            margin-bottom: 15px; border-left: 5px solid #facc15; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            margin-bottom: 20px; border: 1px solid #334155; position: relative; overflow: hidden;
         }
-        .match-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.8rem; color: #94a3b8; }
-        .match-name { font-size: 1.2rem; font-weight: bold; color: #fff; margin: 5px 0; }
-        .prediction-box { background: #0f172a; padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px dashed #334155; }
-        .vip-tag { background: #facc15; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        .match-name { font-size: 1.1rem; font-weight: bold; color: #fff; margin-bottom: 10px; }
+        
+        /* Blur Effect for Locked Content */
+        .locked-content { 
+            filter: blur(5px); user-select: none; pointer-events: none; 
+            background: rgba(15, 23, 42, 0.5); padding: 10px; border-radius: 8px;
+        }
+        .unlock-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(30, 41, 59, 0.7); z-index: 10;
+        }
+        .btn-unlock-small {
+            background: #00ff88; color: #020617; border: none; padding: 8px 15px;
+            border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 0.9rem;
+        }
+
+        /* Subscription Modal */
+        #sub-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center;
+        }
+        .modal-box { background: #1e293b; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
+        .plan-btn { 
+            display: block; width: 100%; padding: 12px; margin: 10px 0; 
+            background: #334155; color: white; border: 1px solid #00ff88; border-radius: 8px; cursor: pointer; 
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align: center; color: #00ff88;">VIP Predictions</h2>
-
-    <div id="lock-screen">
-        <div class="lock-icon"><i class="fas fa-lock"></i></div>
-        <h3>Content Locked</h3>
-        <p style="color: #94a3b8;" id="lock-msg">VIP প্রেডিকশন দেখতে হলে আপনাকে অবশ্যই মেম্বার হতে হবে। সাইন-আপ ছাড়া VIP সুবিধা পাওয়া অসম্ভব।</p>
-        <button class="btn-unlock" id="action-btn" onclick="redirectToLogin()">Unlock Now / Sign Up</button>
-    </div>
-
-    <div id="vip-content" style="display: none;">
-        <div id="match-list">
-            <p style="text-align: center;">Loading VIP Matches...</p>
+    <h2 style="text-align: center; color: #00ff88;">Premium VIP List</h2>
+    <div id="vip-list-container">
         </div>
+</div>
+
+<div id="sub-modal">
+    <div class="modal-box">
+        <h3 style="color: #facc15;">Choose VIP Plan</h3>
+        <p style="font-size: 0.8rem; color: #94a3b8;">প্ল্যান সিলেক্ট করে আমাদের সাথে যোগাযোগ করুন।</p>
+        <button class="plan-btn">7 Days Access</button>
+        <button class="plan-btn">15 Days Access</button>
+        <button class="plan-btn">1 Month Access</button>
+        <button class="plan-btn">6 Months Access</button>
+        <button class="plan-btn">1 Year Access</button>
+        <button onclick="document.getElementById('sub-modal').style.display='none'" style="background:none; border:none; color:red; margin-top:10px; cursor:pointer;">Close</button>
     </div>
 </div>
 
@@ -57,84 +71,56 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    async function checkVipAccess() {
-        // সেশন চেক (লগইন করা আছে কি না)
+    let isUserVip = false;
+
+    async function initVipPage() {
         const { data: { session } } = await _supabase.auth.getSession();
-
-        if (!session) {
-            // লগইন করা না থাকলে লক স্ক্রিনই থাকবে
-            console.log("No Session Found");
-            return;
-        }
-
-        const user = session.user;
-
-        // প্রোফাইল থেকে VIP স্ট্যাটাস চেক করা
-        const { data: profile, error } = await _supabase
-            .from('profiles')
-            .select('is_vip, expiry_date')
-            .eq('id', user.id)
-            .single();
-
-        if (profile && profile.is_vip) {
-            const expiry = profile.expiry_date ? new Date(profile.expiry_date) : null;
-            const today = new Date();
-
-            if (!expiry || expiry > today) {
-                // ইউজার VIP এবং মেয়াদ আছে - আনলক করুন
-                document.getElementById('lock-screen').style.display = 'none';
-                document.getElementById('vip-content').style.display = 'block';
-                fetchVipData();
-            } else {
-                // মেয়াদ শেষ
-                document.getElementById('lock-msg').innerText = "আপনার VIP মেয়াদের সময় শেষ হয়ে গেছে! অনুগ্রহ করে রিনিউ করুন।";
-                document.getElementById('action-btn').innerText = "Renew VIP";
-                document.getElementById('action-btn').onclick = () => window.location.href = 'profile.html';
+        
+        if (session) {
+            const { data: profile } = await _supabase.from('profiles').select('*').eq('id', session.user.id).single();
+            if (profile && profile.is_vip) {
+                const expiry = new Date(profile.expiry_date);
+                if (expiry > new Date()) isUserVip = true;
             }
+        }
+        loadMatches();
+    }
+
+    async function loadMatches() {
+        const { data: matches } = await _supabase.from('vip_matches').select('*').order('created_at', { ascending: false });
+        const container = document.getElementById('vip-list-container');
+
+        container.innerHTML = matches.map(match => `
+            <div class="match-card">
+                <div class="match-name">${match.match_name}</div>
+                ${!isUserVip ? `
+                    <div class="locked-content">
+                        <strong>Prediction:</strong> This is a hidden premium tip for VIP members only.
+                    </div>
+                    <div class="unlock-overlay">
+                        <button class="btn-unlock-small" onclick="handleUnlock()">Unlock Now</button>
+                    </div>
+                ` : `
+                    <div class="prediction-box" style="color: #00ff88;">
+                        <strong>Prediction:</strong> ${match.description}
+                    </div>
+                `}
+            </div>
+        `).join('');
+    }
+
+    async function handleUnlock() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (!session) {
+            alert("আপনাকে আগে একটি একাউন্ট তৈরি করতে হবে!");
+            window.location.href = 'login.html';
         } else {
-            // লগইন আছে কিন্তু VIP নয়
-            document.getElementById('lock-msg').innerText = "আপনি বর্তমানে Free Member। VIP প্রেডিকশন দেখতে মেম্বারশিপ প্রয়োজন।";
-            document.getElementById('action-btn').innerText = "Upgrade to VIP";
-            document.getElementById('action-btn').onclick = () => window.location.href = 'profile.html';
+            // একাউন্ট আছে কিন্তু ভিআইপি নয়, তাই প্ল্যান দেখাবে
+            document.getElementById('sub-modal').style.display = 'flex';
         }
     }
 
-    async function fetchVipData() {
-        // 'vip_matches' টেবিল থেকে ডাটা লোড
-        const { data: matches, error } = await _supabase
-            .from('vip_matches')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        const listDiv = document.getElementById('match-list');
-        if (matches && matches.length > 0) {
-            listDiv.innerHTML = matches.map(match => `
-                <div class="match-card">
-                    <div class="match-header">
-                        <span>${match.category}</span>
-                        <span class="vip-tag">VIP ONLY</span>
-                    </div>
-                    <div class="match-name">${match.match_name}</div>
-                    <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">
-                        <i class="far fa-clock"></i> ${new Date(match.match_time).toLocaleString()}
-                    </div>
-                    <div class="prediction-box">
-                        <strong style="color: #facc15;">Premium Prediction:</strong>
-                        <p style="margin-top: 5px; line-height: 1.5;">${match.description}</p>
-                    </div>
-                </div>
-            `).join('');
-        } else {
-            listDiv.innerHTML = "<p style='text-align:center;'>বর্তমানে কোনো VIP প্রেডিকশন নেই।</p>";
-        }
-    }
-
-    function redirectToLogin() {
-        window.location.href = 'login.html';
-    }
-
-    // পেজ লোড হলে চেক শুরু হবে
-    window.onload = checkVipAccess;
+    window.onload = initVipPage;
 </script>
 </body>
 </html>
