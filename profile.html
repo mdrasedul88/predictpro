@@ -3,116 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile - Sports Prediction</title>
+    <title>My Profile | Sports Pro</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* প্রোফাইল পেজের জন্য এক্সট্রা ডিজাইন */
-        .profile-container {
-            margin-top: 20px;
-        }
-        .profile-card {
-            background: var(--card-color);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border-color);
-        }
-        .profile-card h2 {
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            color: var(--accent-color);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-        }
-        .info-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
-        .info-label { color: var(--text-secondary); }
-        
-        .menu-link {
-            display: flex;
-            align-items: center;
-            padding: 12px 0;
-            color: var(--text-primary);
-            border-bottom: 1px solid #1e293b;
-            text-decoration: none;
-        }
-        .menu-link i {
-            margin-right: 15px;
-            width: 20px;
-            color: var(--accent-color);
-        }
-        .menu-link:last-child { border-bottom: none; }
-
-        .btn-logout {
-            width: 100%;
-            background: #ff4d4d;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            margin-top: 20px;
-            cursor: pointer;
-        }
+        body { background: #0f172a; color: white; font-family: sans-serif; }
+        .profile-container { max-width: 500px; margin: 50px auto; padding: 20px; background: #1e293b; border-radius: 15px; border: 1px solid #334155; text-align: center; }
+        .profile-pic { font-size: 4rem; color: #00ff88; margin-bottom: 10px; }
+        .info-box { text-align: left; background: #0f172a; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        .info-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1e293b; }
+        .label { color: #94a3b8; font-size: 0.9rem; }
+        .value { color: #00ff88; font-weight: bold; }
+        .btn-logout { background: #ff4d4d; color: white; border: none; padding: 10px 20px; border-radius: 8px; margin-top: 20px; cursor: pointer; width: 100%; font-weight: bold; }
+        .vip-badge { background: #facc15; color: #020617; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div id="header-root"></div>
+<div class="profile-container">
+    <div class="profile-pic"><i class="fas fa-user-circle"></i></div>
+    <h2 id="user-display-name">Loading...</h2>
+    
+    <div class="info-box">
+        <div class="info-item">
+            <span class="label">Email:</span>
+            <span class="value" id="user-email">-</span>
+        </div>
+        <div class="info-item">
+            <span class="label">Phone:</span>
+            <span class="value" id="user-phone">-</span>
+        </div>
+        <div class="info-item">
+            <span class="label">Status:</span>
+            <span id="user-status" class="value">Free User</span>
+        </div>
+        <div class="info-item">
+            <span class="label">Expiry Date:</span>
+            <span class="value" id="user-expiry">No Active Plan</span>
+        </div>
+    </div>
 
-    <main class="container profile-container">
+    <button class="btn-logout" onclick="handleLogout()">Logout</button>
+</div>
+
+<script>
+    const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
+    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
+    const _supabase = window.supabase.createClient(S_URL, S_KEY);
+
+    async function loadProfile() {
+        const { data: { user } } = await _supabase.auth.getUser();
         
-        <div class="profile-card">
-            <h2><i class="fa-solid fa-circle-user"></i> Account Info</h2>
-            <div class="info-item">
-                <span class="info-label">Name:</span>
-                <span>User Name</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Status:</span>
-                <span style="color: var(--accent-color);">Free Member</span>
-            </div>
-        </div>
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
 
-        <div class="profile-card">
-            <h2><i class="fa-solid fa-shield-halved"></i> Support & Policy</h2>
-            <a href="mailto:support@yourdomain.com" class="menu-link">
-                <i class="fa-solid fa-envelope"></i> Contact Us
-            </a>
-            <a href="#" class="menu-link">
-                <i class="fa-solid fa-user-lock"></i> Privacy Policy
-            </a>
-            <a href="#" class="menu-link">
-                <i class="fa-solid fa-file-contract"></i> Terms & Conditions
-            </a>
-        </div>
+        // ডাটাবেস টেবিল থেকে তথ্য আনা
+        const { data: profile, error } = await _supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
 
-        <button class="btn-logout" onclick="logoutSession()">
-            <i class="fa-solid fa-right-from-bracket"></i> Logout
-        </button>
-
-    </main>
-
-    <div id="footer-root"></div>
-
-    <script src="js/header.js"></script>
-    <script src="js/footer.js"></script>
-
-    <script>
-        // Logout Functionality
-        function logoutSession() {
-            if(confirm("Are you sure you want to logout?")) {
-                // এখানে আপনার সেশন বা লোকাল স্টোরেজ ডিলিট করার কোড বসবে
-                alert("Logging out...");
-                window.location.href = "index.html"; // লগআউট করে হোম পেজে পাঠাবে
+        if (profile) {
+            document.getElementById('user-display-name').innerText = profile.full_name || "User";
+            document.getElementById('user-email').innerText = profile.email;
+            document.getElementById('user-phone').innerText = profile.phone_number || "N/A";
+            
+            if (profile.is_vip) {
+                document.getElementById('user-status').innerHTML = 'VIP <span class="vip-badge">Active</span>';
+                document.getElementById('user-expiry').innerText = profile.expiry_date ? new Date(profile.expiry_date).toLocaleDateString() : "Lifetime";
             }
         }
-    </script>
+    }
+
+    async function handleLogout() {
+        await _supabase.auth.signOut();
+        window.location.href = 'index.html';
+    }
+
+    loadProfile();
+</script>
 </body>
 </html>
-
