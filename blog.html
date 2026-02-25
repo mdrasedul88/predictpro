@@ -3,45 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sports Blog - Real-time Updates</title>
+    <title>Sports Blog - Predictions</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .blog-post { background: var(--card-color); border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid var(--border-color); }
-        .match-status { display: inline-block; padding: 4px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; }
-        .upcoming { background: rgba(0, 255, 136, 0.1); color: var(--accent-color); }
-        .post-title { font-size: 1.1rem; margin-bottom: 8px; display: block; color: #fff; }
-        
-        /* Banner Ads Styling */
-        #banner-ad-container {
-            width: 100%;
-            min-height: 100px;
-            background: #1a2233;
-            border: 1px dashed #475569;
-            margin: 20px 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            transition: opacity 0.5s ease;
-            border-radius: 8px;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
+<body class="dark-mode">
+
     <div id="header-root"></div>
 
     <main class="container">
-        <div id="banner-ad-container">
-            <p id="ad-text">Wait for the next update...</p>
+        <div id="banner-ad-container" class="ad-space">
+            <p id="ad-text">Featured Analysis Loading...</p>
         </div>
 
         <div id="blog-content">
-            <article class="blog-post">
-                <span class="match-status upcoming">Football • 45m to start</span>
-                <a href="#" class="post-title">Real Madrid vs Manchester City Prediction & Analysis</a>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Today's match between Real Madrid and Man City is expected to be a thriller. Statistics show...</p>
-            </article>
+            <p style="text-align: center; color: var(--text-gray);">Fetching latest matches...</p>
         </div>
     </main>
 
@@ -51,30 +28,59 @@
     <script src="js/footer.js"></script>
 
     <script>
-        // ১-২ মিনিট পর পর ব্যানার অ্যাড পরিবর্তন করার সিস্টেম
-        const adTexts = [
-            "Premium Sports Gear - 20% Off!",
-            "Join VIP for 100% Accurate Predictions",
-            "Get Real-time Match Analysis Now",
-            "Subscribe to our Newsletter for Sports Updates"
-        ];
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function rotateAds() {
-            const adContainer = document.getElementById('banner-ad-container');
-            const adText = document.getElementById('ad-text');
-            
-            adContainer.style.opacity = "0"; // Fade out
-            
-            setTimeout(() => {
-                const randomAd = adTexts[Math.floor(Math.random() * adTexts.length)];
-                adText.innerText = randomAd;
-                adContainer.style.opacity = "1"; // Fade in
-            }, 500);
+        async function loadBlogData() {
+            const { data, error } = await supabase
+                .from('matches')
+                .select('*')
+                .order('match_time', { ascending: true });
+
+            if (error) {
+                console.error("Error:", error);
+                return;
+            }
+
+            const container = document.getElementById('blog-content');
+            container.innerHTML = '';
+
+            data.forEach(match => {
+                const matchDate = new Date(match.match_time).getTime();
+                const now = new Date().getTime();
+                const diff = matchDate - now;
+
+                let timeLabel = "";
+                if (diff > 0) {
+                    const h = Math.floor(diff / 3600000);
+                    const m = Math.floor((diff % 3600000) / 60000);
+                    timeLabel = `${h}h ${m}m to go`;
+                } else {
+                    timeLabel = "Live / Finished";
+                }
+
+                container.innerHTML += `
+                    <article class="prediction-card" style="margin-bottom: 20px; text-align: left;">
+                        <span class="live-tag" style="background: ${diff > 0 ? 'rgba(0,255,136,0.1)' : 'rgba(255,0,0,0.1)'}; color: ${diff > 0 ? '#00ff88' : '#ff4d4d'}; border: 1px solid ${diff > 0 ? '#00ff88' : '#ff4d4d'};">
+                            ${match.category} • ${timeLabel}
+                        </span>
+                        <h2 style="margin: 15px 0 10px; font-size: 1.2rem;">${match.match_name}</h2>
+                        <p style="color: var(--text-gray); font-size: 0.9rem; line-height: 1.6;">${match.description}</p>
+                        <button class="btn-predict" style="width: auto; padding: 8px 20px; font-size: 0.8rem; margin-top: 15px;">Read Full Analysis</button>
+                    </article>
+                `;
+            });
         }
 
-        // প্রতি ১ মিনিট (৬০০০০ মিলি-সেকেন্ড) পর পর অ্যাড পরিবর্তন হবে
-        setInterval(rotateAds, 60000);
+        // Ad Rotation (1 Minute)
+        const ads = ["Join VIP for Premium Tips", "Get 100% Analysis Today", "Follow us on Telegram"];
+        setInterval(() => {
+            document.getElementById('ad-text').innerText = ads[Math.floor(Math.random() * ads.length)];
+        }, 60000);
+
+        loadBlogData();
+        setInterval(loadBlogData, 60000);
     </script>
 </body>
 </html>
-
