@@ -17,10 +17,6 @@
     <meta property="og:description" content="Expert match analysis and live schedule for all major sports events.">
     <meta property="og:image" content="https://mdrasedul88.github.io/images/og-banner.jpg"> 
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://mdrasedul88.github.io/">
-    <meta property="twitter:title" content="Live Sports Analysis & Predictions | Sports Pro">
-    <meta property="twitter:description" content="Expert match analysis and live schedule for all major sports events.">
-    <meta property="twitter:image" content="https://mdrasedul88.github.io/images/og-banner.jpg">
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -28,11 +24,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* মডাল এবং ফর্মের সিএসএস ডিজাইন */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }
-        .modal-content { background: #1e293b; margin: 15% auto; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; color: white; position: relative; border: 1px solid #334155; }
+        .modal-content { background: #1e293b; margin: 10% auto; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; color: white; position: relative; border: 1px solid #334155; }
         .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; color: #94a3b8; cursor: pointer; }
-        .auth-box input { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; }
+        .auth-box input { width: 100%; padding: 12px; margin: 8px 0; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; }
         .auth-box a { cursor: pointer; text-decoration: none; font-weight: bold; }
         .btn-auth { background: #00ff88; color: #020617; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
         #auth-error { color: #ff4d4d; font-size: 0.8rem; margin-top: 10px; text-align: center; }
@@ -47,7 +42,7 @@
             <span class="live-tag">LIVE</span>
             <h3>Upcoming Match Prediction</h3>
             <p>Real Madrid vs Barcelona</p>
-            <button class="btn-predict">View Analysis</button>
+            <button class="btn-predict" onclick="handleViewAnalysis()">View Analysis</button>
         </section>
         
         <div class="ad-space">AdSense Ad Unit Here</div>
@@ -59,30 +54,29 @@
         <div class="modal-content auth-box">
             <span class="close-btn" onclick="closeAuthModal()">&times;</span>
             
-            <div id="signup-form" style="display: none;">
-    <h2 style="color: #00ff88; margin-bottom: 5px;">Create Account</h2>
-    <p style="color: #94a3b8; margin-bottom: 20px;">Register to unlock free & VIP tips</p>
-    
-    <input type="text" id="signup-name" placeholder="Full Name" required>
-    <input type="tel" id="signup-phone" placeholder="Valid Mobile Number" required>
-    <input type="email" id="signup-email" placeholder="Valid Email Address" required>
-    <input type="password" id="signup-password" placeholder="Password (min 6 chars)" required>
-    <input type="password" id="signup-confirm-password" placeholder="Confirm Password" required>
-    
-    <button class="btn-auth" onclick="handleSignup()">Sign Up</button>
-    
-    <p style="font-size: 0.85rem; margin-top: 15px; text-align: center; color: #94a3b8;">
-        Already have an account? <a href="javascript:void(0)" onclick="toggleAuth('login')" style="color: #00ff88;">Login</a>
-    </p>
-</div>
-
+            <div id="login-form">
+                <h2 style="color: #00ff88; margin-bottom: 5px;">Welcome Back</h2>
+                <p style="color: #94a3b8; margin-bottom: 20px;">Login to access predictions</p>
+                <input type="email" id="login-email" placeholder="Email Address">
+                <input type="password" id="login-password" placeholder="Password">
+                <button class="btn-auth" onclick="handleLogin()">Login Now</button>
+                <p style="font-size: 0.85rem; margin-top: 15px; text-align: center; color: #94a3b8;">
+                    New here? <a href="javascript:void(0)" onclick="toggleAuth('signup')" style="color: #00ff88;">Create Account</a>
+                </p>
+            </div>
 
             <div id="signup-form" style="display: none;">
-                <h2 style="color: #00ff88; margin-bottom: 5px;">Join VIP</h2>
-                <p style="color: #94a3b8; margin-bottom: 20px;">Create an account to get started</p>
-                <input type="email" id="signup-email" placeholder="Email Address">
-                <input type="password" id="signup-password" placeholder="Password (min 6 chars)">
+                <h2 style="color: #00ff88; margin-bottom: 5px;">Create Account</h2>
+                <p style="color: #94a3b8; margin-bottom: 15px;">Register to unlock free & VIP tips</p>
+                
+                <input type="text" id="signup-name" placeholder="Full Name" required>
+                <input type="tel" id="signup-phone" placeholder="Valid Mobile Number" required>
+                <input type="email" id="signup-email" placeholder="Valid Email Address" required>
+                <input type="password" id="signup-password" placeholder="Password (min 6 chars)" required>
+                <input type="password" id="signup-confirm-password" placeholder="Confirm Password" required>
+                
                 <button class="btn-auth" onclick="handleSignup()">Sign Up</button>
+                
                 <p style="font-size: 0.85rem; margin-top: 15px; text-align: center; color: #94a3b8;">
                     Already have an account? <a href="javascript:void(0)" onclick="toggleAuth('login')" style="color: #00ff88;">Login</a>
                 </p>
@@ -96,19 +90,16 @@
     <script src="js/footer.js"></script>
 
     <script>
-        // আপনার সুপাবেস ক্রেডেনশিয়ালস
         const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // মডাল কন্ট্রোল ফাংশন
         function openAuthModal() { document.getElementById('authModal').style.display = "block"; }
         function closeAuthModal() { 
             document.getElementById('authModal').style.display = "none"; 
             document.getElementById('auth-error').innerText = "";
         }
 
-        // ফর্ম পাল্টানোর ফাংশন (যাতে ৪0৪ এরর না আসে)
         function toggleAuth(type) {
             const loginF = document.getElementById('login-form');
             const signupF = document.getElementById('signup-form');
@@ -121,38 +112,41 @@
             }
         }
 
-        // সাইন-আপ ফাংশন
         async function handleSignup() {
+            const name = document.getElementById('signup-name').value;
+            const phone = document.getElementById('signup-phone').value;
             const email = document.getElementById('signup-email').value;
             const password = document.getElementById('signup-password').value;
-            const { data, error } = await _supabase.auth.signUp({ email, password });
-            
-            if (error) {
-                document.getElementById('auth-error').innerText = error.message;
-            } else {
-                alert("Sign-up successful! Now you can login.");
-                toggleAuth('login');
+            const confirm = document.getElementById('signup-confirm-password').value;
+            const errorDisplay = document.getElementById('auth-error');
+
+            if (password !== confirm) {
+                errorDisplay.innerText = "Passwords do not match!";
+                return;
             }
+
+            const { data, error } = await _supabase.auth.signUp({
+                email, password,
+                options: { data: { full_name: name, phone_number: phone } }
+            });
+            
+            if (error) { errorDisplay.innerText = error.message; }
+            else { alert("Sign-up successful! Now you can login."); toggleAuth('login'); }
         }
 
-        // লগইন ফাংশন
         async function handleLogin() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
-            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+            const { error } = await _supabase.auth.signInWithPassword({ email, password });
             
-            if (error) {
-                document.getElementById('auth-error').innerText = error.message;
-            } else {
-                closeAuthModal();
-                location.reload(); // পেজ রিলোড হলে লগইন স্ট্যাটাস আপডেট হবে
-            }
+            if (error) { document.getElementById('auth-error').innerText = error.message; }
+            else { closeAuthModal(); location.reload(); }
         }
 
-        // লগআউট ফাংশন
-        async function handleLogout() {
-            await _supabase.auth.signOut();
-            location.reload();
+        async function handleViewAnalysis() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) { alert("Please create an account to view predictions!"); openAuthModal(); } 
+            else { alert("Loading analysis with ads..."); /* অ্যাড লজিক এখানে হবে */ }
         }
     </script>
 </body>
