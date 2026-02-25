@@ -28,12 +28,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* মডাল এবং ফর্ম ডিজাইন */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
+        /* মডাল এবং ফর্মের সিএসএস ডিজাইন */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); }
         .modal-content { background: #1e293b; margin: 15% auto; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; color: white; position: relative; border: 1px solid #334155; }
         .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; color: #94a3b8; cursor: pointer; }
         .auth-box input { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; }
         .auth-box a { cursor: pointer; text-decoration: none; font-weight: bold; }
+        .btn-auth { background: #00ff88; color: #020617; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        #auth-error { color: #ff4d4d; font-size: 0.8rem; margin-top: 10px; text-align: center; }
     </style>
 </head>
 <body class="dark-mode">
@@ -58,28 +60,28 @@
             <span class="close-btn" onclick="closeAuthModal()">&times;</span>
             
             <div id="login-form">
-                <h2 style="color: #00ff88;">Welcome Back</h2>
-                <p>Login to access your account</p>
-                <input type="email" id="login-email" placeholder="Email Address" required>
-                <input type="password" id="login-password" placeholder="Password" required>
-                <button class="btn-predict" onclick="handleLogin()" style="width: 100%;">Login Now</button>
-                <p style="font-size: 0.8rem; margin-top: 15px; text-align: center;">
+                <h2 style="color: #00ff88; margin-bottom: 5px;">Welcome Back</h2>
+                <p style="color: #94a3b8; margin-bottom: 20px;">Login to access your account</p>
+                <input type="email" id="login-email" placeholder="Email Address">
+                <input type="password" id="login-password" placeholder="Password">
+                <button class="btn-auth" onclick="handleLogin()">Login Now</button>
+                <p style="font-size: 0.85rem; margin-top: 15px; text-align: center; color: #94a3b8;">
                     New here? <a href="javascript:void(0)" onclick="toggleAuth('signup')" style="color: #00ff88;">Create Account</a>
                 </p>
             </div>
 
             <div id="signup-form" style="display: none;">
-                <h2 style="color: #00ff88;">Join VIP</h2>
-                <p>Create an account to get started</p>
-                <input type="email" id="signup-email" placeholder="Email Address" required>
-                <input type="password" id="signup-password" placeholder="Password (min 6 chars)" required>
-                <button class="btn-predict" onclick="handleSignup()" style="width: 100%;">Sign Up</button>
-                <p style="font-size: 0.8rem; margin-top: 15px; text-align: center;">
+                <h2 style="color: #00ff88; margin-bottom: 5px;">Join VIP</h2>
+                <p style="color: #94a3b8; margin-bottom: 20px;">Create an account to get started</p>
+                <input type="email" id="signup-email" placeholder="Email Address">
+                <input type="password" id="signup-password" placeholder="Password (min 6 chars)">
+                <button class="btn-auth" onclick="handleSignup()">Sign Up</button>
+                <p style="font-size: 0.85rem; margin-top: 15px; text-align: center; color: #94a3b8;">
                     Already have an account? <a href="javascript:void(0)" onclick="toggleAuth('login')" style="color: #00ff88;">Login</a>
                 </p>
             </div>
             
-            <p id="auth-error" style="color: #ff4d4d; font-size: 0.8rem; margin-top: 10px; text-align: center;"></p>
+            <p id="auth-error"></p>
         </div>
     </div>
 
@@ -87,15 +89,19 @@
     <script src="js/footer.js"></script>
 
     <script>
-        // Supabase Initialization
+        // আপনার সুপাবেস ক্রেডেনশিয়ালস
         const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Modal Controls
+        // মডাল কন্ট্রোল ফাংশন
         function openAuthModal() { document.getElementById('authModal').style.display = "block"; }
-        function closeAuthModal() { document.getElementById('authModal').style.display = "none"; }
+        function closeAuthModal() { 
+            document.getElementById('authModal').style.display = "none"; 
+            document.getElementById('auth-error').innerText = "";
+        }
 
+        // ফর্ম পাল্টানোর ফাংশন (যাতে ৪0৪ এরর না আসে)
         function toggleAuth(type) {
             const loginF = document.getElementById('login-form');
             const signupF = document.getElementById('signup-form');
@@ -108,7 +114,7 @@
             }
         }
 
-        // Authentication Logic
+        // সাইন-আপ ফাংশন
         async function handleSignup() {
             const email = document.getElementById('signup-email').value;
             const password = document.getElementById('signup-password').value;
@@ -117,11 +123,12 @@
             if (error) {
                 document.getElementById('auth-error').innerText = error.message;
             } else {
-                alert("Sign-up successful! You can now login.");
+                alert("Sign-up successful! Now you can login.");
                 toggleAuth('login');
             }
         }
 
+        // লগইন ফাংশন
         async function handleLogin() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
@@ -130,10 +137,15 @@
             if (error) {
                 document.getElementById('auth-error').innerText = error.message;
             } else {
-                alert("Login successful!");
                 closeAuthModal();
-                location.reload();
+                location.reload(); // পেজ রিলোড হলে লগইন স্ট্যাটাস আপডেট হবে
             }
+        }
+
+        // লগআউট ফাংশন
+        async function handleLogout() {
+            await _supabase.auth.signOut();
+            location.reload();
         }
     </script>
 </body>
