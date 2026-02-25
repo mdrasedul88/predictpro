@@ -1,1 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Blog - Real-time Updates</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .blog-post { background: var(--card-color); border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+        .match-status { display: inline-block; padding: 4px 10px; border-radius: 5px; font-size: 0.75rem; font-weight: bold; margin-bottom: 10px; }
+        .upcoming { background: rgba(0, 255, 136, 0.1); color: var(--accent-color); }
+        .post-title { font-size: 1.1rem; margin-bottom: 8px; display: block; color: #fff; }
+        
+        /* Banner Ads Styling */
+        #banner-ad-container {
+            width: 100%;
+            min-height: 100px;
+            background: #1a2233;
+            border: 1px dashed #475569;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: opacity 0.5s ease;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="header-root"></div>
+
+    <main class="container">
+        <div id="banner-ad-container">
+            <p id="ad-text">Wait for the next update...</p>
+        </div>
+
+        <div id="blog-content">
+            <article class="blog-post">
+                <span class="match-status upcoming">Football • 45m to start</span>
+                <a href="#" class="post-title">Real Madrid vs Manchester City Prediction & Analysis</a>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Today's match between Real Madrid and Man City is expected to be a thriller. Statistics show...</p>
+            </article>
+        </div>
+    </main>
+
+    <div id="footer-root"></div>
+
+    <script src="js/header.js"></script>
+    <script src="js/footer.js"></script>
+
+    <script>
+        // ১-২ মিনিট পর পর ব্যানার অ্যাড পরিবর্তন করার সিস্টেম
+        const adTexts = [
+            "Premium Sports Gear - 20% Off!",
+            "Join VIP for 100% Accurate Predictions",
+            "Get Real-time Match Analysis Now",
+            "Subscribe to our Newsletter for Sports Updates"
+        ];
+
+        function rotateAds() {
+            const adContainer = document.getElementById('banner-ad-container');
+            const adText = document.getElementById('ad-text');
+            
+            adContainer.style.opacity = "0"; // Fade out
+            
+            setTimeout(() => {
+                const randomAd = adTexts[Math.floor(Math.random() * adTexts.length)];
+                adText.innerText = randomAd;
+                adContainer.style.opacity = "1"; // Fade in
+            }, 500);
+        }
+
+        // প্রতি ১ মিনিট (৬০০০০ মিলি-সেকেন্ড) পর পর অ্যাড পরিবর্তন হবে
+        setInterval(rotateAds, 60000);
+    </script>
+</body>
+</html>
 
