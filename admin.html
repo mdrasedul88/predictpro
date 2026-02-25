@@ -3,98 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Admin Panel - Sports Pro</title>
+    <title>Master Admin - Sports Pro</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .admin-box { background: #111827; padding: 30px; border-radius: 15px; border: 1px solid #334155; max-width: 500px; margin: 50px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-family: sans-serif; }
-        h2 { color: #00ff88; margin-bottom: 20px; text-align: center; }
+        body { background: #020617; color: white; font-family: sans-serif; }
+        .admin-box { background: #111827; padding: 25px; border-radius: 15px; border: 1px solid #334155; max-width: 500px; margin: 30px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        h2 { color: #00ff88; margin-bottom: 20px; text-align: center; font-size: 1.2rem; border-bottom: 1px solid #334155; padding-bottom: 10px; }
         label { color: #94a3b8; font-size: 0.8rem; display: block; margin-top: 10px; }
         input, textarea, select { width: 100%; padding: 12px; margin: 5px 0 15px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; outline: none; box-sizing: border-box; }
         input:focus { border-color: #00ff88; }
-        .btn-post { background: #00ff88; color: #000; font-weight: bold; border: none; cursor: pointer; padding: 15px; border-radius: 8px; width: 100%; font-size: 1rem; transition: 0.3s; }
-        .btn-post:disabled { background: #475569; cursor: not-allowed; }
+        .btn-post { background: #00ff88; color: #000; font-weight: bold; border: none; cursor: pointer; padding: 15px; border-radius: 8px; width: 100%; font-size: 1rem; transition: 0.3s; margin-bottom: 10px; }
+        .btn-vip { background: #facc15; color: #000; }
+        .section-divider { margin: 40px 0; border: 1px dashed #334155; }
     </style>
 </head>
 <body>
+
     <div class="admin-box">
-        <h2>Post New Match Update</h2>
+        <h2><i class="fas fa-plus-circle"></i> Post New Match Update</h2>
         
         <label>Admin Password</label>
         <input type="password" id="adminKey" placeholder="Enter Secret Admin Password">
-        <hr style="border: 0.5px solid #334155; margin: 10px 0;">
         
         <label>Match Name</label>
-        <input type="text" id="mName" placeholder="e.g. Bangladesh vs India">
+        <input type="text" id="mName" placeholder="e.g. Real Madrid vs Barcelona">
         
-        <label>Match Schedule (Date & Time)</label>
+        <label>Match Schedule</label>
         <input type="datetime-local" id="mTime">
         
         <label>Select Sport</label>
         <select id="mCat">
             <option value="Football">Football</option>
             <option value="Cricket">Cricket</option>
-            <option value="Basketball">Basketball</option>
         </select>
         
-        <label>SEO Friendly Analysis</label>
-        <textarea id="mDesc" rows="6" placeholder="Write detailed match analysis..."></textarea>
+        <label>Analysis Description</label>
+        <textarea id="mDesc" rows="4" placeholder="Write match analysis..."></textarea>
         
         <button class="btn-post" id="publishBtn" onclick="publishMatch()">Publish Now</button>
+
+        <div class="section-divider"></div>
+
+        <h2><i class="fas fa-crown"></i> User VIP Management</h2>
+        
+        <label>User Registered Email</label>
+        <input type="email" id="userEmail" placeholder="user@gmail.com">
+        
+        <label>VIP Expiry Date</label>
+        <input type="date" id="expiryDate">
+        
+        <button class="btn-post btn-vip" id="vipBtn" onclick="makeUserVIP()">Activate VIP Status</button>
     </div>
 
     <script>
-        // আপনার সুপাবেস ডিটেইলস এখানে দিন
         const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
-        // এখানে আপনার সেই বড় 'eyJ...' কি-টি দিন (যদি এটি কাজ না করে)
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ'; 
-        
-        // ক্লায়েন্ট তৈরি করা
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // ১. ম্যাচ পাবলিশ ফাংশন
         async function publishMatch() {
-            const btn = document.getElementById('publishBtn');
             const pass = document.getElementById('adminKey').value;
-            const name = document.getElementById('mName').value;
-            const time = document.getElementById('mTime').value;
-            const desc = document.getElementById('mDesc').value;
-            const cat = document.getElementById('mCat').value;
+            if(pass !== "35895") { alert("Unauthorized!"); return; }
 
-            // পাসওয়ার্ড চেক (আপনার দেওয়া পাসওয়ার্ডটি এখানে দিন)
-            if(pass !== "35895") { 
-                alert("Unauthorized! Incorrect Password.");
-                return;
-            }
+            const { error } = await _supabase.from('matches').insert([{
+                match_name: document.getElementById('mName').value,
+                match_time: document.getElementById('mTime').value,
+                description: document.getElementById('mDesc').value,
+                category: document.getElementById('mCat').value
+            }]);
 
-            if(!name || !time || !desc) {
-                alert("সবগুলো বক্স পূরণ করুন!");
-                return;
-            }
+            if (error) alert("Error: " + error.message);
+            else { alert("Success! Match is Live."); location.reload(); }
+        }
 
+        // ২. ইউজার ভিআইপি বানানোর ফাংশন (নতুন লজিক)
+        async function makeUserVIP() {
+            const pass = document.getElementById('adminKey').value;
+            const email = document.getElementById('userEmail').value;
+            const expiry = document.getElementById('expiryDate').value;
+
+            if(pass !== "35895") { alert("Wrong Admin Password!"); return; }
+            if(!email || !expiry) { alert("ইমেইল এবং মেয়াদের তারিখ দিন!"); return; }
+
+            const btn = document.getElementById('vipBtn');
+            btn.innerText = "Updating...";
             btn.disabled = true;
-            btn.innerText = "Processing...";
 
             try {
-                const { error } = await _supabase.from('matches').insert([
-                    {
-                        match_name: name,
-                        match_time: time,
-                        description: desc,
-                        category: cat
-                    }
-                ]);
+                // ডাটাবেসে ইউজারকে খুঁজে আপডেট করা
+                const { data, error } = await _supabase
+                    .from('profiles')
+                    .update({ 
+                        is_vip: true, 
+                        expiry_date: expiry 
+                    })
+                    .eq('email', email);
 
                 if (error) {
                     alert("Database Error: " + error.message);
                 } else {
-                    alert("Success! Match is now Live.");
-                    location.reload();
+                    alert("Success! " + email + " is now a VIP Member.");
+                    document.getElementById('userEmail').value = "";
                 }
             } catch (err) {
-                alert("Unexpected Error: " + err.message);
+                alert("Error: " + err.message);
             } finally {
+                btn.innerText = "Activate VIP Status";
                 btn.disabled = false;
-                btn.innerText = "Publish Now";
             }
         }
     </script>
