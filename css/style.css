@@ -1,163 +1,97 @@
-/* Bottom Navigation Bar Styles */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 65px;
-    background: rgba(18, 18, 18, 0.95); /* Dark Premium Background */
-    backdrop-filter: blur(10px); /* Glass effect */
+/* ১. গ্লোবাল এবং ব্যাকগ্রাউন্ড সেটআপ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #000000; /* পিচ ব্ল্যাক ব্যাকগ্রাউন্ড */
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+}
+
+/* ২. ইনডেক্স পেজের কন্টেন্ট ডিজাইন (ম্যাচ কার্ড) */
+.container {
+    padding: 20px;
+    max-width: 600px; /* মোবাইল অ্যাপের মতো ফিল পেতে কম রাখা হয়েছে */
+    margin: 80px auto; /* হেডারের জন্য উপরে মার্জিন */
+}
+
+.match-card {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.league-name {
+    font-size: 12px;
+    color: #888;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.live-badge {
+    background: #ff3b30;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.teams {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 9999;
-    padding-bottom: env(safe-area-inset-bottom); /* iOS support */
+    margin: 15px 0;
+    font-weight: 700;
 }
 
-.nav-item {
+.vs {
+    color: #00ff88;
+    font-style: italic;
+}
+
+.prediction-box {
+    background: #252525;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px dashed #444;
+}
+
+.pick {
+    color: #00ff88;
+    font-weight: bold;
+}
+
+.view-btn {
+    display: block;
+    text-align: center;
+    background: #333;
+    color: #fff;
     text-decoration: none;
-    color: #8e8e8e;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 11px;
-    transition: 0.3s;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 8px;
+    font-size: 14px;
 }
 
-.nav-item.active {
-    color: #00ff88; /* Neon Green for Active state */
-    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-}
-
-.nav-item i {
-    font-size: 20px;
-    margin-bottom: 4px;
-}
-
-/* Live Dot Animation */
-.live-dot-container {
-    width: 24px;
-    height: 24px;
+.ad-placeholder {
+    background: #111;
+    border: 1px solid #222;
+    height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.live-dot {
-    width: 10px;
-    height: 10px;
-    background-color: #ff3b30;
-    border-radius: 50%;
-    box-shadow: 0 0 0 rgba(255, 59, 48, 0.4);
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 59, 48, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
-}
-
-/* Important: Space for Content */
-body {
-    padding-bottom: 80px; /* যাতে ফুটার কন্টেন্ট ঢেকে না যায় */
-}
-
-/* Desktop Hider: শুধুমাত্র মোবাইলে দেখানোর জন্য */
-@media (min-width: 768px) {
-    .bottom-nav {
-        display: none;
-    }
-    body {
-        padding-bottom: 0;
-    }
-}
-/* Main Header Base Style */
-#main-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 70px;
-    background: rgba(18, 18, 18, 0.9);
-    backdrop-filter: blur(15px);
-    z-index: 10000;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.4s ease;
-    display: flex;
-    align-items: center;
-}
-
-/* Header Container */
-.header-container {
-    width: 95%;
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-/* Logo Design */
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 20px;
-    font-weight: 800;
-    color: #fff;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.logo .pro {
-    color: #00ff88; /* Neon Green */
-    margin-left: 2px;
-}
-
-/* Join Button Style */
-.btn-join {
-    background: linear-gradient(45deg, #0088cc, #00ff88);
-    color: #000;
-    padding: 8px 18px;
-    border-radius: 50px;
-    font-size: 13px;
-    font-weight: 700;
-    text-decoration: none;
-    transition: 0.3s;
-    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.3);
-}
-
-.btn-join:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 255, 136, 0.5);
-}
-
-/* Shrink Effect on Scroll */
-#main-header.shrink {
-    height: 55px;
-    background: rgba(10, 10, 10, 0.98);
-}
-
-#main-header.shrink .logo {
-    font-size: 18px;
-}
-
-/* Desktop Menu Hiding on Mobile */
-@media (max-width: 768px) {
-    .desktop-menu {
-        display: none;
-    }
-    .btn-join span {
-        display: none; /* মোবাইলে শুধু আইকন বা ছোট লেখা দেখাবে */
-    }
-    .btn-join::after {
-        content: 'Join';
-    }
-}
-
-/* Space for Header content */
-body {
-    padding-top: 75px;
+    margin-bottom: 20px;
+    color: #444;
+    font-size: 12px;
 }
