@@ -43,5 +43,31 @@
 
     <script src="js/header.js"></script>
     <script src="js/footer.js"></script>
+    <div id="authModal" class="modal">
+    <div class="modal-content auth-box">
+        <span class="close-btn" onclick="closeAuthModal()">&times;</span>
+        
+        <div id="login-form">
+            <h2 style="color: #00ff88;">Welcome Back</h2>
+            <p>Login to access your account</p>
+            <input type="email" id="login-email" placeholder="Email Address" required>
+            <input type="password" id="login-password" placeholder="Password" required>
+            <button class="btn-predict" onclick="handleLogin()">Login Now</button>
+            <p style="font-size: 0.8rem; margin-top: 15px;">New here? <a href="#" onclick="toggleAuth('signup')" style="color: #00ff88;">Create Account</a></p>
+        </div>
+
+        <div id="signup-form" style="display: none;">
+            <h2 style="color: #00ff88;">Join VIP</h2>
+            <p>Create an account to get started</p>
+            <input type="email" id="signup-email" placeholder="Email Address" required>
+            <input type="password" id="signup-password" placeholder="Password (min 6 chars)" required>
+            <button class="btn-predict" onclick="handleSignup()">Sign Up</button>
+            <p style="font-size: 0.8rem; margin-top: 15px;">Already have an account? <a href="#" onclick="toggleAuth('login')" style="color: #00ff88;">Login</a></p>
+        </div>
+        
+        <p id="auth-error" style="color: #ff4d4d; font-size: 0.8rem; margin-top: 10px;"></p>
+    </div>
+</div>
+
 </body>
 </html>
