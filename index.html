@@ -31,6 +31,9 @@
         .auth-box a { cursor: pointer; text-decoration: none; font-weight: bold; }
         .btn-auth { background: #00ff88; color: #020617; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
         #auth-error { color: #ff4d4d; font-size: 0.8rem; margin-top: 10px; text-align: center; }
+        
+        /* লগইন পরবর্তী ইউজার ইনফো স্টাইল */
+        .user-info-bar { display: none; background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center; border: 1px solid #334155; }
     </style>
 </head>
 <body class="dark-mode">
@@ -38,6 +41,11 @@
     <div id="header-root"></div>
 
     <main class="container">
+        <div id="user-display" class="user-info-bar">
+            <p>Welcome, <span id="user-name-text" style="color: #00ff88; font-weight: bold;"></span></p>
+            <button onclick="handleLogout()" style="background: none; border: none; color: #ff4d4d; cursor: pointer; font-size: 0.8rem;">[ Logout ]</button>
+        </div>
+
         <section class="prediction-card">
             <span class="live-tag">LIVE</span>
             <h3>Upcoming Match Prediction</h3>
@@ -94,6 +102,23 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // ১. সেশন চেক ফাংশন (লগইন অবস্থা ধরে রাখার জন্য)
+        async function checkSession() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            const userDisplay = document.getElementById('user-display');
+            const userNameText = document.getElementById('user-name-text');
+
+            if (user) {
+                // ইউজার লগইন থাকলে UI আপডেট হবে
+                userDisplay.style.display = 'block';
+                // মেটাডাটা থেকে নাম নেওয়া
+                userNameText.innerText = user.user_metadata.full_name || user.email;
+                console.log("Session active for:", user.email);
+            } else {
+                userDisplay.style.display = 'none';
+            }
+        }
+
         function openAuthModal() { document.getElementById('authModal').style.display = "block"; }
         function closeAuthModal() { 
             document.getElementById('authModal').style.display = "none"; 
@@ -130,24 +155,47 @@
                 options: { data: { full_name: name, phone_number: phone } }
             });
             
-            if (error) { errorDisplay.innerText = error.message; }
-            else { alert("Sign-up successful! Now you can login."); toggleAuth('login'); }
+            if (error) { 
+                errorDisplay.innerText = error.message; 
+            } else { 
+                alert("Sign-up successful! Now you can login."); 
+                toggleAuth('login'); 
+            }
         }
 
         async function handleLogin() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
-            const { error } = await _supabase.auth.signInWithPassword({ email, password });
+            const errorDisplay = document.getElementById('auth-error');
             
-            if (error) { document.getElementById('auth-error').innerText = error.message; }
-            else { closeAuthModal(); location.reload(); }
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+            
+            if (error) { 
+                errorDisplay.innerText = error.message; 
+            } else { 
+                alert("Login Successful!");
+                closeAuthModal(); 
+                window.location.reload(); // রিফ্রেশ দিলে সেশন আপডেট হবে
+            }
+        }
+
+        async function handleLogout() {
+            await _supabase.auth.signOut();
+            window.location.reload();
         }
 
         async function handleViewAnalysis() {
             const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) { alert("Please create an account to view predictions!"); openAuthModal(); } 
-            else { alert("Loading analysis with ads..."); /* অ্যাড লজিক এখানে হবে */ }
+            if (!user) { 
+                alert("Please login to view predictions!"); 
+                openAuthModal(); 
+            } else { 
+                alert("Analysis Unlocked! Enjoy your tips."); 
+            }
         }
+
+        // পেজ লোড হলে সেশন চেক রান হবে
+        checkSession();
     </script>
 </body>
 </html>
