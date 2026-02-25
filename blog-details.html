@@ -1,1 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Details | Sports Pro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .details-container { max-width: 800px; margin: 30px auto; padding: 20px; }
+        .post-header { margin-bottom: 25px; border-bottom: 1px solid #334155; padding-bottom: 20px; }
+        .post-title { color: #00ff88; font-size: 1.8rem; margin-bottom: 10px; }
+        .post-meta { color: #94a3b8; font-size: 0.9rem; display: flex; gap: 15px; }
+        .full-analysis { color: #cbd5e1; line-height: 1.8; font-size: 1.1rem; white-space: pre-wrap; margin-top: 20px; }
+        .ad-space { background: rgba(255,255,255,0.03); border: 1px dashed #475569; padding: 20px; text-align: center; margin: 25px 0; border-radius: 12px; }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <div id="header-root"></div>
+
+    <main class="details-container">
+        <div class="ad-space">
+            <p style="color: #64748b;">[ Top Banner Ad Slot - AdSense/Other ]</p>
+        </div>
+
+        <div id="post-content">
+            <p style="text-align: center;">Loading Analysis...</p>
+        </div>
+
+        <div class="ad-space" style="margin-top: 40px;">
+            <p style="color: #64748b;">[ Bottom Banner Ad Slot - AdSense/Other ]</p>
+        </div>
+    </main>
+
+    <div id="footer-root"></div>
+
+    <script src="js/header.js"></script>
+    <script src="js/footer.js"></script>
+
+    <script>
+        const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function loadDetails() {
+            // URL থেকে আইডি খুঁজে বের করা
+            const urlParams = new URLSearchParams(window.location.search);
+            const matchId = urlParams.get('id');
+
+            if (!matchId) {
+                document.getElementById('post-content').innerHTML = "Post not found!";
+                return;
+            }
+
+            const { data, error } = await _supabase
+                .from('matches')
+                .select('*')
+                .eq('id', matchId)
+                .single();
+
+            if (error || !data) {
+                document.getElementById('post-content').innerHTML = "Error loading content.";
+                return;
+            }
+
+            document.title = data.match_name + " | Sports Pro";
+            
+            document.getElementById('post-content').innerHTML = `
+                <div class="post-header">
+                    <span style="color: #00ff88; font-weight: bold; text-transform: uppercase;">${data.category}</span>
+                    <h1 class="post-title">${data.match_name}</h1>
+                    <div class="post-meta">
+                        <span><i class="fa-regular fa-calendar"></i> ${new Date(data.match_time).toLocaleDateString()}</span>
+                    </div>
+                </div>
+                <div class="full-analysis">${data.description}</div>
+            `;
+        }
+
+        loadDetails();
+    </script>
+</body>
+</html>
 
