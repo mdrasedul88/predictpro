@@ -1,184 +1,114 @@
-/* ১. গ্লোবাল এবং ব্যাকগ্রাউন্ড সেটআপ */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+:root {
+    --bg-dark: #0f172a;
+    --card-dark: #1e293b;
+    --primary-gold: #fbbf24;
+    --text-white: #f8fafc;
+    --accent-blue: #38bdf8;
 }
 
 body {
-    background-color: #000000; /* পিচ ব্ল্যাক ব্যাকগ্রাউন্ড */
-    color: #ffffff;
-    font-family: 'Inter', sans-serif;
-    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-white);
 }
 
-/* ২. ইনডেক্স পেজের কন্টেন্ট ডিজাইন (ম্যাচ কার্ড) */
-.container {
-    padding: 20px;
-    max-width: 600px; /* মোবাইল অ্যাপের মতো ফিল পেতে কম রাখা হয়েছে */
-    margin: 80px auto; /* হেডারের জন্য উপরে মার্জিন */
+/* Header Styles */
+.main-header {
+    background: var(--card-dark);
+    padding: 15px 20px;
+    border-bottom: 1px solid #334155;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
-.match-card {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
-
-.league-name {
-    font-size: 12px;
-    color: #888;
-    text-transform: uppercase;
-    margin-bottom: 10px;
+.header-container {
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
-.live-badge {
-    background: #ff3b30;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 10px;
+.site-logo h1 {
+    font-size: 1.2rem;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+.site-logo span {
+    color: var(--primary-gold);
+}
+
+.notif-icon {
+    font-size: 1.4rem;
+    position: relative;
+    cursor: pointer;
+}
+
+.badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    height: 8px;
+    width: 8px;
+    background: red;
+    border-radius: 50%;
+}
+
+/* Prediction Card */
+.container { padding: 20px; margin-bottom: 80px; }
+.prediction-card {
+    background: var(--card-dark);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid #334155;
+}
+
+.live-tag {
+    background: #ef4444;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
     font-weight: bold;
 }
 
-.teams {
+/* Fixed Footer Navigation */
+.fix-nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #334155;
+    padding: 10px 0;
+}
+
+.nav-bar {
     display: flex;
     justify-content: space-around;
     align-items: center;
-    margin: 15px 0;
-    font-weight: 700;
 }
 
-.vs {
-    color: #00ff88;
-    font-style: italic;
-}
-
-.prediction-box {
-    background: #252525;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-    border: 1px dashed #444;
-}
-
-.pick {
-    color: #00ff88;
-    font-weight: bold;
-}
-
-.view-btn {
-    display: block;
-    text-align: center;
-    background: #333;
-    color: #fff;
+.nav-item {
     text-decoration: none;
-    padding: 10px;
-    margin-top: 15px;
-    border-radius: 8px;
-    font-size: 14px;
-}
-
-.ad-placeholder {
-    background: #111;
-    border: 1px solid #222;
-    height: 100px;
+    color: #94a3b8;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    color: #444;
-    font-size: 12px;
-}
-/* ১. বডি এবং মেইন কন্টেনার ঠিক করা */
-body {
-    background-color: #0f1216; /* ডার্ক প্রিমিয়াম ব্যাকগ্রাউন্ড */
-    color: #ffffff;
-    padding-top: 80px; /* হেডারের জন্য গ্যাপ */
-    padding-bottom: 90px; /* ফুটারের জন্য গ্যাপ */
+    font-size: 0.75rem;
 }
 
-.container {
-    max-width: 500px; /* মোবাইল ভিউর জন্য পারফেক্ট */
-    margin: 0 auto;
-    padding: 0 15px;
-}
+.nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
+.nav-item.active { color: var(--primary-gold); }
 
-/* ২. টাইটেল ডিজাইন */
-h1 { font-size: 24px; margin-bottom: 5px; color: #fff; }
-p { font-size: 14px; color: #888; margin-bottom: 30px; }
-.section-title { font-size: 18px; margin-bottom: 15px; border-left: 4px solid #00ff88; padding-left: 10px; }
-
-/* ৩. ম্যাচ কার্ড ডিজাইন (যা আপনার স্ক্রিনশটে নেই) */
-.match-card {
-    background: #1c2127;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 20px;
-    border: 1px solid #2d343c;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.league-name {
-    font-size: 11px;
-    color: #00ff88;
-    text-transform: uppercase;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.teams {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 15px 0;
-    font-size: 16px;
-    font-weight: 700;
-}
-
-.vs { color: #ff3b30; font-size: 12px; font-weight: 400; }
-
-/* ৪. প্রেডিকশন বক্স */
-.prediction-box {
-    background: #252b33;
-    padding: 10px;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    border: 1px dashed #444;
-}
-
-.pick { color: #00ff88; font-weight: bold; }
-
-/* ৫. বাটন ডিজাইন */
-.view-btn {
-    display: block;
+/* AdSense Placeholder */
+.ad-space {
+    margin-top: 20px;
+    padding: 40px;
+    background: #1a2233;
+    border: 1px dashed #475569;
     text-align: center;
-    background: #00ff88;
-    color: #000;
-    text-decoration: none;
-    padding: 10px;
-    margin-top: 15px;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 14px;
-}
-
-/* ৬. অ্যাড স্লট */
-.ad-placeholder {
-    background: #15191e;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #222;
-    margin-bottom: 20px;
-    color: #444;
-    font-size: 12px;
+    border-radius: 10px;
 }
