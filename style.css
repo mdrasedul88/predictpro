@@ -1,184 +1,78 @@
-/* ১. গ্লোবাল এবং ব্যাকগ্রাউন্ড সেটআপ */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* ১. গ্লোবাল সেটআপ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+    background-color: #0f1216; 
+    color: #ffffff; 
+    font-family: 'Inter', sans-serif; 
+    padding-top: 75px; /* হেডারের জন্য জায়গা */
+    padding-bottom: 80px; /* ফুটারের জন্য জায়গা */
 }
 
-body {
-    background-color: #000000; /* পিচ ব্ল্যাক ব্যাকগ্রাউন্ড */
-    color: #ffffff;
-    font-family: 'Inter', sans-serif;
-    line-height: 1.6;
+/* ২. হেডার ডিজাইন (Sticky Header) */
+#main-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 65px;
+    background: rgba(18, 18, 18, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* ২. ইনডেক্স পেজের কন্টেন্ট ডিজাইন (ম্যাচ কার্ড) */
-.container {
-    padding: 20px;
-    max-width: 600px; /* মোবাইল অ্যাপের মতো ফিল পেতে কম রাখা হয়েছে */
-    margin: 80px auto; /* হেডারের জন্য উপরে মার্জিন */
-}
-
-.match-card {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
-
-.league-name {
-    font-size: 12px;
-    color: #888;
-    text-transform: uppercase;
-    margin-bottom: 10px;
+.header-container {
+    width: 95%;
+    margin: 0 auto;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
-.live-badge {
-    background: #ff3b30;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: bold;
-}
+.logo { font-size: 18px; font-weight: 800; color: #fff; text-transform: uppercase; }
+.logo .pro { color: #00ff88; }
+.btn-join { background: #00ff88; color: #000; padding: 6px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; font-size: 13px; }
 
-.teams {
+/* ৩. বটম নেভিগেশন (Mobile App Style Footer) */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 65px;
+    background: rgba(18, 18, 18, 0.95);
+    backdrop-filter: blur(10px);
     display: flex;
     justify-content: space-around;
     align-items: center;
-    margin: 15px 0;
-    font-weight: 700;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 9999;
 }
 
-.vs {
-    color: #00ff88;
-    font-style: italic;
-}
+.nav-item { text-decoration: none; color: #8e8e8e; display: flex; flex-direction: column; align-items: center; font-size: 11px; }
+.nav-item.active { color: #00ff88; }
 
-.prediction-box {
-    background: #252525;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-    border: 1px dashed #444;
-}
-
-.pick {
-    color: #00ff88;
-    font-weight: bold;
-}
-
-.view-btn {
-    display: block;
-    text-align: center;
-    background: #333;
-    color: #fff;
-    text-decoration: none;
-    padding: 10px;
-    margin-top: 15px;
-    border-radius: 8px;
-    font-size: 14px;
-}
-
-.ad-placeholder {
-    background: #111;
-    border: 1px solid #222;
-    height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    color: #444;
-    font-size: 12px;
-}
-/* ১. বডি এবং মেইন কন্টেনার ঠিক করা */
-body {
-    background-color: #0f1216; /* ডার্ক প্রিমিয়াম ব্যাকগ্রাউন্ড */
-    color: #ffffff;
-    padding-top: 80px; /* হেডারের জন্য গ্যাপ */
-    padding-bottom: 90px; /* ফুটারের জন্য গ্যাপ */
-}
-
-.container {
-    max-width: 500px; /* মোবাইল ভিউর জন্য পারফেক্ট */
-    margin: 0 auto;
-    padding: 0 15px;
-}
-
-/* ২. টাইটেল ডিজাইন */
-h1 { font-size: 24px; margin-bottom: 5px; color: #fff; }
-p { font-size: 14px; color: #888; margin-bottom: 30px; }
-.section-title { font-size: 18px; margin-bottom: 15px; border-left: 4px solid #00ff88; padding-left: 10px; }
-
-/* ৩. ম্যাচ কার্ড ডিজাইন (যা আপনার স্ক্রিনশটে নেই) */
+/* ৪. ল্যান্ডিং পেজ ও ম্যাচ কার্ড */
+.container { max-width: 500px; margin: 0 auto; padding: 0 15px; }
 .match-card {
     background: #1c2127;
     border-radius: 12px;
     padding: 15px;
     margin-bottom: 20px;
     border: 1px solid #2d343c;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
-.league-name {
-    font-size: 11px;
-    color: #00ff88;
-    text-transform: uppercase;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
+.league-name { font-size: 11px; color: #00ff88; text-transform: uppercase; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; }
+.live-badge { background: #ff3b30; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
 
-.teams {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 15px 0;
-    font-size: 16px;
-    font-weight: 700;
-}
+.teams { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; font-size: 16px; font-weight: bold; }
+.vs { color: #ff3b30; font-style: italic; font-size: 12px; }
 
-.vs { color: #ff3b30; font-size: 12px; font-weight: 400; }
-
-/* ৪. প্রেডিকশন বক্স */
-.prediction-box {
-    background: #252b33;
-    padding: 10px;
-    border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    border: 1px dashed #444;
-}
-
+.prediction-box { background: #252b33; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; font-size: 13px; border: 1px dashed #444; }
 .pick { color: #00ff88; font-weight: bold; }
 
-/* ৫. বাটন ডিজাইন */
-.view-btn {
-    display: block;
-    text-align: center;
-    background: #00ff88;
-    color: #000;
-    text-decoration: none;
-    padding: 10px;
-    margin-top: 15px;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 14px;
-}
+.view-btn { display: block; text-align: center; background: #00ff88; color: #000; text-decoration: none; padding: 12px; margin-top: 15px; border-radius: 8px; font-weight: bold; }
 
-/* ৬. অ্যাড স্লট */
-.ad-placeholder {
-    background: #15191e;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #222;
-    margin-bottom: 20px;
-    color: #444;
-    font-size: 12px;
-}
+.ad-placeholder { background: #15191e; height: 80px; display: flex; align-items: center; justify-content: center; border: 1px solid #222; margin-bottom: 20px; color: #444; font-size: 12px; }
