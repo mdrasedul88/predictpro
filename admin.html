@@ -1,1 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Secure Admin Panel</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .admin-box { background: var(--card-dark); padding: 30px; border-radius: 15px; border: 1px solid #334155; max-width: 500px; margin: 50px auto; }
+        input, textarea, select { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 8px; }
+        .btn-post { background: #00ff88; color: black; font-weight: bold; border: none; cursor: pointer; padding: 15px; border-radius: 8px; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="admin-box">
+        <h2 style="text-align: center;">Post New Match</h2>
+        <input type="password" id="adminKey" placeholder="Enter Secret Admin Password">
+        <hr style="border: 0.5px solid #334155; margin: 20px 0;">
+        <input type="text" id="mName" placeholder="Match Name (e.g. Brazil vs France)">
+        <input type="datetime-local" id="mTime">
+        <select id="mCat">
+            <option value="Football">Football</option>
+            <option value="Cricket">Cricket</option>
+            <option value="Basketball">Basketball</option>
+        </select>
+        <textarea id="mDesc" rows="5" placeholder="Write SEO Friendly Analysis..."></textarea>
+        <button class="btn-post" onclick="publishMatch()">Publish Now</button>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function publishMatch() {
+            const pass = document.getElementById('adminKey').value;
+            if(pass !== "MY_PASSWORD_123") { // আপনার পছন্দের পাসওয়ার্ড দিন
+                alert("Unauthorized!"); return;
+            }
+
+            const { error } = await supabase.from('matches').insert([{
+                match_name: document.getElementById('mName').value,
+                match_time: document.getElementById('mTime').value,
+                description: document.getElementById('mDesc').value,
+                category: document.getElementById('mCat').value
+            }]);
+
+            if (error) alert("Error: " + error.message);
+            else { alert("Success! Match is now Live on Blog."); location.reload(); }
+        }
+    </script>
+</body>
+</html>
 
