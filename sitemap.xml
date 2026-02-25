@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://mdrasedul88.github.io/</loc>
+    <lastmod>2026-02-26</lastmod>
+    <priority>1.00</priority>
+  </url>
+  <url>
+    <loc>https://mdrasedul88.github.io/blog.html</loc>
+    <lastmod>2026-02-26</lastmod>
+    <priority>0.80</priority>
+  </url>
 
-<url>
-<loc>https://yourdomain.com/</loc>
-<priority>1.0</priority>
-</url>
-
-<url>
-<loc>https://yourdomain.com/free</loc>
-</url>
-
-<url>
-<loc>https://yourdomain.com/vip</loc>
-</url>
-
+  <url>
+    <loc>https://mdrasedul88.github.io/blog-details.html</loc>
+    <lastmod>2026-02-26</lastmod>
+    <priority>0.70</priority>
+  </url>
 </urlset>
