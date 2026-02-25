@@ -13,6 +13,9 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
 <style>
 
 body{
@@ -43,6 +46,8 @@ body{
     border-radius:999px;
     font-weight:600;
     transition:0.3s;
+    border:none;
+    cursor:pointer;
 }
 
 .btn-gold:hover{
@@ -89,6 +94,91 @@ View Prediction
 </section>
 
 </main>
+
+<!-- ================= Auth Modal ================= -->
+
+<div id="authModal" class="hidden fixed inset-0 flex justify-center items-center z-50 backdrop-blur-lg">
+
+<div class="w-[95%] max-w-md card">
+
+<h2 class="text-2xl font-bold text-yellow-400 mb-6 text-center">
+Account Login
+</h2>
+
+<input id="email" type="email" placeholder="Email"
+class="w-full p-3 mb-4 rounded bg-slate-900 border border-slate-700">
+
+<input id="password" type="password" placeholder="Password"
+class="w-full p-3 mb-6 rounded bg-slate-900 border border-slate-700">
+
+<button onclick="loginUser()" class="btn-gold w-full mb-4">
+Login
+</button>
+
+<button onclick="registerUser()" class="btn-gold w-full">
+Register
+</button>
+
+</div>
+</div>
+
+<script>
+
+/* ===== Supabase Client Setup ===== */
+
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "YOUR_PUBLIC_ANON_KEY";
+
+const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
+
+/* ===== Modal Control ===== */
+
+function openAuthModal(){
+    document.getElementById("authModal").classList.remove("hidden");
+}
+
+/* ===== Auth System ===== */
+
+async function loginUser(){
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const { error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+    });
+
+    if(error){
+        alert(error.message);
+        return;
+    }
+
+    location.reload();
+}
+
+async function registerUser(){
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    const { error } = await supabaseClient.auth.signUp({
+        email,
+        password
+    });
+
+    if(error){
+        alert(error.message);
+        return;
+    }
+
+    alert("Registration successful. Check email.");
+}
+
+</script>
 
 </body>
 </html>
