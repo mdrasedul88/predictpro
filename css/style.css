@@ -95,3 +95,90 @@ body {
     color: #444;
     font-size: 12px;
 }
+/* ১. বডি এবং মেইন কন্টেনার ঠিক করা */
+body {
+    background-color: #0f1216; /* ডার্ক প্রিমিয়াম ব্যাকগ্রাউন্ড */
+    color: #ffffff;
+    padding-top: 80px; /* হেডারের জন্য গ্যাপ */
+    padding-bottom: 90px; /* ফুটারের জন্য গ্যাপ */
+}
+
+.container {
+    max-width: 500px; /* মোবাইল ভিউর জন্য পারফেক্ট */
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* ২. টাইটেল ডিজাইন */
+h1 { font-size: 24px; margin-bottom: 5px; color: #fff; }
+p { font-size: 14px; color: #888; margin-bottom: 30px; }
+.section-title { font-size: 18px; margin-bottom: 15px; border-left: 4px solid #00ff88; padding-left: 10px; }
+
+/* ৩. ম্যাচ কার্ড ডিজাইন (যা আপনার স্ক্রিনশটে নেই) */
+.match-card {
+    background: #1c2127;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #2d343c;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.league-name {
+    font-size: 11px;
+    color: #00ff88;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.teams {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.vs { color: #ff3b30; font-size: 12px; font-weight: 400; }
+
+/* ৪. প্রেডিকশন বক্স */
+.prediction-box {
+    background: #252b33;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    border: 1px dashed #444;
+}
+
+.pick { color: #00ff88; font-weight: bold; }
+
+/* ৫. বাটন ডিজাইন */
+.view-btn {
+    display: block;
+    text-align: center;
+    background: #00ff88;
+    color: #000;
+    text-decoration: none;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* ৬. অ্যাড স্লট */
+.ad-placeholder {
+    background: #15191e;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #222;
+    margin-bottom: 20px;
+    color: #444;
+    font-size: 12px;
+}
