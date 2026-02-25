@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIP Predictions | Sports Pro</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="style.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .vip-locked { text-align: center; padding: 50px 20px; background: #1e293b; border-radius: 15px; margin-top: 20px; }
-        .payment-box { border: 1px solid #00ff88; padding: 20px; margin-top: 20px; border-radius: 10px; }
-        .btn-pay { background: #d1006c; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .vip-locked { text-align: center; padding: 40px 20px; background: #1e293b; border-radius: 15px; margin-top: 20px; border: 1px solid #334155; }
+        .payment-box { border: 1px solid #00ff88; padding: 20px; margin-top: 20px; border-radius: 10px; background: #0f172a; }
+        .btn-pay { background: #00ff88; color: #020617; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        .prediction-card { background: #1e293b; padding: 20px; border-radius: 12px; margin-top: 15px; border-left: 4px solid #00ff88; }
     </style>
 </head>
 <body class="dark-mode">
@@ -17,9 +18,15 @@
 
     <main class="container">
         <div id="vip-screen">
-            <p style="text-align: center;">Checking access status...</p>
+            <div style="text-align: center; padding: 50px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #00ff88;"></i>
+                <p style="margin-top: 15px;">Checking access status...</p>
+            </div>
         </div>
     </main>
+
+    <script src="js/header.js"></script>
+    <script src="js/footer.js"></script>
 
     <script>
         const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
@@ -29,55 +36,71 @@
         async function checkAccess() {
             const screen = document.getElementById('vip-screen');
             
-            // ১. ইউজার লগইন আছে কি না চেক
+            // ১. ইউজার লগইন চেক
             const { data: { user } } = await _supabase.auth.getUser();
 
             if (!user) {
                 screen.innerHTML = `
                     <div class="vip-locked">
+                        <i class="fas fa-lock" style="font-size: 3rem; color: #ff4d4d; margin-bottom: 15px;"></i>
                         <h2>Login Required</h2>
                         <p>Please login to access VIP predictions.</p>
-                        <button onclick="window.location.href='login.html'">Login / Sign Up</button>
+                        <button class="btn-pay" onclick="window.location.href='index.html'">Go to Login Page</button>
                     </div>`;
                 return;
             }
 
-            // ২. ইউজার প্রোফাইল থেকে VIP স্ট্যাটাস চেক
-            const { data: profile } = await _supabase
+            // ২. প্রোফাইল থেকে VIP স্ট্যাটাস চেক
+            const { data: profile, error: profileError } = await _supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle(); // single() এর বদলে maybeSingle() ব্যবহার করা হয়েছে যাতে এরর না দেয়
 
             if (profile && profile.is_vip) {
                 loadVIPMatches();
             } else {
                 screen.innerHTML = `
                     <div class="vip-locked">
+                        <i class="fas fa-crown" style="font-size: 3rem; color: #fbbf24; margin-bottom: 15px;"></i>
                         <h2>VIP Membership Required</h2>
-                        <p>Current Subscription Fee: <b>${profile?.subscription_fee || 'Contact Admin'}</b></p>
+                        <p>Unlock premium expert analysis and predictions.</p>
                         <div class="payment-box">
-                            <h3>Manual Payment Steps:</h3>
-                            <p>Send fee to: <b>bKash/Nagad: 017XXXXXXXX</b></p>
-                            <p>After payment, send your Email & Transaction ID to our Telegram/WhatsApp.</p>
-                            <button class="btn-pay" onclick="window.open('https://t.me/yourusername')">Contact Admin to Unlock</button>
+                            <p>Subscription Status: <span style="color: #ff4d4d;">Inactive</span></p>
+                            <button class="btn-pay" onclick="window.open('https://t.me/yourusername')">
+                                <i class="fab fa-telegram"></i> Contact Admin to Unlock
+                            </button>
                         </div>
                     </div>`;
             }
         }
 
         async function loadVIPMatches() {
-            const { data, error } = await _supabase.from('vip_matches').select('*');
             const screen = document.getElementById('vip-screen');
+            const { data, error } = await _supabase.from('vip_matches').select('*');
             
             if (error) {
-                screen.innerHTML = "<p>Access Denied!</p>";
+                screen.innerHTML = `
+                    <div class="vip-locked">
+                        <h2>Access Denied</h2>
+                        <p>Your account is not authorized to view this content.</p>
+                    </div>`;
                 return;
             }
 
-            screen.innerHTML = "<h1>Premium VIP Matches</h1>";
+            if (!data || data.length === 0) {
+                screen.innerHTML = "<h2>No VIP Matches Available Right Now.</h2>";
+                return;
+            }
+
+            screen.innerHTML = "<h1 style='color: #00ff88; margin-bottom: 20px;'>Premium VIP Matches</h1>";
             data.forEach(match => {
-                screen.innerHTML += `<div class="prediction-card">...${match.match_name}...</div>`;
+                screen.innerHTML += `
+                    <div class="prediction-card">
+                        <span style="background: #00ff88; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">${match.category || 'VIP'}</span>
+                        <h3 style="margin: 10px 0;">${match.match_name}</h3>
+                        <p style="color: #94a3b8; font-size: 0.9rem;">${match.description}</p>
+                    </div>`;
             });
         }
 
@@ -85,4 +108,3 @@
     </script>
 </body>
 </html>
-
