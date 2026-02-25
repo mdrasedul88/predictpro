@@ -11,7 +11,7 @@
         body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
         .container { max-width: 600px; margin: 20px auto; padding: 15px; }
         
-        /* Lock Screen Style */
+        /* Lock Screen */
         #lock-screen { 
             text-align: center; padding: 60px 20px; background: #1e293b; 
             border-radius: 15px; border: 1px solid #334155; margin-top: 50px;
@@ -22,15 +22,15 @@
             border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; font-size: 1rem;
         }
 
-        /* VIP Content Card */
+        /* VIP Match Card */
         .match-card { 
             background: #1e293b; border-radius: 12px; padding: 20px; 
-            margin-bottom: 15px; border-left: 5px solid #facc15; 
+            margin-bottom: 15px; border-left: 5px solid #facc15; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .match-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.8rem; color: #94a3b8; }
         .match-name { font-size: 1.2rem; font-weight: bold; color: #fff; margin: 5px 0; }
         .prediction-box { background: #0f172a; padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px dashed #334155; }
-        .status-badge { background: #facc15; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        .vip-tag { background: #facc15; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -41,8 +41,8 @@
     <div id="lock-screen">
         <div class="lock-icon"><i class="fas fa-lock"></i></div>
         <h3>Content Locked</h3>
-        <p style="color: #94a3b8;">VIP প্রেডিকশন দেখতে হলে আপনাকে অবশ্যই মেম্বার হতে হবে। সাইন-আপ ছাড়া VIP সুবিধা পাওয়া অসম্ভব।</p>
-        <button class="btn-unlock" onclick="redirectToAuth()">Unlock Now / Sign Up</button>
+        <p style="color: #94a3b8;" id="lock-msg">VIP প্রেডিকশন দেখতে হলে আপনাকে অবশ্যই মেম্বার হতে হবে। সাইন-আপ ছাড়া VIP সুবিধা পাওয়া অসম্ভব।</p>
+        <button class="btn-unlock" id="action-btn" onclick="redirectToLogin()">Unlock Now / Sign Up</button>
     </div>
 
     <div id="vip-content" style="display: none;">
@@ -57,42 +57,52 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    async function checkAccess() {
-        const { data: { user } } = await _supabase.auth.getUser();
+    async function checkVipAccess() {
+        // সেশন চেক (লগইন করা আছে কি না)
+        const { data: { session } } = await _supabase.auth.getSession();
 
-        // ১. ইউজার লগইন না থাকলে সরাসরি লক স্ক্রিন দেখাবে এবং বাটনে ক্লিক করলে লগইন পেজে নিবে
-        if (!user) {
-            return; 
+        if (!session) {
+            // লগইন করা না থাকলে লক স্ক্রিনই থাকবে
+            console.log("No Session Found");
+            return;
         }
 
-        // ২. ইউজার লগইন থাকলে তার VIP স্ট্যাটাস চেক করা
-        const { data: profile } = await _supabase
+        const user = session.user;
+
+        // প্রোফাইল থেকে VIP স্ট্যাটাস চেক করা
+        const { data: profile, error } = await _supabase
             .from('profiles')
             .select('is_vip, expiry_date')
             .eq('id', user.id)
             .single();
 
         if (profile && profile.is_vip) {
-            // মেয়াদের তারিখ চেক
-            const expiry = new Date(profile.expiry_date);
+            const expiry = profile.expiry_date ? new Date(profile.expiry_date) : null;
             const today = new Date();
 
-            if (expiry > today || profile.expiry_date === null) {
-                // ইউজার VIP হলে কন্টেন্ট দেখাও
+            if (!expiry || expiry > today) {
+                // ইউজার VIP এবং মেয়াদ আছে - আনলক করুন
                 document.getElementById('lock-screen').style.display = 'none';
                 document.getElementById('vip-content').style.display = 'block';
-                loadVipMatches();
+                fetchVipData();
             } else {
-                alert("আপনার VIP মেয়াদের সময় শেষ হয়ে গেছে!");
-                window.location.href = 'profile.html';
+                // মেয়াদ শেষ
+                document.getElementById('lock-msg').innerText = "আপনার VIP মেয়াদের সময় শেষ হয়ে গেছে! অনুগ্রহ করে রিনিউ করুন।";
+                document.getElementById('action-btn').innerText = "Renew VIP";
+                document.getElementById('action-btn').onclick = () => window.location.href = 'profile.html';
             }
+        } else {
+            // লগইন আছে কিন্তু VIP নয়
+            document.getElementById('lock-msg').innerText = "আপনি বর্তমানে Free Member। VIP প্রেডিকশন দেখতে মেম্বারশিপ প্রয়োজন।";
+            document.getElementById('action-btn').innerText = "Upgrade to VIP";
+            document.getElementById('action-btn').onclick = () => window.location.href = 'profile.html';
         }
     }
 
-    async function loadVipMatches() {
-        // আপনার ডাটাবেসের 'vip_matches' টেবিল থেকে ডাটা আনা
+    async function fetchVipData() {
+        // 'vip_matches' টেবিল থেকে ডাটা লোড
         const { data: matches, error } = await _supabase
-            .from('vip_matches') // আপনার VIP টেবিলের নাম এটি কি না নিশ্চিত করুন
+            .from('vip_matches')
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -102,14 +112,14 @@
                 <div class="match-card">
                     <div class="match-header">
                         <span>${match.category}</span>
-                        <span class="status-badge">VIP ONLY</span>
+                        <span class="vip-tag">VIP ONLY</span>
                     </div>
                     <div class="match-name">${match.match_name}</div>
                     <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">
                         <i class="far fa-clock"></i> ${new Date(match.match_time).toLocaleString()}
                     </div>
                     <div class="prediction-box">
-                        <strong>Prediction:</strong><br>
+                        <strong style="color: #facc15;">Premium Prediction:</strong>
                         <p style="margin-top: 5px; line-height: 1.5;">${match.description}</p>
                     </div>
                 </div>
@@ -119,11 +129,12 @@
         }
     }
 
-    function redirectToAuth() {
+    function redirectToLogin() {
         window.location.href = 'login.html';
     }
 
-    checkAccess();
+    // পেজ লোড হলে চেক শুরু হবে
+    window.onload = checkVipAccess;
 </script>
 </body>
 </html>
