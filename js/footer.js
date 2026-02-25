@@ -1,28 +1,22 @@
-const bottomNavHTML = `
-<div class="bottom-nav">
-    <a href="index.html" class="nav-item active">
-        <i class="icon-home"></i>
-        <span>Home</span>
-    </a>
-    <a href="predictions.html" class="nav-item">
-        <i class="icon-predict"></i>
-        <span>Predictions</span>
-    </a>
-    <a href="live.html" class="nav-item">
-        <div class="live-dot-container">
-            <span class="live-dot"></span>
-        </div>
-        <span>Live</span>
-    </a>
-    <a href="vip.html" class="nav-item">
-        <i class="icon-star"></i>
-        <span>VIP Tips</span>
-    </a>
-    <a href="menu.html" class="nav-item">
-        <i class="icon-menu"></i>
-        <span>More</span>
-    </a>
-</div>
-`;
-
-document.body.insertAdjacentHTML('beforeend', bottomNavHTML);
+<footer class="fixed bottom-0 left-0 right-0 bg-[#1e293b]/90 backdrop-blur-md border-t border-gray-800 z-50">
+    <div class="flex justify-around items-center py-2">
+        <a href="#" class="flex flex-col items-center text-yellow-500">
+            <span class="text-xs mt-1">Home</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-400">
+            <span class="text-xs mt-1 font-bold text-red-500 animate-pulse">● Live</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-400">
+            <span class="text-xs mt-1">Free</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-400">
+            <span class="text-xs mt-1">VIP</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-400">
+            <span class="text-xs mt-1">Blog</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-400">
+            <span class="text-xs mt-1">Profile</span>
+        </a>
+    </div>
+</footer>
