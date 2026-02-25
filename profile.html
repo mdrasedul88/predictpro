@@ -1,1 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Sports Prediction</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* প্রোফাইল পেজের জন্য এক্সট্রা ডিজাইন */
+        .profile-container {
+            margin-top: 20px;
+        }
+        .profile-card {
+            background: var(--card-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .profile-card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        .info-label { color: var(--text-secondary); }
+        
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            color: var(--text-primary);
+            border-bottom: 1px solid #1e293b;
+            text-decoration: none;
+        }
+        .menu-link i {
+            margin-right: 15px;
+            width: 20px;
+            color: var(--accent-color);
+        }
+        .menu-link:last-child { border-bottom: none; }
+
+        .btn-logout {
+            width: 100%;
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="header-root"></div>
+
+    <main class="container profile-container">
+        
+        <div class="profile-card">
+            <h2><i class="fa-solid fa-circle-user"></i> Account Info</h2>
+            <div class="info-item">
+                <span class="info-label">Name:</span>
+                <span>User Name</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status:</span>
+                <span style="color: var(--accent-color);">Free Member</span>
+            </div>
+        </div>
+
+        <div class="profile-card">
+            <h2><i class="fa-solid fa-shield-halved"></i> Support & Policy</h2>
+            <a href="mailto:support@yourdomain.com" class="menu-link">
+                <i class="fa-solid fa-envelope"></i> Contact Us
+            </a>
+            <a href="#" class="menu-link">
+                <i class="fa-solid fa-user-lock"></i> Privacy Policy
+            </a>
+            <a href="#" class="menu-link">
+                <i class="fa-solid fa-file-contract"></i> Terms & Conditions
+            </a>
+        </div>
+
+        <button class="btn-logout" onclick="logoutSession()">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
+
+    </main>
+
+    <div id="footer-root"></div>
+
+    <script src="js/header.js"></script>
+    <script src="js/footer.js"></script>
+
+    <script>
+        // Logout Functionality
+        function logoutSession() {
+            if(confirm("Are you sure you want to logout?")) {
+                // এখানে আপনার সেশন বা লোকাল স্টোরেজ ডিলিট করার কোড বসবে
+                alert("Logging out...");
+                window.location.href = "index.html"; // লগআউট করে হোম পেজে পাঠাবে
+            }
+        }
+    </script>
+</body>
+</html>
 
