@@ -1,1 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Predictions | Sports Pro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .vip-locked { text-align: center; padding: 50px 20px; background: #1e293b; border-radius: 15px; margin-top: 20px; }
+        .payment-box { border: 1px solid #00ff88; padding: 20px; margin-top: 20px; border-radius: 10px; }
+        .btn-pay { background: #d1006c; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body class="dark-mode">
+    <div id="header-root"></div>
+
+    <main class="container">
+        <div id="vip-screen">
+            <p style="text-align: center;">Checking access status...</p>
+        </div>
+    </main>
+
+    <script>
+        const SUPABASE_URL = 'YOUR_URL';
+        const SUPABASE_KEY = 'YOUR_ANON_KEY';
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function checkAccess() {
+            const screen = document.getElementById('vip-screen');
+            
+            // ১. ইউজার লগইন আছে কি না চেক
+            const { data: { user } } = await _supabase.auth.getUser();
+
+            if (!user) {
+                screen.innerHTML = `
+                    <div class="vip-locked">
+                        <h2>Login Required</h2>
+                        <p>Please login to access VIP predictions.</p>
+                        <button onclick="window.location.href='login.html'">Login / Sign Up</button>
+                    </div>`;
+                return;
+            }
+
+            // ২. ইউজার প্রোফাইল থেকে VIP স্ট্যাটাস চেক
+            const { data: profile } = await _supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (profile && profile.is_vip) {
+                loadVIPMatches();
+            } else {
+                screen.innerHTML = `
+                    <div class="vip-locked">
+                        <h2>VIP Membership Required</h2>
+                        <p>Current Subscription Fee: <b>${profile?.subscription_fee || 'Contact Admin'}</b></p>
+                        <div class="payment-box">
+                            <h3>Manual Payment Steps:</h3>
+                            <p>Send fee to: <b>bKash/Nagad: 017XXXXXXXX</b></p>
+                            <p>After payment, send your Email & Transaction ID to our Telegram/WhatsApp.</p>
+                            <button class="btn-pay" onclick="window.open('https://t.me/yourusername')">Contact Admin to Unlock</button>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        async function loadVIPMatches() {
+            const { data, error } = await _supabase.from('vip_matches').select('*');
+            const screen = document.getElementById('vip-screen');
+            
+            if (error) {
+                screen.innerHTML = "<p>Access Denied!</p>";
+                return;
+            }
+
+            screen.innerHTML = "<h1>Premium VIP Matches</h1>";
+            data.forEach(match => {
+                screen.innerHTML += `<div class="prediction-card">...${match.match_name}...</div>`;
+            });
+        }
+
+        checkAccess();
+    </script>
+</body>
+</html>
 
