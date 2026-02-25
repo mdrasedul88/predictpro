@@ -13,3 +13,13 @@ async function generateSecurityToken(){
     })
     .eq("id", user.data.user.id);
 }
+async function checkSession(){
+
+    const { data } = await supabase.auth.getSession();
+
+    if(!data.session){
+        return;
+    }
+
+    generateSecurityToken();
+}
