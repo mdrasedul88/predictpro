@@ -48,24 +48,16 @@
     <div id="footer-placeholder"></div>
 
     <script>
-    // হেডার লোড করার সঠিক নিয়ম
-    async function loadComponents() {
-        try {
-            // হেডার
-            const headerRes = await fetch('components/header.js');
-            const headerCode = await headerRes.text();
-            eval(headerCode); // JS এর ভেতর থেকে HTML সেট করবে
-
-            // ফুটার
-            const footerRes = await fetch('components/footer.js');
-            const footerCode = await footerRes.text();
-            eval(footerCode);
-        } catch (err) {
-            console.error("ফাইল লোড হতে সমস্যা হচ্ছে:", err);
-        }
-    }
-    loadComponents();
+    // হেডার লোড করা
+    fetch('components/header.js')
+        .then(response => response.text())
+        .then(data => {
+            // যদি আপনার JS ফাইলে সরাসরি HTML কোড থাকে
+            // তবে সরাসরি বসাতে পারেন অথবা eval() ব্যবহার করতে পারেন।
+            // সহজ উপায় হলো .js ফাইলের ভেতর HTML স্ট্রিং রাখা।
+        });
 </script>
+
 
 </body>
 </html>
