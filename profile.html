@@ -3,47 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile | Sports Pro</title>
+    <title>My Account | Sports Pro</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; }
-        .profile-container { max-width: 500px; margin: 50px auto; padding: 20px; background: #1e293b; border-radius: 15px; border: 1px solid #334155; text-align: center; }
-        .profile-pic { font-size: 4rem; color: #00ff88; margin-bottom: 10px; }
-        .info-box { text-align: left; background: #0f172a; padding: 15px; border-radius: 10px; margin-top: 20px; }
-        .info-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1e293b; }
-        .label { color: #94a3b8; font-size: 0.9rem; }
-        .value { color: #00ff88; font-weight: bold; }
-        .btn-logout { background: #ff4d4d; color: white; border: none; padding: 10px 20px; border-radius: 8px; margin-top: 20px; cursor: pointer; width: 100%; font-weight: bold; }
-        .vip-badge { background: #facc15; color: #020617; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
+        body { background: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 20px auto; padding: 15px; }
+        
+        /* Account Info Section */
+        .account-card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; margin-bottom: 20px; }
+        .user-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 15px; }
+        .user-header i { font-size: 3rem; color: #00ff88; }
+        .user-header h2 { margin: 0; font-size: 1.2rem; color: #fff; }
+        
+        /* Menu Items */
+        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0f172a; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.3s; border: 1px solid transparent; }
+        .menu-item:hover { border-color: #00ff88; }
+        .menu-left { display: flex; align-items: center; gap: 12px; }
+        .menu-left i { color: #00ff88; width: 20px; }
+        
+        /* Sub-info Box (Hidden by default) */
+        #account-details { display: none; background: #020617; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
+        .info-label { color: #94a3b8; }
+        .info-value { color: #fff; font-weight: bold; }
+
+        /* AdSense Friendly Links */
+        .legal-links { margin-top: 30px; text-align: center; font-size: 0.8rem; }
+        .legal-links a { color: #94a3b8; text-decoration: none; margin: 0 10px; }
+        .legal-links a:hover { color: #00ff88; }
+
+        .btn-logout { background: #ef4444; color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="profile-container">
-    <div class="profile-pic"><i class="fas fa-user-circle"></i></div>
-    <h2 id="user-display-name">Loading...</h2>
-    
-    <div class="info-box">
-        <div class="info-item">
-            <span class="label">Email:</span>
-            <span class="value" id="user-email">-</span>
+<div class="container">
+    <div class="account-card">
+        <div class="user-header">
+            <i class="fas fa-user-circle"></i>
+            <div>
+                <h2 id="display-name">Loading...</h2>
+                <span id="display-status" style="font-size: 0.8rem; color: #00ff88;">Free Member</span>
+            </div>
         </div>
-        <div class="info-item">
-            <span class="label">Phone:</span>
-            <span class="value" id="user-phone">-</span>
+
+        <div class="menu-item" onclick="toggleDetails()">
+            <div class="menu-left">
+                <i class="fas fa-id-card"></i>
+                <span>Account Information</span>
+            </div>
+            <i class="fas fa-chevron-down" id="arrow"></i>
         </div>
-        <div class="info-item">
-            <span class="label">Status:</span>
-            <span id="user-status" class="value">Free User</span>
+
+        <div id="account-details">
+            <div class="info-row">
+                <span class="info-label">Email:</span>
+                <span class="info-value" id="info-email">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Mobile:</span>
+                <span class="info-value" id="info-phone">-</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Subscription:</span>
+                <span class="info-value" id="info-sub">Free Plan</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Valid Until:</span>
+                <span class="info-value" id="info-expiry">Never</span>
+            </div>
         </div>
-        <div class="info-item">
-            <span class="label">Expiry Date:</span>
-            <span class="value" id="user-expiry">No Active Plan</span>
+
+        <div class="menu-item" onclick="window.location.href='privacy-policy.html'">
+            <div class="menu-left">
+                <i class="fas fa-user-shield"></i>
+                <span>Privacy Policy</span>
+            </div>
+            <i class="fas fa-external-link-alt" style="font-size: 0.8rem; color: #94a3b8;"></i>
         </div>
+
+        <div class="menu-item" onclick="window.location.href='terms.html'">
+            <div class="menu-left">
+                <i class="fas fa-file-contract"></i>
+                <span>Terms & Conditions</span>
+            </div>
+            <i class="fas fa-external-link-alt" style="font-size: 0.8rem; color: #94a3b8;"></i>
+        </div>
+
+        <button class="btn-logout" onclick="logout()">Logout</button>
     </div>
 
-    <button class="btn-logout" onclick="handleLogout()">Logout</button>
+    <div class="legal-links">
+        <a href="about.html">About Us</a> | 
+        <a href="contact.html">Contact Us</a>
+    </div>
 </div>
 
 <script>
@@ -51,39 +106,43 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    async function loadProfile() {
+    async function loadUserData() {
         const { data: { user } } = await _supabase.auth.getUser();
-        
-        if (!user) {
-            window.location.href = 'login.html';
-            return;
-        }
+        if (!user) { window.location.href = 'login.html'; return; }
 
-        // ডাটাবেস টেবিল থেকে তথ্য আনা
-        const { data: profile, error } = await _supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
+        const { data: profile } = await _supabase.from('profiles').select('*').eq('id', user.id).single();
 
         if (profile) {
-            document.getElementById('user-display-name').innerText = profile.full_name || "User";
-            document.getElementById('user-email').innerText = profile.email;
-            document.getElementById('user-phone').innerText = profile.phone_number || "N/A";
+            document.getElementById('display-name').innerText = profile.full_name || "User";
+            document.getElementById('info-email').innerText = profile.email;
+            document.getElementById('info-phone').innerText = profile.phone_number || "N/A";
             
             if (profile.is_vip) {
-                document.getElementById('user-status').innerHTML = 'VIP <span class="vip-badge">Active</span>';
-                document.getElementById('user-expiry').innerText = profile.expiry_date ? new Date(profile.expiry_date).toLocaleDateString() : "Lifetime";
+                document.getElementById('display-status').innerText = "VIP Member";
+                document.getElementById('info-sub').innerText = "VIP Plan";
+                document.getElementById('info-expiry').innerText = profile.expiry_date ? new Date(profile.expiry_date).toLocaleDateString() : "Lifetime";
             }
         }
     }
 
-    async function handleLogout() {
+    function toggleDetails() {
+        const details = document.getElementById('account-details');
+        const arrow = document.getElementById('arrow');
+        if (details.style.display === "block") {
+            details.style.display = "none";
+            arrow.className = "fas fa-chevron-down";
+        } else {
+            details.style.display = "block";
+            arrow.className = "fas fa-chevron-up";
+        }
+    }
+
+    async function logout() {
         await _supabase.auth.signOut();
         window.location.href = 'index.html';
     }
 
-    loadProfile();
+    loadUserData();
 </script>
 </body>
 </html>
