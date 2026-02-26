@@ -3,129 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Premium Signals | Sports Pro</title>
+    <title>VIP Premium Signals</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --gold: #facc15; --neon-green: #00ff88; --dark-bg: #060b18;
-            --card-bg: #111827; --error-red: #ef4444;
+            --card-bg: #111827;
         }
         body { background: var(--dark-bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
-        .container { max-width: 450px; margin: auto; padding: 10px; min-height: 85vh; }
-        
-        /* Header & Nav Styling */
-        #site-header { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); padding: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); position: sticky; top: 0; z-index: 100; }
-        #site-header nav { display: flex; justify-content: center; gap: 20px; }
-        #site-header nav a { color: #94a3b8; text-decoration: none; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .container { max-width: 450px; margin: auto; padding: 10px; }
+        header, footer { display: none; }
 
-        /* Premium Card Design */
+        /* Smooth Blinking Animations for Glow */
+        @keyframes glow-cricket { 0%, 100% { box-shadow: 0 0 5px #00ff88; } 50% { box-shadow: 0 0 12px #00ff88; } }
+        @keyframes glow-football { 0%, 100% { box-shadow: 0 0 5px #3b82f6; } 50% { box-shadow: 0 0 12px #3b82f6; } }
+        @keyframes glow-basketball { 0%, 100% { box-shadow: 0 0 5px #f97316; } 50% { box-shadow: 0 0 12px #f97316; } }
+
+        .badge-cricket { background: #00ff88; color: #000; animation: glow-cricket 1.5s infinite; }
+        .badge-football { background: #3b82f6; color: #fff; animation: glow-football 1.5s infinite; }
+        .badge-basketball { background: #f97316; color: #fff; animation: glow-basketball 1.5s infinite; }
+
+        /* Super Slim Card Styling */
         .match-card {
-            background: var(--card-bg); border-radius: 16px; padding: 18px; 
-            margin-bottom: 20px; border: 2px solid var(--neon-green); /* Neon Border */
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.15);
+            background: var(--card-bg); border-radius: 12px; padding: 12px 15px; 
+            margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .category-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; background: rgba(0, 255, 136, 0.1); color: var(--neon-green); border: 1px solid var(--neon-green); }
-        .header-info { font-size: 0.7rem; color: #64748b; display: flex; gap: 10px; font-weight: 600; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .category-badge { padding: 1px 8px; border-radius: 4px; font-size: 0.55rem; font-weight: bold; text-transform: uppercase; }
+        .live-dot { font-size: 0.6rem; color: #ef4444; font-weight: bold; display: flex; align-items: center; gap: 4px; }
 
-        .vs-text { font-size: 1.25rem; font-weight: 900; text-align: center; margin: 15px 0; color: #fff; letter-spacing: 0.5px; }
+        .vs-text { font-size: 1rem; font-weight: 700; text-align: center; margin: 2px 0; color: #fff; }
         
-        .prediction-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
-        .predict-box { background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.05); }
-        .label { display: block; font-size: 0.6rem; color: var(--gold); font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
-        .blur-val { filter: blur(7px); user-select: none; font-size: 0.85rem; opacity: 0.5; color: #94a3b8; }
-        .clear-val { color: var(--neon-green); font-weight: 800; font-size: 1rem; }
+        /* Time and Date Info Row */
+        .info-row { 
+            display: flex; justify-content: center; gap: 15px; 
+            font-size: 0.65rem; color: #94a3b8; margin-bottom: 10px; 
+        }
+        .info-row span { display: flex; align-items: center; gap: 4px; }
 
-        .unlock-btn { width: 100%; margin-top: 18px; padding: 12px; border-radius: 10px; background: linear-gradient(135deg, #00ff88, #00cc6a); color: #020617; border: none; font-weight: 900; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; }
+        /* Prediction Row Styling */
+        .prediction-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .predict-box { 
+            background: rgba(255, 255, 255, 0.03); padding: 6px; border-radius: 8px; 
+            text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .label { display: block; font-size: 0.55rem; color: var(--gold); font-weight: bold; }
+        .blur-val { filter: blur(6px); user-select: none; font-size: 0.8rem; }
+        .clear-val { color: var(--neon-green); font-weight: bold; font-size: 0.9rem; }
 
-        .status-msg { text-align: center; margin-top: 60px; font-size: 0.9rem; font-weight: 600; color: #64748b; }
+        .unlock-btn {
+            width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px;
+            background: linear-gradient(45deg, var(--neon-green), #05d675);
+            color: #020617; border: none; font-weight: 800; font-size: 0.75rem; cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-<header id="site-header">
-    <nav>
-        <a href="index.html">Home</a>
-        <a href="profile.html">Profile</a>
-    </nav>
+<header id="site-header" style="background: #0f172a; padding: 10px; text-align: center;">
+    <nav><a href="index.html" style="color:white; text-decoration:none; margin:0 10px; font-size:0.8rem;">HOME</a> | 
+    <a href="profile.html" style="color:white; text-decoration:none; margin:0 10px; font-size:0.8rem;">PROFILE</a></nav>
 </header>
 
 <div class="container">
-    <h2 style="text-align:center; color: var(--neon-green); font-size: 1.4rem; margin: 25px 0; font-weight: 900;">
-        <i class="fas fa-crown"></i> PREMIUM VIP
-    </h2>
-    
+    <h2 style="text-align:center; color: var(--neon-green); font-size: 1.2rem; margin: 10px 0;">PREMIUM VIP</h2>
     <div id="vip-list">
-        <div class="status-msg">
-            <i class="fas fa-circle-notch fa-spin fa-2x"></i>
-            <p>Syncing VIP Signals...</p>
-        </div>
+        <p style="text-align:center; color: #4b5563; font-size:0.8rem;">Syncing Signals...</p>
     </div>
 </div>
+
+<footer id="site-footer" style="padding: 10px; text-align: center; color: #4b5563; font-size: 0.6rem;">
+    &copy; 2026 Sports Pro International
+</footer>
 
 <script>
     const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    async function loadVIP() {
-        const list = document.getElementById('vip-list');
-        try {
-            // ১. সেশন চেক
-            const { data: { session } } = await _supabase.auth.getSession();
-            let isVip = false;
-            let isLoggedIn = !!session;
-
-            if (session) {
-                const { data: profile } = await _supabase.from('profiles').select('is_vip, expiry_date').eq('id', session.user.id).single();
-                if (profile && profile.is_vip && new Date(profile.expiry_date) > new Date()) isVip = true;
-            }
-
-            // ২. ডাটা ফেচ (টেবিল নাম 'vip_matches' ছোট হাতের কি না তা নিশ্চিত করুন)
-            const { data: matches, error } = await _supabase.from('vip_matches').select('*').order('created_at', { ascending: false });
-
-            if (error) throw error;
-
-            if (!matches || matches.length === 0) {
-                list.innerHTML = `<div class="status-msg">No signals found in database.</div>`;
-                return;
-            }
-
-            // ৩. রেন্ডারিং
-            list.innerHTML = matches.map(m => {
-                const mDate = m.created_at ? new Date(m.created_at).toLocaleDateString('en-GB', {day: '2-digit', month: 'short'}) : 'Today';
-                const mTime = m.created_at ? new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Live';
-
-                return `
-                <div class="match-card">
-                    <div class="card-header">
-                        <span class="category-badge">${m.category || 'VIP'}</span>
-                        <div class="header-info">
-                            <span><i class="far fa-calendar-alt"></i> ${mDate}</span>
-                            <span><i class="far fa-clock"></i> ${mTime}</span>
-                        </div>
-                    </div>
-                    <div class="vs-text">${m.match_name || 'Match'}</div>
-                    <div class="prediction-row">
-                        <div class="predict-box">
-                            <span class="label">PICK</span>
-                            <span class="${isVip ? 'clear-val' : 'blur-val'}">${isVip ? m.description : '••••••••'}</span>
-                        </div>
-                        <div class="predict-box">
-                            <span class="label">ODDS</span>
-                            <span class="${isVip ? 'clear-val' : 'blur-val'}">${isVip ? (m.odds || '1.90') : '0.00'}</span>
-                        </div>
-                    </div>
-                    ${!isVip ? `<button class="unlock-btn" onclick="location.href='${isLoggedIn ? 'subscription.html' : 'login.html'}'">Unlock Now</button>` : ''}
-                </div>`;
-            }).join('');
-
-        } catch (err) {
-            list.innerHTML = `<div class="status-msg" style="color:#ef4444;">Error loading data. Please check table name!</div>`;
+    async function init() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        let isVip = false;
+        if (session) {
+            document.getElementById('site-header').style.display = 'block';
+            document.getElementById('site-footer').style.display = 'block';
+            const { data: profile } = await _supabase.from('profiles').select('*').eq('id', session.user.id).single();
+            if (profile && profile.is_vip && new Date(profile.expiry_date) > new Date()) isVip = true;
         }
+        loadMatches(isVip, !!session);
     }
-    window.onload = loadVIP;
+
+    async function loadMatches(isVip, isLoggedIn) {
+        const { data: matches } = await _supabase.from('vip_matches').select('*');
+        const list = document.getElementById('vip-list');
+        if (!matches || matches.length === 0) { list.innerHTML = "<p style='text-align:center;'>No signals found.</p>"; return; }
+
+        list.innerHTML = matches.map(m => {
+            const cat = (m.category || '').toLowerCase();
+            let bClass = 'badge-default';
+            if (cat.includes('cricket')) bClass = 'badge-cricket';
+            else if (cat.includes('football')) bClass = 'badge-football';
+            else if (cat.includes('basketball')) bClass = 'badge-basketball';
+
+            // Fix Invalid Date logic
+            const mDate = m.created_at ? new Date(m.created_at).toLocaleDateString() : 'Today';
+            const mTime = m.created_at ? new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Live';
+
+            return `
+            <div class="match-card">
+                <div class="card-header">
+                    <span class="category-badge ${bClass}">${m.category || 'VIP'}</span>
+                    <span class="live-dot"><i class="fas fa-circle"></i> LIVE</span>
+                </div>
+                <div class="vs-text">${m.match_name}</div>
+                
+                <div class="info-row">
+                    <span><i class="far fa-calendar-alt"></i> ${mDate}</span>
+                    <span><i class="far fa-clock"></i> ${mTime}</span>
+                </div>
+
+                <div class="prediction-row">
+                    <div class="predict-box">
+                        <span class="label">PICK</span>
+                        <span class="${isVip ? 'clear-val' : 'blur-val'}">${isVip ? m.description : 'WINNER'}</span>
+                    </div>
+                    <div class="predict-box">
+                        <span class="label">ODDS</span>
+                        <span class="${isVip ? 'clear-val' : 'blur-val'}">${isVip ? (m.odds || '1.90') : '0.00'}</span>
+                    </div>
+                </div>
+                ${!isVip ? `<button class="unlock-btn" onclick="location.href='${isLoggedIn ? 'subscription.html' : 'login.html'}'"><i class="fas fa-unlock"></i> UNLOCK NOW</button>` : ''}
+            </div>`;
+        }).join('');
+    }
+    window.onload = init;
 </script>
 </body>
 </html>
