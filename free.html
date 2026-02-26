@@ -107,22 +107,27 @@
 <script src="js/footer.js"></script>
 
 <script>
+    // সার্ভার কানেকশন সেটিংস
     const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // ১. ডাটা লোড করার মেইন ফাংশন
     async function loadFreeData() {
         const listContainer = document.getElementById('predictions-list');
+        if (!listContainer) return;
+
         try {
             const { data: { user } } = await _supabase.auth.getUser();
 
-            // ডাটা লোড করা
+            // প্রেডিকশন টেবিল থেকে ডাটা আনা
             const { data: matches, error: matchError } = await _supabase
                 .from('free_predictions')
                 .select('*');
 
             if (matchError) throw matchError;
 
+            // ইউজার কোনগুলো আনলক করেছে তা চেক করা
             let unlockedIds = [];
             if (user) {
                 const { data: unlockedData } = await _supabase
@@ -136,13 +141,12 @@
             }
 
             if (!matches || matches.length === 0) {
-                listContainer.innerHTML = "<p style='text-align:center;'>No matches found.</p>";
+                listContainer.innerHTML = "<p style='text-align:center; color:#94a3b8;'>No predictions available.</p>";
                 return;
             }
 
             listContainer.innerHTML = '';
             matches.forEach(match => {
-                // এখানে আইডিটি নিশ্চিত করছি
                 const matchID = match.id ? String(match.id) : null;
                 if (!matchID) return;
 
@@ -150,20 +154,20 @@
                 
                 listContainer.innerHTML += `
                     <div class="prediction-card">
-                        <span class="badge">${match.category || 'Match'}</span>
+                        <span class="badge">${match.category || 'VIP'}</span>
                         <div class="match-title">${match.match_name}</div>
                         <div class="stats-grid">
                             <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
                             <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
                         </div>
                         ${isUnlocked ? `
-                            <div class="unlocked-content">
-                                <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 5px;">Analysis Result:</p>
-                                <div style="font-weight: 800; color: #fff; font-size: 1.1rem;">${match.description}</div>
+                            <div class="unlocked-content" style="background:#1e293b; padding:12px; border-radius:10px; border:1px solid #334155; margin-top:10px;">
+                                <span style="color:#22c55e; font-size:11px; font-weight:bold;">● UNLOCKED ANALYSIS</span>
+                                <div style="font-weight: 800; color: #fff; margin-top:5px;">${match.description}</div>
                             </div>
                         ` : `
                             <div class="lock-overlay">
-                                <button class="btn-unlock" onclick="startFinalUnlockFlow('${matchID}', ${!!user})">
+                                <button class="btn-unlock" onclick="handleProductionUnlock('${matchID}', ${!!user})">
                                     <i class="fas fa-play-circle"></i> Unlock Prediction
                                 </button>
                             </div>
@@ -173,19 +177,19 @@
             });
         } catch (err) {
             console.error(err);
-            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Sync Error. Check Database Policy.</p>";
+            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Sync Error. Please check Supabase Connection.</p>";
         }
     }
 
-    async function startFinalUnlockFlow(targetMId, isLoggedIn) {
-        // আইডি না থাকলে বাটন কাজই করবে না
-        if (!targetMId || targetMId === "undefined") {
-            alert("Error: Page data is old. Please reload.");
+    // ২. আনলক করার প্রসেস
+    async function handleProductionUnlock(mId, isLoggedIn) {
+        if (!mId || mId === "undefined") {
+            alert("Error: Data out of sync. Please refresh.");
             return;
         }
 
         if (!isLoggedIn) {
-            alert("Please login first.");
+            alert("Please login to your account.");
             window.location.href = 'login.html';
             return;
         }
@@ -203,19 +207,19 @@
                 try {
                     const { data: { user } } = await _supabase.auth.getUser();
                     
-                    // এখানে আমরা একদম নিশ্চিত করছি যে একটি Number যাচ্ছে
+                    // এখানে আমরা নিশ্চিত করছি যে ডাটাবেসে Number ফরম্যাটে আইডি যাচ্ছে
                     const { error: insError } = await _supabase
                         .from('unlocked_predictions')
                         .insert([{ 
                             user_id: user.id, 
-                            prediction_id: parseInt(targetMId) 
+                            prediction_id: parseInt(mId) 
                         }]);
 
                     if (insError) throw insError;
 
                     modal.style.display = 'none';
-                    alert("Successful! Enjoy your VIP tip.");
-                    loadFreeData();
+                    alert("Success! Prediction Unlocked.");
+                    loadFreeData(); // ডাটা রিফ্রেশ
                 } catch (e) {
                     alert("Database Error: " + e.message);
                     modal.style.display = 'none';
@@ -224,8 +228,10 @@
         }, 1000);
     }
 
+    // পেজ লোড হলে ফাংশন কল
     document.addEventListener('DOMContentLoaded', loadFreeData);
 </script>
+
 
 
 </body>
