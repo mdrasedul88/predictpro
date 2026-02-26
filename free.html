@@ -123,7 +123,12 @@
         try {
             const { data: { user } } = await _supabase.auth.getUser();
 
-            const { data: matches, error: mErr } = await _supabase.from('free_predictions').select('*');
+            // এখানে .order যোগ করা হয়েছে যাতে নতুন প্রেডিকশন উপরে থাকে
+            const { data: matches, error: mErr } = await _supabase
+                .from('free_predictions')
+                .select('*')
+                .order('id', { ascending: false });
+
             if (mErr) throw mErr;
 
             let unlockedList = [];
