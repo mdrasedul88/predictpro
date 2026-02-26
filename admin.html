@@ -19,72 +19,49 @@
         .btn-premium { background: linear-gradient(45deg, #00ff88, #05d675); color: #000; }
         .section-divider { margin: 40px 0; border: 1px dashed #334155; }
         
-        /* New Table Styling */
+        /* Table Styling */
         .req-card { background: #0f172a; border: 1px solid #1e293b; padding: 15px; margin-bottom: 15px; border-radius: 12px; font-size: 0.85rem; }
         .req-card p { margin: 5px 0; color: #cbd5e1; }
         .req-card b { color: #00ff88; }
-        .trx-box { background: rgba(0, 255, 136, 0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid rgba(0, 255, 136, 0.2); font-family: monospace; display: inline-block; margin-top: 5px; }
+        .trx-box { background: rgba(0, 255, 136, 0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid rgba(0, 255, 136, 0.2); font-family: monospace; display: inline-block; margin-top: 5px; word-break: break-all; }
     </style>
 </head>
 <body>
 
     <div class="admin-box">
         <h2><i class="fas fa-plus-circle"></i> Post New Match Update</h2>
-        
         <label>Admin Password</label>
         <input type="password" id="adminKey" placeholder="Enter Secret Admin Password">
-        
         <label>Match Name</label>
         <input type="text" id="mName" placeholder="e.g. Real Madrid vs Barcelona">
-        
         <label>Match Schedule</label>
         <input type="datetime-local" id="mTime">
-        
         <label>Select Sport</label>
-        <select id="mCat">
-            <option value="Football">Football</option>
-            <option value="Cricket">Cricket</option>
-        </select>
-        
+        <select id="mCat"><option value="Football">Football</option><option value="Cricket">Cricket</option></select>
         <label>Analysis Description</label>
         <textarea id="mDesc" rows="4" placeholder="Write match analysis..."></textarea>
-        
         <button class="btn-post" id="publishBtn" onclick="publishMatch()">Publish Now</button>
-
         <div class="section-divider"></div>
 
         <h2 style="color: #facc15;"><i class="fas fa-star"></i> Post VIP Prediction</h2>
-        
         <label>VIP Match Name</label>
         <input type="text" id="vName" placeholder="e.g. BAN vs AFG">
-
         <label>Select Category</label>
-        <select id="vCat">
-            <option value="CRICKET">CRICKET</option>
-            <option value="FOOTBALL">FOOTBALL</option>
-        </select>
-
+        <select id="vCat"><option value="CRICKET">CRICKET</option><option value="FOOTBALL">FOOTBALL</option></select>
         <label>VIP Pick (Prediction)</label>
         <input type="text" id="vPick" placeholder="e.g. Bangladesh to Win">
-
         <label>Odds</label>
         <input type="text" id="vOdds" placeholder="e.g. 1.90">
-
         <label>Match Time (Direct Text)</label>
         <input type="text" id="vTime" placeholder="e.g. 7:30 PM">
-
         <button class="btn-post btn-premium" onclick="publishVipMatch()">Publish VIP Signal</button>
-
         <div class="section-divider"></div>
 
         <h2><i class="fas fa-crown"></i> User VIP Management</h2>
-        
         <label>User Registered Email</label>
         <input type="email" id="userEmail" placeholder="user@gmail.com">
-        
         <label>VIP Expiry Date</label>
         <input type="date" id="expiryDate">
-        
         <button class="btn-post btn-vip" id="vipBtn" onclick="makeUserVIP()">Activate VIP Status</button>
     </div>
 
@@ -98,6 +75,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ'; 
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // সাধারণ ম্যাচ পাবলিশ
         async function publishMatch() {
             const pass = document.getElementById('adminKey').value;
             if(pass !== "35895") { alert("Unauthorized!"); return; }
@@ -111,6 +89,7 @@
             else { alert("Success! Match is Live."); location.reload(); }
         }
 
+        // VIP ম্যাচ পাবলিশ
         async function publishVipMatch() {
             const pass = document.getElementById('adminKey').value;
             if(pass !== "35895") { alert("Unauthorized!"); return; }
@@ -125,6 +104,7 @@
             else { alert("Success! VIP Match Published."); location.reload(); }
         }
 
+        // সরাসরি ইমেইল দিয়ে VIP বানানো
         async function makeUserVIP() {
             const pass = document.getElementById('adminKey').value;
             const email = document.getElementById('userEmail').value;
@@ -141,12 +121,19 @@
             finally { btn.innerText = "Activate VIP Status"; btn.disabled = false; }
         }
 
-        // পেমেন্ট রিকোয়েস্ট লোড করার ফাংশন
+        // --- মূল সমস্যা সমাধান (Load Requests Function) ---
         async function loadRequests() {
+            // ডাটাবেস থেকে সকল 'pending' রিকোয়েস্ট নিয়ে আসা
             const { data: requests, error } = await _supabase
                 .from('payment_requests')
                 .select('*')
-                .eq('status', 'pending');
+                .ilike('status', 'pending'); // কেস সেনসিটিভ সমস্যা এড়াতে ilike ব্যবহার করা হয়েছে
+
+            if (error) {
+                console.error("Fetch Error:", error);
+                document.getElementById('payment-list').innerHTML = "Error loading data.";
+                return;
+            }
 
             const list = document.getElementById('payment-list');
             if (requests && requests.length > 0) {
@@ -158,8 +145,8 @@
                         <p>🆔 <b>Transaction ID:</b></p>
                         <div class="trx-box">${req.transaction_id || 'No ID Provided'}</div>
                         <div style="margin-top:15px; display:flex; gap:10px;">
-                            <button class="btn-post" style="padding:10px; font-size:0.8rem;" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">APPROVE VIP</button>
-                            <button class="btn-post" style="padding:10px; font-size:0.8rem; background:#ef4444; color:white;" onclick="rejectRequest(${req.id})">REJECT</button>
+                            <button class="btn-post" style="padding:10px; font-size:0.8rem; flex:1;" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">APPROVE</button>
+                            <button class="btn-post" style="padding:10px; font-size:0.8rem; background:#ef4444; color:white; flex:1;" onclick="rejectRequest(${req.id})">REJECT</button>
                         </div>
                     </div>
                 `).join('');
@@ -168,15 +155,16 @@
             }
         }
 
+        // পেমেন্ট এপ্রুভ এবং মেয়াদ নির্ধারণ
         async function approveUser(email, days, requestId) {
             const pass = document.getElementById('adminKey').value;
-            if(pass !== "35895") { alert("পাসওয়ার্ড দিন!"); return; }
+            if(pass !== "35895") { alert("Password please!"); return; }
 
             let expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + days);
+            expiryDate.setDate(expiryDate.getDate() + parseInt(days));
             const finalDateStr = expiryDate.toISOString().split('T')[0];
 
-            // ১. VIP প্রোফাইল আপডেট
+            // ১. প্রোফাইল আপডেট
             const { error: profileErr } = await _supabase
                 .from('profiles')
                 .update({ is_vip: true, expiry_date: finalDateStr })
@@ -185,24 +173,24 @@
             if (!profileErr) {
                 // ২. রিকোয়েস্ট স্ট্যাটাস আপডেট
                 await _supabase.from('payment_requests').update({ status: 'approved' }).eq('id', requestId);
-                alert(`SUCCESS! ${email} এখন VIP মেম্বার। মেয়াদ: ${finalDateStr}`);
-                loadRequests();
+                alert(`SUCCESS! ${email} is VIP until ${finalDateStr}`);
+                loadRequests(); // লিস্ট রিফ্রেশ
             } else {
-                alert("প্রোফাইল আপডেটে সমস্যা: " + profileErr.message);
+                alert("Error: " + profileErr.message);
             }
         }
 
+        // রিকোয়েস্ট বাতিল
         async function rejectRequest(requestId) {
             const pass = document.getElementById('adminKey').value;
-            if(pass !== "35895") { alert("পাসওয়ার্ড দিন!"); return; }
-            
-            if(confirm("আপনি কি এই রিকোয়েস্টটি ডিলিট করতে চান?")) {
+            if(pass !== "35895") { alert("Password!"); return; }
+            if(confirm("Reject this request?")) {
                 await _supabase.from('payment_requests').update({ status: 'rejected' }).eq('id', requestId);
-                alert("Request Rejected.");
                 loadRequests();
             }
         }
 
+        // পেজ লোড হলে ফাংশনটি চালু হবে
         loadRequests();
     </script>
 </body>
