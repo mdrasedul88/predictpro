@@ -5,122 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIP Predictions | Sports Pro</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; }
-        .container { max-width: 600px; margin: 20px auto; padding: 15px; }
-        
-        /* Match Card Design */
-        .match-card { 
-            background: #1e293b; border-radius: 12px; padding: 20px; 
-            margin-bottom: 20px; border: 1px solid #334155; position: relative; overflow: hidden;
-        }
-        .match-name { font-size: 1.1rem; font-weight: bold; color: #fff; margin-bottom: 10px; }
-        
-        /* Blur Effect for Locked Content */
-        .locked-content { 
-            filter: blur(5px); user-select: none; pointer-events: none; 
-            background: rgba(15, 23, 42, 0.5); padding: 10px; border-radius: 8px;
-        }
-        .unlock-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(30, 41, 59, 0.7); z-index: 10;
-        }
-        .btn-unlock-small {
-            background: #00ff88; color: #020617; border: none; padding: 8px 15px;
-            border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 0.9rem;
-        }
-
-        /* Subscription Modal */
-        #sub-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center;
-        }
-        .modal-box { background: #1e293b; padding: 25px; border-radius: 15px; width: 90%; max-width: 400px; text-align: center; }
-        .plan-btn { 
-            display: block; width: 100%; padding: 12px; margin: 10px 0; 
-            background: #334155; color: white; border: 1px solid #00ff88; border-radius: 8px; cursor: pointer; 
-        }
+        body { background: #0f172a; color: white; font-family: sans-serif; }
+        .match-card { background: #1e293b; padding: 20px; margin: 15px; border-radius: 12px; position: relative; border: 1px solid #334155; }
+        .blur-text { filter: blur(6px); user-select: none; margin: 10px 0; background: #0f172a; padding: 10px; border-radius: 5px; }
+        .lock-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.6); }
+        .btn-unlock { background: #00ff88; color: #000; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        header, footer { display: none; } /* শুরুতে হাইড থাকবে */
     </style>
 </head>
 <body>
 
+<header id="main-header"> </header>
+
 <div class="container">
-    <h2 style="text-align: center; color: #00ff88;">Premium VIP List</h2>
-    <div id="vip-list-container">
-        </div>
+    <h2 style="text-align: center; color: #00ff88; margin-top: 20px;">Premium VIP Predictions</h2>
+    <div id="vip-list"> </div>
 </div>
 
-<div id="sub-modal">
-    <div class="modal-box">
-        <h3 style="color: #facc15;">Choose VIP Plan</h3>
-        <p style="font-size: 0.8rem; color: #94a3b8;">প্ল্যান সিলেক্ট করে আমাদের সাথে যোগাযোগ করুন।</p>
-        <button class="plan-btn">7 Days Access</button>
-        <button class="plan-btn">15 Days Access</button>
-        <button class="plan-btn">1 Month Access</button>
-        <button class="plan-btn">6 Months Access</button>
-        <button class="plan-btn">1 Year Access</button>
-        <button onclick="document.getElementById('sub-modal').style.display='none'" style="background:none; border:none; color:red; margin-top:10px; cursor:pointer;">Close</button>
-    </div>
-</div>
+<footer id="main-footer"> </footer>
 
 <script>
     const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    let isUserVip = false;
-
-    async function initVipPage() {
+    async function checkUserAndLoad() {
         const { data: { session } } = await _supabase.auth.getSession();
-        
+        let isVip = false;
+
         if (session) {
+            // শর্ত ৮: একাউন্ট থাকলে হেডার-ফুটার দেখাবে
+            document.getElementById('main-header').style.display = 'block';
+            document.getElementById('main-footer').style.display = 'block';
+
+            // শর্ত ৩ ও ৭: VIP স্ট্যাটাস ও এক্সপায়ারি চেক
             const { data: profile } = await _supabase.from('profiles').select('*').eq('id', session.user.id).single();
-            if (profile && profile.is_vip) {
-                const expiry = new Date(profile.expiry_date);
-                if (expiry > new Date()) isUserVip = true;
+            if (profile && profile.is_vip && new Date(profile.expiry_date) > new Date()) {
+                isVip = true;
             }
         }
-        loadMatches();
-    }
 
-    async function loadMatches() {
-        const { data: matches } = await _supabase.from('vip_matches').select('*').order('created_at', { ascending: false });
-        const container = document.getElementById('vip-list-container');
+        const { data: matches } = await _supabase.from('vip_matches').select('*');
+        const list = document.getElementById('vip-list');
 
-        container.innerHTML = matches.map(match => `
+        list.innerHTML = matches.map(m => `
             <div class="match-card">
-                <div class="match-name">${match.match_name}</div>
-                ${!isUserVip ? `
-                    <div class="locked-content">
-                        <strong>Prediction:</strong> This is a hidden premium tip for VIP members only.
-                    </div>
-                    <div class="unlock-overlay">
-                        <button class="btn-unlock-small" onclick="handleUnlock()">Unlock Now</button>
-                    </div>
-                ` : `
-                    <div class="prediction-box" style="color: #00ff88;">
-                        <strong>Prediction:</strong> ${match.description}
-                    </div>
-                `}
+                <h3>${m.match_name}</h3>
+                <div class="${isVip ? '' : 'blur-text'}">
+                    <strong>Prediction:</strong> ${isVip ? m.description : 'This content is hidden for non-vip members. Please unlock to see.'}
+                </div>
+                ${!isVip ? `<div class="lock-overlay"><button class="btn-unlock" onclick="handleUnlock(${!!session})">Unlock Now</button></div>` : ''}
             </div>
         `).join('');
     }
 
-    async function handleUnlock() {
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (!session) {
-            alert("আপনাকে আগে একটি একাউন্ট তৈরি করতে হবে!");
+    function handleUnlock(isLoggedIn) {
+        if (!isLoggedIn) {
+            // শর্ত ২: একাউন্ট না থাকলে লগইন পেজে পাঠাবে
             window.location.href = 'login.html';
         } else {
-            // একাউন্ট আছে কিন্তু ভিআইপি নয়, তাই প্ল্যান দেখাবে
-            document.getElementById('sub-modal').style.display = 'flex';
+            // শর্ত ৪: একাউন্ট আছে কিন্তু VIP না হলে সাবস্ক্রিপশন পেজে পাঠাবে
+            window.location.href = 'subscription.html';
         }
     }
 
-    window.onload = initVipPage;
+    window.onload = checkUserAndLoad;
 </script>
 </body>
 </html>
