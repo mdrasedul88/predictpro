@@ -48,40 +48,54 @@
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function loadRequests() {
-    // এখানে .select('*') এর পর কোনো ফিল্টার ছাড়াই একবার চেক করি ডাটা আসে কি না
-    const { data: requests, error } = await _supabase
-        .from('payment_requests')
-        .select('*'); 
+            const { data: requests, error } = await _supabase
+                .from('payment_requests')
+                .select('*')
+                .eq('status', 'pending');
 
-    if (error) {
-        console.error("Fetch Error:", error);
-        document.getElementById('payment-list').innerHTML = "Error: " + error.message;
-        return;
-    }
+            const list = document.getElementById('payment-list');
+            if (requests && requests.length > 0) {
+                list.innerHTML = requests.map(req => `
+                    <div class="req-card">
+                        <p>👤 <b>Email:</b> ${req.user_email}</p>
+                        <p>📦 <b>Plan:</b> ${req.plan_name} (${req.duration} Days)</p>
+                        <p>💳 <b>Method:</b> ${req.payment_method} (${req.mobile})</p>
+                        <p>🆔 <b>TrxID:</b> <span class="trx-box">${req.transaction_id || 'N/A'}</span></p>
+                        <div style="margin-top:15px; display:flex; gap:10px;">
+                            <button class="btn-post" style="padding:10px; font:0.8rem; flex:1;" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">APPROVE</button>
+                            <button class="btn-post" style="padding:10px; font:0.8rem; background:#ef4444; color:white; flex:1;" onclick="rejectRequest(${req.id})">REJECT</button>
+                        </div>
+                    </div>`).join('');
+            } else {
+                list.innerHTML = "<p style='text-align:center; color:#94a3b8;'>No pending requests found.</p>";
+            }
+        }
 
-    const list = document.getElementById('payment-list');
-    
-    // শুধু 'pending' ডাটাগুলো আলাদা করছি জাভাস্ক্রিপ্ট দিয়ে
-    const pendingRequests = requests ? requests.filter(r => String(r.status).toLowerCase().trim() === 'pending') : [];
+        async function approveUser(email, days, requestId) {
+            const pass = document.getElementById('adminKey').value;
+            if(pass !== "35895") { alert("Unauthorized!"); return; }
 
-    if (pendingRequests.length > 0) {
-        list.innerHTML = pendingRequests.map(req => `
-            <div class="req-card">
-                <p>👤 <b>User:</b> ${req.user_email}</p>
-                <p>📦 <b>Plan:</b> ${req.plan_name}</p>
-                <p>💳 <b>Method:</b> ${req.payment_method} (${req.mobile})</p>
-                <p>🆔 <b>TrxID:</b> <span class="trx-box">${req.transaction_id || 'N/A'}</span></p>
-                <div style="margin-top:15px; display:flex; gap:10px;">
-                    <button class="btn-post" style="padding:10px; flex:1;" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">APPROVE</button>
-                    <button class="btn-post" style="padding:10px; background:#ef4444; color:white; flex:1;" onclick="rejectRequest(${req.id})">REJECT</button>
-                </div>
-            </div>
-        `).join('');
-    } else {
-        list.innerHTML = "<p style='text-align:center; color:#94a3b8;'>পেন্ডিং লিস্ট খালি। ডাটাবেসে চেক করুন স্ট্যাটাস কলামে ঠিক কি লেখা আছে।</p>";
-    }
-}
+            let expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + parseInt(days));
+            const finalDateStr = expiryDate.toISOString().split('T')[0];
 
+            const { error: profileErr } = await _supabase.from('profiles').update({ is_vip: true, expiry_date: finalDateStr }).eq('email', email);
+
+            if (!profileErr) {
+                await _supabase.from('payment_requests').update({ status: 'approved' }).eq('id', requestId);
+                alert("User Approved!");
+                loadRequests();
+            } else { alert("Error: " + profileErr.message); }
+        }
+
+        async function rejectRequest(requestId) {
+            const pass = document.getElementById('adminKey').value;
+            if(pass !== "35895") { alert("Unauthorized!"); return; }
+            if(confirm("Reject this?")) {
+                await _supabase.from('payment_requests').update({ status: 'rejected' }).eq('id', requestId);
+                loadRequests();
+            }
+        }
 
         loadRequests();
         setInterval(loadRequests, 10000); // প্রতি ১০ সেকেন্ডে রিফ্রেশ হবে
