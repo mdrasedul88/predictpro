@@ -107,7 +107,6 @@
 <script src="js/footer.js"></script>
 
 <script>
-    // Supabase Configuration with Cache-Bust
     const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -117,14 +116,14 @@
         try {
             const { data: { user } } = await _supabase.auth.getUser();
 
-            // Fetch Predictions
+            // ১. ডাটা লোড করা
             const { data: matches, error: matchError } = await _supabase
                 .from('free_predictions')
                 .select('*');
 
             if (matchError) throw matchError;
 
-            // Fetch Unlocked List
+            // ২. আনলক করা আইডিগুলো আনা
             let unlockedIds = [];
             if (user) {
                 const { data: unlockedData } = await _supabase
@@ -138,34 +137,34 @@
             }
 
             if (!matches || matches.length === 0) {
-                listContainer.innerHTML = "<p style='text-align:center;'>No match data found.</p>";
+                listContainer.innerHTML = "<p style='text-align:center; color:#94a3b8;'>No matches available at the moment.</p>";
                 return;
             }
 
             listContainer.innerHTML = '';
             matches.forEach(match => {
-                // Ensure ID is a valid string
-                const matchIDString = match.id ? String(match.id) : null;
-                if (!matchIDString) return;
+                // আইডি স্ট্রিং হিসেবে নিশ্চিত করা
+                const mID = match.id ? String(match.id) : null;
+                if (!mID) return;
 
-                const isUnlocked = unlockedIds.includes(matchIDString);
+                const isUnlocked = unlockedIds.includes(mID);
                 
                 listContainer.innerHTML += `
-                    <div class="prediction-card">
-                        <span class="badge">${match.category || 'VIP'}</span>
-                        <div class="match-title">${match.match_name}</div>
-                        <div class="stats-grid">
-                            <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
-                            <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
+                    <div class="prediction-card" style="margin-bottom: 20px;">
+                        <span class="badge" style="background:#7b61ff; padding:5px 10px; border-radius:5px;">${match.category || 'VIP'}</span>
+                        <h3 class="match-title" style="margin:10px 0;">${match.match_name}</h3>
+                        <div class="stats-grid" style="display:flex; justify-content:space-around; margin-bottom:15px;">
+                            <div class="stat-box"><span>PICK</span><br><strong>${match.pick}</strong></div>
+                            <div class="stat-box"><span>ODDS</span><br><strong>${match.odds}</strong></div>
                         </div>
                         ${isUnlocked ? `
-                            <div class="unlocked-content" style="background:#1a1a2e; padding:15px; border:1px solid #7b61ff; border-radius:12px;">
-                                <span style="color:#7b61ff; font-weight:bold; font-size:12px;">PREDICTION:</span>
-                                <div style="font-weight: 800; color: #fff; font-size:1.1rem; margin-top:5px;">${match.description}</div>
+                            <div class="unlocked-content" style="background:#1e293b; padding:15px; border-radius:12px; border:1px solid #7b61ff;">
+                                <p style="color:#7b61ff; font-weight:bold; margin:0;">Analysis Result:</p>
+                                <p style="color:#fff; font-weight:800; font-size:1.1rem; margin-top:5px;">${match.description}</p>
                             </div>
                         ` : `
                             <div class="lock-overlay">
-                                <button class="btn-unlock" onclick="handleFinalUnlock('${matchIDString}', ${!!user})">
+                                <button class="btn-unlock" onclick="handleFinalUnlockFlow('${mID}', ${!!user})" style="width:100%; padding:12px; background:#7b61ff; color:#white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">
                                     <i class="fas fa-play-circle"></i> Unlock Prediction
                                 </button>
                             </div>
@@ -174,15 +173,16 @@
                 `;
             });
         } catch (err) {
-            console.error(err);
-            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Sync Error. Check Internet.</p>";
+            console.error("Critical Error:", err);
+            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Database Sync Error. Check Supabase Policy.</p>";
         }
     }
 
-    async function handleFinalUnlock(mId, isLoggedIn) {
-        // ID check to prevent "null/undefined" error
-        if (!mId || mId === "undefined" || mId === "null") {
-            alert("Match ID error. Please hard refresh the page.");
+    async function handleFinalUnlockFlow(targetId, isLoggedIn) {
+        // null value এরর চিরতরে বন্ধ করার জন্য চেক
+        if (!targetId || targetId === "undefined" || targetId === "null") {
+            alert("Match ID error. Refreshing the page...");
+            location.reload();
             return;
         }
 
@@ -205,23 +205,23 @@
                 try {
                     const { data: { user } } = await _supabase.auth.getUser();
                     
-                    // Force converting to Integer to match BigInt type
-                    const numericId = parseInt(mId);
+                    // এখানে আইডিকে স্পষ্টভাবে Number-এ কনভার্ট করা হচ্ছে
+                    const numericID = parseInt(targetId);
                     
                     const { error: insError } = await _supabase
                         .from('unlocked_predictions')
                         .insert([{ 
                             user_id: user.id, 
-                            prediction_id: numericId 
+                            prediction_id: numericID 
                         }]);
 
                     if (insError) throw insError;
 
                     modal.style.display = 'none';
-                    alert("Success! Prediction Unlocked.");
+                    alert("Successful! Check the analysis now.");
                     loadFreeData();
                 } catch (e) {
-                    alert("Database Sync Error: " + e.message);
+                    alert("Database Error: " + e.message);
                     modal.style.display = 'none';
                 }
             }
@@ -230,6 +230,7 @@
 
     document.addEventListener('DOMContentLoaded', loadFreeData);
 </script>
+
 
 </body>
 </html>
