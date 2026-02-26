@@ -3,86 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium Membership - Sports Pro</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>VIP Access - Sports Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --main-green: #00ff88; --bg-dark: #020617; --card-bg: #0f172a; }
-        body { background: var(--bg-dark); color: white; font-family: sans-serif; margin: 0; padding: 20px; text-align: center; }
-        .header h1 { color: var(--main-green); font-size: 1.5rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1000px; margin: 30px auto; }
+        :root {
+            --primary: #00ff88;
+            --secondary: #05d675;
+            --gold: #facc15;
+            --bg: #020617;
+            --card: #0f172a;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .header { text-align: center; padding: 50px 20px; }
+        .header h1 { color: var(--primary); font-size: 2rem; text-transform: uppercase; letter-spacing: 2px; }
         
-        /* Premium Card Design */
-        .plan-card { background: var(--card-bg); border: 1px solid #1e293b; border-radius: 20px; padding: 30px; transition: 0.3s; position: relative; }
-        .plan-card:hover { border-color: var(--main-green); transform: translateY(-5px); }
-        .plan-card h2 { margin: 10px 0; font-size: 1.4rem; }
-        .duration { color: #facc15; font-weight: bold; font-size: 0.9rem; }
-        .features { list-style: none; padding: 0; margin: 20px 0; text-align: left; font-size: 0.85rem; color: #94a3b8; }
-        .features li { margin-bottom: 10px; }
-        .features i { color: var(--main-green); margin-right: 10px; }
-        
-        .buy-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--main-green); color: black; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        /* Plan Grid */
+        .plan-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px; width: 90%; max-width: 1100px; padding-bottom: 50px;
+        }
+
+        .plan-card {
+            background: var(--card);
+            border: 1px solid #1e293b;
+            border-radius: 24px;
+            padding: 35px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; overflow: hidden;
+        }
+
+        .plan-card:hover { border-color: var(--primary); transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0, 255, 136, 0.1); }
+
+        .price-box { margin: 20px 0; }
+        .amount { font-size: 2.5rem; font-weight: 800; color: white; }
+        .currency { font-size: 1rem; color: var(--primary); margin-left: 5px; }
+
+        .buy-btn {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: #000; border: none; width: 100%; padding: 15px;
+            border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1rem;
+        }
+
+        /* --- LUXURY MODAL STYLE --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+
+        .modal-content {
+            background: #111827;
+            width: 90%; max-width: 450px;
+            padding: 30px; border-radius: 28px;
+            border: 1px solid #334155;
+            position: relative; animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-header { text-align: center; margin-bottom: 25px; }
+        .modal-header i { font-size: 3rem; color: var(--gold); margin-bottom: 10px; }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; }
+        .input-group input, .input-group select {
+            width: 100%; padding: 14px; background: #020617; border: 1px solid #334155;
+            color: white; border-radius: 12px; outline: none; box-sizing: border-box;
+        }
+
+        .crypto-box {
+            background: rgba(250, 204, 21, 0.1); border: 1px dashed var(--gold);
+            padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 0.85rem;
+        }
+
+        .confirm-btn {
+            background: var(--primary); color: black; width: 100%; padding: 16px;
+            border-radius: 12px; font-weight: bold; border: none; cursor: pointer;
+        }
+
+        .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 1.5rem; color: #64748b; }
+
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>👑 CHOOSE YOUR VIP PLAN</h1>
-        <p style="color: #94a3b8;">Get accuracy up to 95% with our premium signals</p>
+        <h1><i class="fas fa-crown"></i> VIP Membership</h1>
+        <p>Get instant access to premium match analysis</p>
     </div>
 
-    <div id="plan-list" class="grid">
+    <div id="plan-list" class="plan-container">
         </div>
+
+    <div id="paymentModal" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div class="modal-header">
+                <i class="fas fa-shield-halved"></i>
+                <h2 id="mPlanName">Premium Plan</h2>
+                <p id="mPriceDisplay" style="color: var(--primary); font-weight: bold;"></p>
+            </div>
+
+            <div id="dynamicFields">
+                </div>
+
+            <button class="confirm-btn" onclick="submitPayment()">SEND APPROVAL REQUEST</button>
+        </div>
+    </div>
 
     <script>
         const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
+        let currentPlan = {};
+        let userCountry = 'BD';
+
+        // ইউজারের দেশ শনাক্ত করা
+        async function detectCountry() {
+            try {
+                const res = await fetch('https://ipapi.co/json/');
+                const data = await res.json();
+                userCountry = data.country_code;
+            } catch (e) { userCountry = 'BD'; }
+            fetchPlans();
+        }
+
         async function fetchPlans() {
-            // ডাটাবেস থেকে সরাসরি প্ল্যান লোড করা
             const { data: plans } = await _supabase.from('subscription_plans').select('*').eq('is_active', true);
             const container = document.getElementById('plan-list');
             
             if (plans) {
-                container.innerHTML = plans.map(p => `
-                    <div class="plan-card">
-                        <div class="duration">${p.duration_days} DAYS PLAN</div>
-                        <h2>${p.plan_name}</h2>
-                        <ul class="features">
-                            <li><i class="fas fa-check"></i> VIP Cricket/Football Signals</li>
-                            <li><i class="fas fa-check"></i> Odds 1.50 to 5.00+</li>
-                            <li><i class="fas fa-check"></i> Full Match Analysis</li>
-                        </ul>
-                        <button class="buy-btn" onclick="sendPaymentRequest('${p.plan_name}', ${p.duration_days})">ACTIVATE NOW</button>
-                    </div>
-                `).join('');
+                container.innerHTML = plans.map(p => {
+                    // ডাইনামিক কারেন্সি লজিক (আপনি আপনার শিটের ডাটা অনুযায়ী এটা অ্যাডজাস্ট করতে পারেন)
+                    const displayPrice = userCountry === 'BD' ? `৳ ${p.duration_days * 100}` : `$ ${p.duration_days * 1.5}`;
+                    const currency = userCountry === 'BD' ? 'BDT' : 'USDT';
+
+                    return `
+                        <div class="plan-card">
+                            <div style="color: var(--gold); font-weight:bold;">${p.duration_days} DAYS ACCESS</div>
+                            <h2>${p.plan_name}</h2>
+                            <div class="price-box">
+                                <span class="amount">${displayPrice}</span>
+                            </div>
+                            <button class="buy-btn" onclick="openModal('${p.plan_name}', ${p.duration_days}, '${displayPrice}', '${currency}')">
+                                ACTIVATE NOW
+                            </button>
+                        </div>
+                    `;
+                }).join('');
             }
         }
 
-        async function sendPaymentRequest(name, days) {
-            const mobile = prompt("আপনার বিকাশ/নগদ নাম্বার দিন:");
-            if(!mobile) return;
+        function openModal(name, days, price, curr) {
+            currentPlan = { name, days, price, curr };
+            document.getElementById('mPlanName').innerText = name;
+            document.getElementById('mPriceDisplay').innerText = `Amount: ${price}`;
+            
+            const fields = document.getElementById('dynamicFields');
+            if (userCountry === 'BD') {
+                fields.innerHTML = `
+                    <div class="input-group">
+                        <label>Select Payment Method</label>
+                        <select id="pMethod"><option value="bKash">bKash Personal</option><option value="Nagad">Nagad Personal</option></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Your Mobile Number</label>
+                        <input type="text" id="pMobile" placeholder="01XXXXXXXXX">
+                    </div>
+                `;
+            } else {
+                fields.innerHTML = `
+                    <div class="crypto-box">
+                        <strong>Bybit USDT (TRC20):</strong><br>
+                        <code>T9zBxxxxYourWalletAddressxxxx</code>
+                    </div>
+                    <div class="input-group">
+                        <label>Select Crypto</label>
+                        <select id="pMethod"><option value="USDT">USDT (TRC20)</option><option value="BTC">Bitcoin</option><option value="SOL">Solana</option></select>
+                    </div>
+                    <div class="input-group">
+                        <label>Transaction ID / Wallet Address</label>
+                        <input type="text" id="pMobile" placeholder="Enter TxID or Wallet ID">
+                    </div>
+                `;
+            }
+            document.getElementById('paymentModal').style.display = 'flex';
+        }
 
-            // বর্তমানে হার্ডকোড ইমেইল দেওয়া, আপনি আপনার লগইন সিস্টেমের ইমেইল এখানে দিবেন
-            const email = "user@example.com"; 
+        function closeModal() { document.getElementById('paymentModal').style.display = 'none'; }
+
+        async function submitPayment() {
+            const info = document.getElementById('pMobile').value;
+            const method = document.getElementById('pMethod').value;
+            if (!info) { alert("Please provide payment info!"); return; }
+
+            // সেশন থেকে ইউজারের ইমেইল নেওয়া
+            const { data: { session } } = await _supabase.auth.getSession();
+            const email = session ? session.user.email : "guest@test.com";
 
             const { error } = await _supabase.from('payment_requests').insert([{
                 user_email: email,
-                mobile: mobile,
-                plan_name: name,
-                duration: days,
+                mobile: info,
+                plan_name: currentPlan.name,
+                duration: currentPlan.days,
+                amount: currentPlan.price,
+                currency: currentPlan.curr,
+                payment_method: method,
                 status: 'pending'
             }]);
 
             if (!error) {
-                alert("রিকোয়েস্ট সফল হয়েছে! অ্যাডমিন অ্যাপ্রুভ করলে আপনার VIP চালু হয়ে যাবে।");
+                alert("Request Submitted! Admin will verify and activate your VIP status soon.");
+                closeModal();
             } else {
                 alert("Error: " + error.message);
             }
         }
 
-        fetchPlans();
+        window.onload = detectCountry;
     </script>
 </body>
 </html>
