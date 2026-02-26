@@ -6,80 +6,44 @@
     <title>Live Sports Analysis & Predictions | Sports Pro</title>
     
     <meta name="title" content="Live Sports Analysis & Predictions | Sports Pro">
-    <meta name="description" content="Get real-time football, cricket, and basketball match analysis, live updates, and expert predictions. Stay ahead with our SEO-friendly sports blog.">
-    <meta name="keywords" content="Live Sports, Football Analysis, Cricket Predictions, Match Updates, Sports Blog">
-    <meta name="robots" content="index, follow">
-    <meta name="language" content="English">
-    <meta name="author" content="Md Rasedul">
-
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://mdrasedul88.github.io/">
-    <meta property="og:title" content="Live Sports Analysis & Predictions | Sports Pro">
-    <meta property="og:description" content="Expert match analysis and live schedule for all major sports events.">
-    <meta property="og:image" content="https://mdrasedul88.github.io/images/og-banner.jpg">
-
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://mdrasedul88.github.io/">
-    <meta property="twitter:title" content="Live Sports Analysis & Predictions | Sports Pro">
-    <meta property="twitter:description" content="Expert match analysis and live schedule for all major sports events.">
-    <meta property="twitter:image" content="https://mdrasedul88.github.io/images/og-banner.jpg">
-
+    <meta name="description" content="Get real-time football, cricket, and basketball match analysis, live updates, and expert predictions.">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        #blog-content { display: grid; gap: 20px; margin-top: 20px; font-family: sans-serif; }
+        /* Existing Styles */
+        #blog-content { display: grid; gap: 20px; margin-top: 20px; font-family: sans-serif; padding-bottom: 80px; }
         .prediction-card {
             background: linear-gradient(145deg, #1e293b, #0f172a);
-            border: 1px solid #334155;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 16px;
             padding: 20px;
             transition: transform 0.3s ease;
-            position: relative;
         }
-        .prediction-card:hover { transform: translateY(-5px); border-color: #00ff88; }
+        .prediction-card:hover { border-color: #00ff88; }
+        
+        /* Category Specific Blinking Glow (Rule 5 & 10) */
+        @keyframes glow-cricket { 0%, 100% { box-shadow: 0 0 5px #00ff88; } 50% { box-shadow: 0 0 15px #00ff88; } }
+        @keyframes glow-football { 0%, 100% { box-shadow: 0 0 5px #3b82f6; } 50% { box-shadow: 0 0 15px #3b82f6; } }
+        
+        .tag-cricket { background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid #00ff88; animation: glow-cricket 2s infinite; }
+        .tag-football { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid #3b82f6; animation: glow-football 2s infinite; }
+        .tag-live { background: rgba(255, 77, 77, 0.1); color: #ff4d4d; border: 1px solid #ff4d4d; }
+
         .status-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .live-tag {
-            font-size: 0.7rem;
-            font-weight: bold;
-            padding: 4px 10px;
-            border-radius: 20px;
-            text-transform: uppercase;
-        }
-        .tag-upcoming { background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid #00ff88; }
-        .tag-live { background: rgba(255, 77, 77, 0.1); color: #ff4d4d; border: 1px solid #ff4d4d; animation: blink 1.5s infinite; }
-        .match-title { color: #f8fafc; font-size: 1.2rem; margin-bottom: 10px; font-weight: 600; }
-        .match-desc { 
-            color: #94a3b8; 
-            font-size: 0.85rem; 
-            line-height: 1.6; 
-            margin-bottom: 15px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
+        .live-tag { font-size: 0.65rem; font-weight: bold; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; }
+        .match-title { color: #f8fafc; font-size: 1.1rem; margin-bottom: 8px; font-weight: 700; }
+        .match-desc { color: #94a3b8; font-size: 0.8rem; line-height: 1.5; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
         .btn-predict {
-            background: #00ff88;
-            color: #020617;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 0.8rem;
-            cursor: pointer;
+            background: #00ff88; color: #020617; border: none; padding: 10px 20px; 
+            border-radius: 10px; font-weight: 800; font-size: 0.75rem; cursor: pointer;
+            transition: 0.2s; width: 100%; text-transform: uppercase;
         }
-        .in-feed-ad {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px dashed #475569;
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            color: #64748b;
-            font-size: 0.8rem;
-        }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        .btn-predict:active { transform: scale(0.96); } /* Click Feedback */
+
+        .in-feed-ad { background: rgba(255, 255, 255, 0.02); border: 1px dashed #334155; border-radius: 12px; padding: 15px; text-align: center; color: #64748b; font-size: 0.75rem; }
     </style>
 </head>
 <body class="dark-mode">
@@ -87,12 +51,12 @@
     <div id="header-root"></div>
 
     <main class="container">
-        <div id="banner-ad-container" class="ad-space" style="margin-bottom: 20px;">
-            <p id="ad-text" style="color: #64748b; font-size: 0.8rem; text-align: center;">Featured Analysis Loading...</p>
+        <div id="banner-ad-container" class="ad-space" style="margin: 15px 0;">
+            <p id="ad-text" style="color: #00ff88; font-size: 0.75rem; text-align: center; font-weight: bold;">Featured Analysis Loading...</p>
         </div>
 
         <div id="blog-content">
-            <p style="text-align: center; color: #94a3b8;">Fetching latest matches...</p>
+            <p style="text-align: center; color: #94a3b8;">Fetching latest insights...</p>
         </div>
     </main>
 
@@ -102,87 +66,67 @@
     <script src="js/footer.js"></script>
 
     <script>
-        // Supabase Configuration
         const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
-        
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function loadBlogData() {
             const container = document.getElementById('blog-content');
-            
             try {
+                // আপনার বিদ্যমান 'matches' টেবিল থেকেই ডাটা আসবে
                 const { data, error } = await _supabase
                     .from('matches')
                     .select('*')
                     .order('match_time', { ascending: false });
 
-                if (error) {
-                    console.error("Database Error:", error);
-                    container.innerHTML = `<p style="text-align: center; color: #ff4d4d;">Error: ${error.message}</p>`;
-                    return;
-                }
-
+                if (error) throw error;
                 if (!data || data.length === 0) {
                     container.innerHTML = '<p style="text-align: center; color: #94a3b8;">No analysis posted yet. Check back soon!</p>';
                     return;
                 }
 
                 container.innerHTML = '';
-
                 data.forEach((match, index) => {
-                    const matchDate = new Date(match.match_time).getTime();
-                    const now = new Date().getTime();
-                    const diff = matchDate - now;
+                    const mTime = match.match_time ? new Date(match.match_time) : new Date();
+                    const now = new Date();
+                    const isLive = mTime <= now;
+                    
+                    // ক্যাটাগরি অনুযায়ী ডাইনামিক ক্লাস (Rule 10)
+                    const cat = (match.category || 'Sports').toLowerCase();
+                    let catClass = 'tag-live';
+                    if(cat.includes('cricket')) catClass = 'tag-cricket';
+                    else if(cat.includes('football')) catClass = 'tag-football';
 
-                    let timeLabel = "";
-                    let statusClass = "tag-upcoming";
-
-                    if (diff > 0) {
-                        const h = Math.floor(diff / 3600000);
-                        const m = Math.floor((diff % 3600000) / 60000);
-                        timeLabel = `${h}h ${m}m to go`;
-                    } else {
-                        timeLabel = "Live / Finished";
-                        statusClass = "tag-live";
-                    }
-
-                    // কার্ড তৈরি করা - এখানে বাটনে নতুন লিঙ্ক যোগ করা হয়েছে
                     container.innerHTML += `
                         <article class="prediction-card">
                             <div class="status-wrapper">
-                                <span class="live-tag ${statusClass}">${match.category || 'Sports'}</span>
-                                <span style="color: #64748b; font-size: 0.75rem;"><i class="fa-regular fa-clock"></i> ${timeLabel}</span>
+                                <span class="live-tag ${catClass}">${match.category || 'Sports'}</span>
+                                <span style="color: #64748b; font-size: 0.7rem;">
+                                    <i class="fa-regular fa-calendar"></i> ${mTime.toLocaleDateString()}
+                                </span>
                             </div>
                             <h2 class="match-title">${match.match_name}</h2>
                             <p class="match-desc">${match.description}</p>
                             <button class="btn-predict" onclick="window.location.href='blog-details.html?id=${match.id}'">
-                                Read Full Analysis <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; margin-left:5px;"></i>
+                                View Full Analysis <i class="fa-solid fa-arrow-right" style="margin-left:5px;"></i>
                             </button>
                         </article>
                     `;
 
                     if ((index + 1) % 3 === 0) {
-                        container.innerHTML += `
-                            <div class="in-feed-ad">
-                                <p>Sponsored Ad Slot</p>
-                            </div>
-                        `;
+                        container.innerHTML += `<div class="in-feed-ad"><p>SPONSORED ANALYSIS SLOT</p></div>`;
                     }
                 });
             } catch (err) {
-                console.error("Critical Error:", err);
-                container.innerHTML = `<p style="text-align: center; color: #ff4d4d;">Connection failed!</p>`;
+                container.innerHTML = `<p style="text-align: center; color: #ff4d4d;">Failed to sync matches.</p>`;
             }
         }
 
-        const ads = ["Join VIP for Premium Tips", "Get 100% Analysis Today", "Follow us on Telegram"];
+        const ads = ["🔥 Join VIP for 99% Accuracy", "⚡ Live Football Predictions Available", "🏏 Cricket Match Analysis Updated"];
         setInterval(() => {
             const adTextElement = document.getElementById('ad-text');
-            if(adTextElement) {
-                adTextElement.innerText = ads[Math.floor(Math.random() * ads.length)];
-            }
-        }, 45000);
+            if(adTextElement) adTextElement.innerText = ads[Math.floor(Math.random() * ads.length)];
+        }, 10000);
 
         loadBlogData();
         setInterval(loadBlogData, 60000);
