@@ -161,7 +161,51 @@
         });
     }
 
-    async function attemptUnlock(matchId, isLoggedIn) {
+    // ১. কার্ড রেন্ডার করার সময় নিশ্চিত করা হয়েছে match.id ঠিকমতো বসছে
+function renderMatches(matches, unlockedIds, user) {
+    const listContainer = document.getElementById('predictions-list');
+    listContainer.innerHTML = '';
+    
+    matches.forEach(match => {
+        // নিশ্চিত করুন match.id স্ট্রিং বা নাম্বার হিসেবে আছে
+        const mID = match.id; 
+        const isUnlocked = unlockedIds.includes(mID);
+        
+        listContainer.innerHTML += `
+            <div class="prediction-card">
+                <span class="badge">${match.category}</span>
+                <div class="match-title">${match.match_name}</div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
+                    <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
+                </div>
+
+                ${isUnlocked ? `
+                    <div class="unlocked-content">
+                        <span class="stat-label">Expert Analysis</span>
+                        <div style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-top:5px;">${match.description}</div>
+                    </div>
+                ` : `
+                    <div class="lock-overlay" style="border: 1px dashed var(--premium-purple); padding: 15px; border-radius: 15px;">
+                        <button class="btn-unlock" onclick="attemptUnlock('${mID}', ${!!user})">
+                            <i class="fas fa-play-circle"></i> Unlock Prediction
+                        </button>
+                    </div>
+                `}
+            </div>
+        `;
+    });
+}
+
+// ২. আনলক ফাংশনটি এখন ভেরিয়েবল চেক করে ডাটা পাঠাবে
+async function attemptUnlock(matchId, isLoggedIn) {
+    // চেক করুন matchId কি আসলেই আছে?
+    if (!matchId || matchId === 'undefined') {
+        alert("Error: Match ID not found. Please refresh.");
+        return;
+    }
+
     if(!isLoggedIn) {
         alert("Please login to your account to unlock free predictions.");
         window.location.href = 'login.html';
@@ -180,38 +224,32 @@
         if(timeLeft <= 0) {
             clearInterval(countdown);
             
-            // ১. সুপাবেস সেশন থেকে সরাসরি ইউজার আইডি নেওয়া
             const { data: { session } } = await _supabase.auth.getSession();
             const userId = session?.user?.id;
 
-            if (!userId) {
-                alert("Session expired. Please login again.");
-                location.reload();
-                return;
-            }
+            // ডাটাবেসে ইনসার্ট করার আগে কনভার্ট করে নেওয়া হচ্ছে (BigInt এর জন্য)
+            const finalMatchId = parseInt(matchId);
 
-            // ২. ডাটাবেসে আনলক রেকর্ড সেভ করার চেষ্টা
             const { error } = await _supabase
                 .from('unlocked_predictions')
                 .insert([{ 
                     user_id: userId, 
-                    prediction_id: matchId 
+                    prediction_id: finalMatchId 
                 }]);
 
             if(!error) {
                 modal.style.display = 'none';
-                // ৩. ইনসার্ট সফল হলে সরাসরি UI আপডেট করতে ডাটা রিলোড করুন
-                await loadFreeData(); 
-                alert("Success! Prediction unlocked.");
+                alert("Success! Prediction unlocked forever.");
+                await loadFreeData(); // ডাটা রিফ্রেশ
             } else {
-                // এরর মেসেজটি কনসোলে প্রিন্ট করুন যাতে আপনি বুঝতে পারেন সমস্যা কোথায়
-                console.error("Database Error:", error.message);
-                alert("Database Error: " + error.message); 
+                console.error("DB Error:", error.message);
+                alert("Database Error: " + error.message);
                 modal.style.display = 'none';
             }
         }
     }, 1000);
 }
+
 
 
 
