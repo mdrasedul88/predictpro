@@ -142,18 +142,16 @@
         function closeModal() { document.getElementById('pModal').style.display = 'none'; }
 
         async function submitOrder() {
-    const userContact = document.getElementById('mInfo').value;
-    const userTrx = document.getElementById('trxId').value;
-    const method = document.getElementById('mth').value;
+    const userContact = document.getElementById('mInfo').value; // আপনার নাম্বার ইনপুট আইডি
+    const userTrx = document.getElementById('trxId').value;    // ট্রানজেকশন আইডি ইনপুট
+    const method = document.getElementById('mth').value;      // পেমেন্ট মেথড সিলেক্ট
     const btn = document.querySelector('.buy-btn');
 
-    // ইনপুট ভ্যালিডেশন
     if(!userContact || !userTrx) {
         alert("দয়া করে আপনার নাম্বার এবং Transaction ID দিন।");
         return;
     }
 
-    // বাটন লোডিং স্টেট (যাতে ইউজার বারবার ক্লিক না করে)
     btn.innerText = "Processing...";
     btn.disabled = true;
 
@@ -161,7 +159,7 @@
         const { data: { session } } = await _supabase.auth.getSession();
         const email = session?.user?.email || "guest@user.com";
 
-        // ডাটাবেসে ইনসার্ট
+        // এখানে আমরা নিশ্চিত করছি কলামের নাম ডাটাবেসের সাথে মিলছে
         const { error } = await _supabase.from('payment_requests').insert([{
             user_email: email,
             mobile: userContact,
@@ -170,17 +168,14 @@
             amount: selectedPlan.price,
             payment_method: method,
             currency: isLocal ? 'BDT' : 'USDT',
-            transaction_id: userTrx, // আপনার নতুন কলাম
-            status: 'pending'
+            transaction_id: userTrx,   // এই নাম ডাটাবেসের কলামের নামের সাথে মিলতে হবে
+            status: 'pending',
+            created_at: new Date()     // ম্যানুয়ালি টাইমস্ট্যাম্প পাঠানো হচ্ছে
         }]);
 
         if(!error) {
-            // সাকসেস মেসেজ
-            alert("✅ Request Submitted!\nAdmin will verify your payment soon.");
-            closeModal();
-            // ফরম রিসেট
-            document.getElementById('mInfo').value = "";
-            document.getElementById('trxId').value = "";
+            alert("✅ Request Submitted Successfully!");
+            location.reload(); 
         } else {
             throw error;
         }
@@ -191,6 +186,7 @@
         btn.disabled = false;
     }
 }
+
 
         detectUser();
     </script>
