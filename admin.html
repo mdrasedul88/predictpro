@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Master Admin - Sports Pro</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #020617; color: white; font-family: sans-serif; }
+        body { background: #020617; color: white; font-family: sans-serif; padding-bottom: 50px; }
         .admin-box { background: #111827; padding: 25px; border-radius: 15px; border: 1px solid #334155; max-width: 500px; margin: 30px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         h2 { color: #00ff88; margin-bottom: 20px; text-align: center; font-size: 1.2rem; border-bottom: 1px solid #334155; padding-bottom: 10px; }
         label { color: #94a3b8; font-size: 0.8rem; display: block; margin-top: 10px; }
@@ -17,6 +18,12 @@
         .btn-vip { background: #facc15; color: #000; }
         .btn-premium { background: linear-gradient(45deg, #00ff88, #05d675); color: #000; }
         .section-divider { margin: 40px 0; border: 1px dashed #334155; }
+        
+        /* New Table Styling */
+        .req-card { background: #0f172a; border: 1px solid #1e293b; padding: 15px; margin-bottom: 15px; border-radius: 12px; font-size: 0.85rem; }
+        .req-card p { margin: 5px 0; color: #cbd5e1; }
+        .req-card b { color: #00ff88; }
+        .trx-box { background: rgba(0, 255, 136, 0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid rgba(0, 255, 136, 0.2); font-family: monospace; display: inline-block; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -81,134 +88,122 @@
         <button class="btn-post btn-vip" id="vipBtn" onclick="makeUserVIP()">Activate VIP Status</button>
     </div>
 
+    <div class="admin-box">
+        <h2 style="color: #38bdf8;"><i class="fas fa-file-invoice-dollar"></i> Pending Payment Requests</h2>
+        <div id="payment-list">Loading requests...</div>
+    </div>
+
     <script>
         const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ'; 
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // ১. সাধারণ ম্যাচ পাবলিশ ফাংশন
         async function publishMatch() {
             const pass = document.getElementById('adminKey').value;
             if(pass !== "35895") { alert("Unauthorized!"); return; }
-
             const { error } = await _supabase.from('matches').insert([{
                 match_name: document.getElementById('mName').value,
                 match_time: document.getElementById('mTime').value,
                 description: document.getElementById('mDesc').value,
                 category: document.getElementById('mCat').value
             }]);
-
             if (error) alert("Error: " + error.message);
             else { alert("Success! Match is Live."); location.reload(); }
         }
 
-        // ২. নতুন VIP সিগন্যাল পাবলিশ ফাংশন (আপনার শীটের কলাম অনুযায়ী)
         async function publishVipMatch() {
-    const pass = document.getElementById('adminKey').value;
-    if(pass !== "35895") { alert("Unauthorized!"); return; }
-    
-    // ডাটাবেস টেবিল 'vip_matches'-এ ডাটা পাঠানো হচ্ছে
-    const { error } = await _supabase.from('vip_matches').insert([{
-        match_name: document.getElementById('vName').value,
-        category: document.getElementById('vCat').value,
-        description: document.getElementById('vPick').value,
-        odds: document.getElementById('vOdds').value,
-        match_time: document.getElementById('vTime').value 
-    }]);
+            const pass = document.getElementById('adminKey').value;
+            if(pass !== "35895") { alert("Unauthorized!"); return; }
+            const { error } = await _supabase.from('vip_matches').insert([{
+                match_name: document.getElementById('vName').value,
+                category: document.getElementById('vCat').value,
+                description: document.getElementById('vPick').value,
+                odds: document.getElementById('vOdds').value,
+                match_time: document.getElementById('vTime').value 
+            }]);
+            if (error) alert("Error: " + error.message);
+            else { alert("Success! VIP Match Published."); location.reload(); }
+        }
 
-    if (error) {
-        // RLS পলিসি ঠিক না থাকলে এখানে error দেখাবে
-        alert("Error: " + error.message);
-    } else {
-        alert("Success! VIP Match Published.");
-        location.reload();
-    }
-}
-
-
-        // ৩. ইউজার ভিআইপি বানানোর ফাংশন
         async function makeUserVIP() {
             const pass = document.getElementById('adminKey').value;
             const email = document.getElementById('userEmail').value;
             const expiry = document.getElementById('expiryDate').value;
-
             if(pass !== "35895") { alert("Wrong Admin Password!"); return; }
-            if(!email || !expiry) { alert("ইমেইল এবং মেয়াদের তারিখ দিন!"); return; }
-
             const btn = document.getElementById('vipBtn');
             btn.innerText = "Updating...";
             btn.disabled = true;
-
             try {
-                const { data, error } = await _supabase
-                    .from('profiles')
-                    .update({ is_vip: true, expiry_date: expiry })
-                    .eq('email', email);
-
+                const { error } = await _supabase.from('profiles').update({ is_vip: true, expiry_date: expiry }).eq('email', email);
                 if (error) alert("Database Error: " + error.message);
                 else { alert("Success! " + email + " is now a VIP Member."); location.reload(); }
-            } catch (err) {
-                alert("Error: " + err.message);
-            } finally {
-                btn.innerText = "Activate VIP Status";
-                btn.disabled = false;
+            } catch (err) { alert("Error: " + err.message); }
+            finally { btn.innerText = "Activate VIP Status"; btn.disabled = false; }
+        }
+
+        // পেমেন্ট রিকোয়েস্ট লোড করার ফাংশন
+        async function loadRequests() {
+            const { data: requests, error } = await _supabase
+                .from('payment_requests')
+                .select('*')
+                .eq('status', 'pending');
+
+            const list = document.getElementById('payment-list');
+            if (requests && requests.length > 0) {
+                list.innerHTML = requests.map(req => `
+                    <div class="req-card">
+                        <p>👤 <b>User:</b> ${req.user_email}</p>
+                        <p>📦 <b>Plan:</b> ${req.plan_name} (${req.duration} Days)</p>
+                        <p>💳 <b>Method:</b> ${req.payment_method} | <b>Num:</b> ${req.mobile}</p>
+                        <p>🆔 <b>Transaction ID:</b></p>
+                        <div class="trx-box">${req.transaction_id || 'No ID Provided'}</div>
+                        <div style="margin-top:15px; display:flex; gap:10px;">
+                            <button class="btn-post" style="padding:10px; font-size:0.8rem;" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">APPROVE VIP</button>
+                            <button class="btn-post" style="padding:10px; font-size:0.8rem; background:#ef4444; color:white;" onclick="rejectRequest(${req.id})">REJECT</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = "<p style='text-align:center; color:#94a3b8;'>No pending requests found.</p>";
             }
         }
-    </script>
-    <div class="admin-box">
-    <h2><i class="fas fa-file-invoice-dollar"></i> Pending Payment Requests</h2>
-    <div id="payment-list">Loading...</div>
-</div>
 
-<script>
-async function loadRequests() {
-    const { data: requests } = await _supabase
-        .from('payment_requests')
-        .select('*')
-        .eq('status', 'pending');
+        async function approveUser(email, days, requestId) {
+            const pass = document.getElementById('adminKey').value;
+            if(pass !== "35895") { alert("পাসওয়ার্ড দিন!"); return; }
 
-    const list = document.getElementById('payment-list');
-    if (requests && requests.length > 0) {
-        list.innerHTML = requests.map(req => `
-            <div style="border: 1px solid #334155; padding: 10px; margin-bottom: 10px; border-radius: 8px;">
-                <p>Email: ${req.user_email}</p>
-                <p>Plan: ${req.plan_name} (${req.duration} Days)</p>
-                <p>Mobile: ${req.mobile}</p>
-                <button class="btn-post" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">Approve (Set True)</button>
-            </div>
-        `).join('');
-    } else {
-        list.innerHTML = "No pending requests found.";
-    }
-}
+            let expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + days);
+            const finalDateStr = expiryDate.toISOString().split('T')[0];
 
-// এই ফাংশনটি অটোমেটিক এক্সপায়ারি ডেট ক্যালকুলেট করবে
-async function approveUser(email, days, requestId) {
-    const pass = document.getElementById('adminKey').value;
-    if(pass !== "35895") { alert("Unauthorized!"); return; }
+            // ১. VIP প্রোফাইল আপডেট
+            const { error: profileErr } = await _supabase
+                .from('profiles')
+                .update({ is_vip: true, expiry_date: finalDateStr })
+                .eq('email', email);
 
-    // আজকের তারিখ থেকে এক্সপায়ারি ডেট হিসাব করা
-    let expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + days);
-    const finalDateStr = expiryDate.toISOString().split('T')[0];
+            if (!profileErr) {
+                // ২. রিকোয়েস্ট স্ট্যাটাস আপডেট
+                await _supabase.from('payment_requests').update({ status: 'approved' }).eq('id', requestId);
+                alert(`SUCCESS! ${email} এখন VIP মেম্বার। মেয়াদ: ${finalDateStr}`);
+                loadRequests();
+            } else {
+                alert("প্রোফাইল আপডেটে সমস্যা: " + profileErr.message);
+            }
+        }
 
-    // ১. প্রোফাইলে VIP আপডেট এবং এক্সপায়ারি সেট করা
-    const { error: profileErr } = await _supabase
-        .from('profiles')
-        .update({ is_vip: true, expiry_date: finalDateStr })
-        .eq('email', email);
+        async function rejectRequest(requestId) {
+            const pass = document.getElementById('adminKey').value;
+            if(pass !== "35895") { alert("পাসওয়ার্ড দিন!"); return; }
+            
+            if(confirm("আপনি কি এই রিকোয়েস্টটি ডিলিট করতে চান?")) {
+                await _supabase.from('payment_requests').update({ status: 'rejected' }).eq('id', requestId);
+                alert("Request Rejected.");
+                loadRequests();
+            }
+        }
 
-    // ২. পেমেন্ট রিকোয়েস্ট স্ট্যাটাস 'approved' করা
-    if (!profileErr) {
-        await _supabase.from('payment_requests').update({ status: 'approved' }).eq('id', requestId);
-        alert(`Success! User ${email} is now VIP until ${finalDateStr}`);
         loadRequests();
-    } else {
-        alert("Error updating user: " + profileErr.message);
-    }
-}
-loadRequests();
-</script>
-
+    </script>
 </body>
 </html>
