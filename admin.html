@@ -104,20 +104,27 @@
 
         // ২. নতুন VIP সিগন্যাল পাবলিশ ফাংশন (আপনার শীটের কলাম অনুযায়ী)
         async function publishVipMatch() {
-            const pass = document.getElementById('adminKey').value;
-            if(pass !== "35895") { alert("Unauthorized!"); return; }
+    const pass = document.getElementById('adminKey').value;
+    if(pass !== "35895") { alert("Unauthorized!"); return; }
+    
+    // ডাটাবেস টেবিল 'vip_matches'-এ ডাটা পাঠানো হচ্ছে
+    const { error } = await _supabase.from('vip_matches').insert([{
+        match_name: document.getElementById('vName').value,
+        category: document.getElementById('vCat').value,
+        description: document.getElementById('vPick').value,
+        odds: document.getElementById('vOdds').value,
+        match_time: document.getElementById('vTime').value 
+    }]);
 
-            const { error } = await _supabase.from('vip_matches').insert([{
-                match_name: document.getElementById('vName').value,
-                category: document.getElementById('vCat').value,
-                description: document.getElementById('vPick').value,
-                odds: document.getElementById('vOdds').value,
-                match_time: document.getElementById('vTime').value
-            }]);
+    if (error) {
+        // RLS পলিসি ঠিক না থাকলে এখানে error দেখাবে
+        alert("Error: " + error.message);
+    } else {
+        alert("Success! VIP Match Published.");
+        location.reload();
+    }
+}
 
-            if (error) alert("Error: " + error.message);
-            else { alert("Success! VIP Signal is Live."); location.reload(); }
-        }
 
         // ৩. ইউজার ভিআইপি বানানোর ফাংশন
         async function makeUserVIP() {
