@@ -1,31 +1,39 @@
+/* Global Reset */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     text-decoration: none;
+    font-family: 'Poppins', 'Segoe UI', sans-serif; /* প্রিমিয়াম ফন্ট */
 }
 
 :root {
-    --bg-color: #0d1117;
-    --card-color: #161b22;
-    --accent-color: #00ff88;
+    /* ছবির মতো প্রিমিয়াম কালার প্যালেট */
+    --bg-dark: #050505; 
+    --bg-gradient: radial-gradient(circle at 50% 10%, #1a103d 0%, #050505 100%);
+    --premium-purple: #7b61ff; 
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
     --text-primary: #ffffff;
-    --text-secondary: #8b949e;
-    --border-color: #30363d;
+    --text-secondary: #94a3b8;
+    --glow-shadow: 0 0 15px rgba(123, 97, 255, 0.3);
 }
 
 body {
-    background-color: var(--bg-color);
+    background-color: var(--bg-dark);
+    background-image: var(--bg-gradient);
+    background-attachment: fixed;
     color: var(--text-primary);
-    font-family: 'Segoe UI', sans-serif;
-    padding-bottom: 80px; /* ফুটারের জন্য জায়গা */
+    padding-bottom: 90px;
+    min-height: 100vh;
 }
 
-/* Header Fix: Notification Left, Name Right */
+/* Header Update: Glass Effect */
 .main-header {
-    background: var(--card-color);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(15px);
     padding: 15px 20px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--glass-border);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -33,90 +41,119 @@ body {
 
 .header-container {
     display: flex;
-    justify-content: space-between; /* এটিই মেইন ম্যাজিক */
+    justify-content: space-between;
     align-items: center;
 }
 
-.notif-icon {
-    font-size: 1.4rem;
-}
-
 .site-logo h1 {
-    font-size: 1.2rem;
-    font-weight: bold;
+    font-size: 1.1rem;
+    font-weight: 800;
     text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #fff;
 }
 
-/* Card & Content */
+/* Card Update: Glassmorphism Style (ছবির মতো) */
 .container { padding: 20px; }
-.prediction-card {
-    background: var(--card-color);
-    border-radius: 12px;
+
+.prediction-card, .auth-box {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
     padding: 20px;
-    border: 1px solid var(--border-color);
-    margin-bottom: 15px;
+    border: 1px solid var(--glass-border);
+    margin-bottom: 18px;
+    transition: 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.prediction-card:hover {
+    border-color: var(--premium-purple);
+    box-shadow: var(--glow-shadow);
+    transform: translateY(-3px);
 }
 
 .live-tag {
     color: #ff4d4d;
-    font-weight: bold;
-    font-size: 0.8rem;
-}
-
-.btn-predict {
-    background: white;
-    border: none;
-    padding: 8px 15px;
+    background: rgba(255, 77, 77, 0.1);
+    padding: 2px 8px;
     border-radius: 6px;
     font-weight: bold;
-    margin-top: 10px;
-    cursor: pointer;
+    font-size: 0.75rem;
+    display: inline-block;
+    margin-bottom: 10px;
 }
 
-/* Footer Navigation Fix: Horizontal (পাশাপাশি) */
+/* Button Update: Glowing Purple */
+.btn-predict, .auth-box button {
+    background: var(--premium-purple);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    width: 100%; /* ছবির মতো ফুল উইডথ */
+    box-shadow: var(--glow-shadow);
+    transition: 0.3s;
+}
+
+.btn-predict:hover {
+    filter: brightness(1.2);
+    box-shadow: 0 0 20px var(--premium-purple);
+}
+
+/* Input Fields Update */
+.auth-box input {
+    width: 100%;
+    padding: 14px;
+    margin: 12px 0;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    color: white;
+    outline: none;
+    transition: 0.3s;
+}
+
+.auth-box input:focus {
+    border-color: var(--premium-purple);
+    box-shadow: 0 0 10px rgba(123, 97, 255, 0.2);
+}
+
+/* Footer Navigation Update */
 .fix-nav {
     position: fixed;
     bottom: 0;
     width: 100%;
-    background: #161b22;
-    border-top: 1px solid var(--border-color);
-    padding: 10px 0;
+    background: rgba(10, 10, 10, 0.85);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--glass-border);
+    padding: 12px 0;
     z-index: 1000;
 }
 
 .nav-bar {
-    display: flex; /* আইকনগুলো পাশাপাশি দেখাবে */
-    justify-content: space-around; /* সমান দূরত্ব বজায় রাখবে */
+    display: flex;
+    justify-content: space-around;
     align-items: center;
 }
 
 .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     color: var(--text-secondary);
     font-size: 0.7rem;
-    flex: 1; /* প্রত্যেকটি সমান জায়গা নিবে */
+    transition: 0.3s;
 }
 
 .nav-item i {
-    font-size: 1.3rem;
-    margin-bottom: 4px;
+    font-size: 1.4rem;
+    margin-bottom: 5px;
+    display: block;
 }
 
 .nav-item.active {
-    color: var(--accent-color);
-}
-.auth-box input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    background: #0f172a;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    color: white;
-}
-.auth-box {
-    text-align: center;
-    max-width: 400px !important;
+    color: var(--premium-purple);
+    text-shadow: 0 0 10px var(--premium-purple);
 }
