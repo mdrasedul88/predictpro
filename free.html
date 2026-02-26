@@ -180,32 +180,39 @@
         if(timeLeft <= 0) {
             clearInterval(countdown);
             
-            try {
-                const { data: { user } } = await _supabase.auth.getUser();
-                
-                // ১. ডাটাবেসে আনলক রেকর্ড সেভ করা
-                const { error } = await _supabase.from('unlocked_predictions').insert([
-                    { user_id: user.id, prediction_id: matchId }
-                ]);
+            // ১. সুপাবেস সেশন থেকে সরাসরি ইউজার আইডি নেওয়া
+            const { data: { session } } = await _supabase.auth.getSession();
+            const userId = session?.user?.id;
 
-                if(!error) {
-                    modal.style.display = 'none';
-                    alert("Success! Prediction unlocked.");
-                    
-                    // ২. পেজ রিফ্রেশ না করে সরাসরি ডাটা দেখানোর জন্য এটি কল করুন
-                    loadFreeData(); 
-                } else {
-                    console.error("Insert Error:", error);
-                    alert("Something went wrong. Please try again.");
-                    modal.style.display = 'none';
-                }
-            } catch (err) {
-                console.error("Critical Error:", err);
+            if (!userId) {
+                alert("Session expired. Please login again.");
+                location.reload();
+                return;
+            }
+
+            // ২. ডাটাবেসে আনলক রেকর্ড সেভ করার চেষ্টা
+            const { error } = await _supabase
+                .from('unlocked_predictions')
+                .insert([{ 
+                    user_id: userId, 
+                    prediction_id: matchId 
+                }]);
+
+            if(!error) {
+                modal.style.display = 'none';
+                // ৩. ইনসার্ট সফল হলে সরাসরি UI আপডেট করতে ডাটা রিলোড করুন
+                await loadFreeData(); 
+                alert("Success! Prediction unlocked.");
+            } else {
+                // এরর মেসেজটি কনসোলে প্রিন্ট করুন যাতে আপনি বুঝতে পারেন সমস্যা কোথায়
+                console.error("Database Error:", error.message);
+                alert("Database Error: " + error.message); 
                 modal.style.display = 'none';
             }
         }
     }, 1000);
 }
+
 
 
     loadFreeData();
