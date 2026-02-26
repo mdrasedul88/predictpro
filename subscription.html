@@ -1,12 +1,57 @@
-<div class="subscription-container">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Subscription | Sports Pro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body { background: #0f172a; color: white; font-family: sans-serif; text-align: center; }
+        .plan-card { 
+            background: #1e293b; border: 1px solid #00ff88; padding: 20px; 
+            margin: 15px auto; width: 80%; max-width: 400px; border-radius: 10px; cursor: pointer;
+        }
+        .payment-modal {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #1e293b; padding: 30px; border-radius: 15px; border: 2px solid #facc15; z-index: 100; width: 90%;
+        }
+        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
+        .btn-confirm { background: #facc15; color: black; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
     <h2>Choose Your VIP Plan</h2>
-    <div class="plan-card" onclick="openPayment('7 Days')">7 Days Access</div>
-    <div class="plan-card" onclick="openPayment('1 Month')">1 Month Access</div>
-    
-    <div id="payment-window" style="display:none;">
-        <h3>Pay via bKash / Nagad / Crypto</h3>
-        <p>Send money to: 017XXXXXXXX</p>
-        <input type="text" placeholder="Enter Transaction ID">
-        <button onclick="submitRequest()">Submit Payment</button>
+    <div id="plans-list">
+        <div class="plan-card" onclick="openPayment('7 Days')">7 Days Access</div>
+        <div class="plan-card" onclick="openPayment('1 Month')">1 Month Access</div>
+        <div class="plan-card" onclick="openPayment('6 Months')">6 Months Access</div>
     </div>
-</div>
+
+    <div id="payment-modal" class="payment-modal">
+        <h3 id="selected-plan">Plan: 7 Days</h3>
+        <p>Pay via: <strong>bKash / Nagad / Rocket</strong></p>
+        <p style="color: #00ff88;">Number: 017XXXXXXXX</p>
+        <input type="text" id="trx-id" placeholder="Enter Transaction ID">
+        <button class="btn-confirm" onclick="submitPayment()">Submit for Verification</button>
+        <button onclick="document.getElementById('payment-modal').style.display='none'" style="background:none; color:red; border:none; margin-top:10px;">Cancel</button>
+    </div>
+
+    <script>
+        function openPayment(plan) {
+            document.getElementById('selected-plan').innerText = "Plan: " + plan;
+            document.getElementById('payment-modal').style.display = 'block';
+        }
+
+        function submitPayment() {
+            const trx = document.getElementById('trx-id').value;
+            if(trx) {
+                alert("আপনার পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে। অ্যাডমিন ভেরিফাই করে আপনার VIP স্ট্যাটাস সক্রিয় করে দিবেন।");
+                window.location.href = 'vip.html';
+            } else {
+                alert("দয়া করে Transaction ID দিন।");
+            }
+        }
+    </script>
+</body>
+</html>
