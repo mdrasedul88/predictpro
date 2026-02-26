@@ -113,18 +113,14 @@
 
     async function loadFreeData() {
         const listContainer = document.getElementById('predictions-list');
-        if(!listContainer) return;
-
         try {
             const { data: { user } } = await _supabase.auth.getUser();
 
-            // ডাটাবেস থেকে তথ্য আনা
-            const { data: matches, error: matchError } = await _supabase
-                .from('free_predictions')
-                .select('*');
+            // ১. সব প্রেডিকশন আনা
+            const { data: matches, error: mErr } = await _supabase.from('free_predictions').select('*');
+            if (mErr) throw mErr;
 
-            if (matchError) throw matchError;
-
+            // ২. এই ইউজার কোনটা আনলক করেছে তা চেক করা
             let unlockedIds = [];
             if (user) {
                 const { data: uData } = await _supabase
@@ -135,15 +131,13 @@
             }
 
             if (!matches || matches.length === 0) {
-                listContainer.innerHTML = "<p style='text-align:center; color:#94a3b8;'>No active predictions available.</p>";
+                listContainer.innerHTML = "<p style='text-align:center;'>No predictions available.</p>";
                 return;
             }
 
             listContainer.innerHTML = '';
             matches.forEach(match => {
-                const mid = match.id ? String(match.id) : null;
-                if (!mid) return; // আইডি না থাকলে কার্ড দেখাবে না
-
+                const mid = String(match.id);
                 const isUnlocked = unlockedIds.includes(mid);
                 
                 listContainer.innerHTML += `
@@ -155,13 +149,14 @@
                             <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
                         </div>
                         ${isUnlocked ? `
-                            <div class="unlocked-content" style="background:rgba(123, 97, 255, 0.1); border:1px solid #7b61ff; padding:10px; border-radius:12px;">
-                                <div style="font-weight: 800; color: #fff;">${match.description}</div>
+                            <div class="unlocked-content" style="background:rgba(34, 197, 94, 0.1); border:1px solid #22c55e; padding:15px; border-radius:12px; margin-top:10px;">
+                                <span style="color:#22c55e; font-weight:bold; font-size:12px;">ANALYSIS UNLOCKED:</span>
+                                <div style="color:#fff; font-weight:800; font-size:1.1rem; margin-top:5px;">${match.description}</div>
                             </div>
                         ` : `
-                            <div class="lock-overlay">
-                                <button class="btn-unlock" onclick="handleFinalUnlock('${mid}', ${!!user})">
-                                    <i class="fas fa-play-circle"></i> Unlock Now
+                            <div class="lock-overlay" id="lock-${mid}">
+                                <button class="btn-unlock" onclick="finalUnlockFlow('${mid}', ${!!user})">
+                                    <i class="fas fa-play-circle"></i> UNLOCK NOW
                                 </button>
                             </div>
                         `}
@@ -169,11 +164,11 @@
                 `;
             });
         } catch (err) {
-            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Sync Error. Please Check Supabase Policy.</p>";
+            console.error(err);
         }
     }
 
-    async function handleFinalUnlock(mId, isLoggedIn) {
+    async function finalUnlockFlow(mId, isLoggedIn) {
         if (!isLoggedIn) {
             alert("Please login first.");
             window.location.href = 'login.html';
@@ -192,7 +187,7 @@
                 try {
                     const { data: { user } } = await _supabase.auth.getUser();
                     
-                    // এখানে আইডিকে স্পষ্টভাবে Number-এ কনভার্ট করছি যাতে null না যায়
+                    // ডাটাবেসে সেভ করা
                     const { error: insError } = await _supabase
                         .from('unlocked_predictions')
                         .insert([{ 
@@ -204,7 +199,9 @@
 
                     document.getElementById('ad-modal').style.display = 'none';
                     alert("Success! Prediction Unlocked.");
-                    loadFreeData(); 
+                    
+                    // সবচেয়ে গুরুত্বপূর্ণ কাজ: ডাটা আবার লোড করা যাতে বাটন চলে যায়
+                    window.location.reload(); 
                 } catch (e) {
                     alert("Error: " + e.message);
                     document.getElementById('ad-modal').style.display = 'none';
@@ -215,6 +212,7 @@
 
     document.addEventListener('DOMContentLoaded', loadFreeData);
 </script>
+
 
 </body>
 </html>
