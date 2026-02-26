@@ -24,39 +24,38 @@
         .badge-football { background: #3b82f6; color: #fff; animation: glow-football 1.5s infinite; }
         .badge-basketball { background: #f97316; color: #fff; animation: glow-basketball 1.5s infinite; }
 
-        /* Super Slim Card Styling */
+        /* Super Slim Card Styling with Premium Neon Border */
         .match-card {
-            background: var(--card-bg); border-radius: 12px; padding: 12px 15px; 
-            margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.05);
+            background: var(--card-bg); border-radius: 12px; padding: 15px; 
+            margin-bottom: 15px; 
+            border: 2px solid var(--neon-green); /* চোখে পড়ার মতো বর্ডার */
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
         }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .category-badge { padding: 1px 8px; border-radius: 4px; font-size: 0.55rem; font-weight: bold; text-transform: uppercase; }
-        .live-dot { font-size: 0.6rem; color: #ef4444; font-weight: bold; display: flex; align-items: center; gap: 4px; }
-
-        .vs-text { font-size: 1rem; font-weight: 700; text-align: center; margin: 2px 0; color: #fff; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .category-badge { padding: 3px 10px; border-radius: 6px; font-size: 0.6rem; font-weight: bold; text-transform: uppercase; }
         
-        /* Time and Date Info Row */
-        .info-row { 
-            display: flex; justify-content: center; gap: 15px; 
-            font-size: 0.65rem; color: #94a3b8; margin-bottom: 10px; 
-        }
-        .info-row span { display: flex; align-items: center; gap: 4px; }
+        /* New Time & Date Section on Top Right */
+        .header-info { font-size: 0.7rem; color: #94a3b8; font-weight: 500; display: flex; gap: 8px; }
 
+        .vs-text { font-size: 1.1rem; font-weight: 800; text-align: center; margin: 10px 0; color: #fff; text-transform: uppercase; }
+        
         /* Prediction Row Styling */
-        .prediction-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .prediction-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
         .predict-box { 
-            background: rgba(255, 255, 255, 0.03); padding: 6px; border-radius: 8px; 
+            background: rgba(255, 255, 255, 0.03); padding: 10px; border-radius: 10px; 
             text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .label { display: block; font-size: 0.55rem; color: var(--gold); font-weight: bold; }
-        .blur-val { filter: blur(6px); user-select: none; font-size: 0.8rem; }
+        .label { display: block; font-size: 0.6rem; color: var(--gold); font-weight: bold; margin-bottom: 4px; }
+        .blur-val { filter: blur(6px); user-select: none; font-size: 0.8rem; opacity: 0.6; }
         .clear-val { color: var(--neon-green); font-weight: bold; font-size: 0.9rem; }
 
         .unlock-btn {
-            width: 100%; margin-top: 10px; padding: 8px; border-radius: 8px;
+            width: 100%; margin-top: 15px; padding: 10px; border-radius: 10px;
             background: linear-gradient(45deg, var(--neon-green), #05d675);
-            color: #020617; border: none; font-weight: 800; font-size: 0.75rem; cursor: pointer;
+            color: #020617; border: none; font-weight: 900; font-size: 0.8rem; cursor: pointer;
+            text-transform: uppercase;
         }
+        .unlock-btn:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
@@ -67,13 +66,13 @@
 </header>
 
 <div class="container">
-    <h2 style="text-align:center; color: var(--neon-green); font-size: 1.2rem; margin: 10px 0;">PREMIUM VIP</h2>
+    <h2 style="text-align:center; color: var(--neon-green); font-size: 1.3rem; margin: 15px 0; letter-spacing: 1px;">PREMIUM VIP</h2>
     <div id="vip-list">
         <p style="text-align:center; color: #4b5563; font-size:0.8rem;">Syncing Signals...</p>
     </div>
 </div>
 
-<footer id="site-footer" style="padding: 10px; text-align: center; color: #4b5563; font-size: 0.6rem;">
+<footer id="site-footer" style="padding: 15px; text-align: center; color: #4b5563; font-size: 0.65rem;">
     &copy; 2026 Sports Pro International
 </footer>
 
@@ -95,7 +94,7 @@
     }
 
     async function loadMatches(isVip, isLoggedIn) {
-        const { data: matches } = await _supabase.from('vip_matches').select('*');
+        const { data: matches } = await _supabase.from('vip_matches').select('*').order('created_at', { ascending: false });
         const list = document.getElementById('vip-list');
         if (!matches || matches.length === 0) { list.innerHTML = "<p style='text-align:center;'>No signals found.</p>"; return; }
 
@@ -106,23 +105,21 @@
             else if (cat.includes('football')) bClass = 'badge-football';
             else if (cat.includes('basketball')) bClass = 'badge-basketball';
 
-            // Fix Invalid Date logic
-            const mDate = m.created_at ? new Date(m.created_at).toLocaleDateString() : 'Today';
+            // ডাইনামিক Date এবং Time ফরম্যাট
+            const mDate = m.created_at ? new Date(m.created_at).toLocaleDateString('en-GB', {day: '2-digit', month: 'short'}) : 'Today';
             const mTime = m.created_at ? new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Live';
 
             return `
             <div class="match-card">
                 <div class="card-header">
                     <span class="category-badge ${bClass}">${m.category || 'VIP'}</span>
-                    <span class="live-dot"><i class="fas fa-circle"></i> LIVE</span>
+                    <div class="header-info">
+                        <span><i class="far fa-calendar-alt"></i> ${mDate}</span>
+                        <span><i class="far fa-clock"></i> ${mTime}</span>
+                    </div>
                 </div>
                 <div class="vs-text">${m.match_name}</div>
                 
-                <div class="info-row">
-                    <span><i class="far fa-calendar-alt"></i> ${mDate}</span>
-                    <span><i class="far fa-clock"></i> ${mTime}</span>
-                </div>
-
                 <div class="prediction-row">
                     <div class="predict-box">
                         <span class="label">PICK</span>
