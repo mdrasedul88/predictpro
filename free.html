@@ -1,1 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Predictions | Sports Pro</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --premium-purple: #7b61ff; 
+            --dark-bg: #050505; 
+            --card-glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glow: rgba(123, 97, 255, 0.3);
+            --text-gray: #94a3b8;
+        }
+
+        body { 
+            background: var(--dark-bg); 
+            background-image: radial-gradient(circle at 50% 10%, #1a103d 0%, #050505 100%);
+            color: white; 
+            font-family: 'Poppins', sans-serif; 
+            margin: 0; padding: 0; 
+        }
+
+        .container { max-width: 500px; margin: auto; padding: 15px; }
+
+        .page-title { text-align: center; margin: 20px 0; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #fff; }
+
+        #free-predictions { display: grid; gap: 20px; padding-bottom: 80px; }
+
+        /* কার্ড ডিজাইন */
+        .prediction-card {
+            background: var(--card-glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+        }
+
+        .match-info { margin-bottom: 15px; }
+        .match-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; }
+        .match-cat { font-size: 0.7rem; color: var(--premium-purple); text-transform: uppercase; font-weight: 800; }
+
+        /* লক করা সেকশন */
+        .locked-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px dashed var(--premium-purple);
+        }
+
+        .locked-overlay i { font-size: 2rem; color: var(--premium-purple); margin-bottom: 10px; }
+        
+        .btn-unlock {
+            background: var(--premium-purple);
+            color: white; border: none; padding: 10px 20px;
+            border-radius: 10px; font-weight: 700; cursor: pointer;
+            margin-top: 10px; width: 100%; transition: 0.3s;
+        }
+
+        /* আনলক হওয়ার পর ডাটা লুক */
+        .unlocked-data {
+            display: none;
+            background: rgba(123, 97, 255, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--premium-purple);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* টাইমার মাস্ক */
+        #ad-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 10000;
+            justify-content: center; align-items: center; flex-direction: column; padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="header-root"></div>
+
+<div class="container">
+    <h2 class="page-title">Free Predictions</h2>
+    <div id="free-predictions">
+        <p style="text-align: center; color: var(--text-gray);">Checking for today's matches...</p>
+    </div>
+</div>
+
+<div id="ad-modal">
+    <div style="text-align: center;">
+        <h3 style="color: var(--premium-purple);">Watching Ad to Unlock...</h3>
+        <p id="timer-text" style="font-size: 2rem; font-weight: 800; margin: 20px 0;">15</p>
+        <div style="width: 300px; height: 250px; background: #222; margin: auto; border: 1px solid #444;">
+            <p style="color: #666; padding-top: 100px;">Ad Unit Will Load Here</p>
+        </div>
+        <p style="color: var(--text-gray); font-size: 0.8rem; margin-top: 20px;">Don't close this window until the timer ends.</p>
+    </div>
+</div>
+
+<div id="footer-root"></div>
+
+<script src="js/header.js"></script>
+<script src="js/footer.js"></script>
+
+<script>
+    const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
+    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
+    const _supabase = window.supabase.createClient(S_URL, S_KEY);
+
+    async function loadFreeMatches() {
+        const container = document.getElementById('free-predictions');
+        const { data, error } = await _supabase.from('matches').select('*').order('match_time', { ascending: false });
+
+        if (error || !data) { container.innerHTML = "No matches found."; return; }
+
+        container.innerHTML = '';
+        data.forEach(match => {
+            container.innerHTML += `
+                <div class="prediction-card" id="card-${match.id}">
+                    <div class="match-info">
+                        <span class="match-cat">${match.category}</span>
+                        <div class="match-name">${match.match_name}</div>
+                    </div>
+                    
+                    <div id="locked-${match.id}" class="locked-overlay">
+                        <i class="fas fa-lock"></i>
+                        <span style="font-size:0.8rem;">Watch a short ad to see prediction</span>
+                        <button class="btn-unlock" onclick="startAd('${match.id}')">WATCH AD & UNLOCK</button>
+                    </div>
+
+                    <div id="unlocked-${match.id}" class="unlocked-data">
+                        <div style="font-size:0.75rem; color:var(--text-gray);">Prediction:</div>
+                        <div style="font-weight:800; color:var(--premium-purple); font-size:1.1rem;">${match.description}</div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function startAd(matchId) {
+        const modal = document.getElementById('ad-modal');
+        const timerText = document.getElementById('timer-text');
+        modal.style.display = 'flex';
+        
+        let count = 15; // ১৫ সেকেন্ডের অ্যাড টাইম
+        const interval = setInterval(() => {
+            count--;
+            timerText.innerText = count;
+            if (count <= 0) {
+                clearInterval(interval);
+                modal.style.display = 'none';
+                unlockPrediction(matchId);
+            }
+        }, 1000);
+    }
+
+    function unlockPrediction(matchId) {
+        document.getElementById(`locked-${matchId}`).style.display = 'none';
+        document.getElementById(`unlocked-${matchId}`).style.display = 'block';
+    }
+
+    loadFreeMatches();
+</script>
+</body>
+</html>
 
