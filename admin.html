@@ -155,5 +155,60 @@
             }
         }
     </script>
+    <div class="admin-box">
+    <h2><i class="fas fa-file-invoice-dollar"></i> Pending Payment Requests</h2>
+    <div id="payment-list">Loading...</div>
+</div>
+
+<script>
+async function loadRequests() {
+    const { data: requests } = await _supabase
+        .from('payment_requests')
+        .select('*')
+        .eq('status', 'pending');
+
+    const list = document.getElementById('payment-list');
+    if (requests && requests.length > 0) {
+        list.innerHTML = requests.map(req => `
+            <div style="border: 1px solid #334155; padding: 10px; margin-bottom: 10px; border-radius: 8px;">
+                <p>Email: ${req.user_email}</p>
+                <p>Plan: ${req.plan_name} (${req.duration} Days)</p>
+                <p>Mobile: ${req.mobile}</p>
+                <button class="btn-post" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">Approve (Set True)</button>
+            </div>
+        `).join('');
+    } else {
+        list.innerHTML = "No pending requests found.";
+    }
+}
+
+// এই ফাংশনটি অটোমেটিক এক্সপায়ারি ডেট ক্যালকুলেট করবে
+async function approveUser(email, days, requestId) {
+    const pass = document.getElementById('adminKey').value;
+    if(pass !== "35895") { alert("Unauthorized!"); return; }
+
+    // আজকের তারিখ থেকে এক্সপায়ারি ডেট হিসাব করা
+    let expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + days);
+    const finalDateStr = expiryDate.toISOString().split('T')[0];
+
+    // ১. প্রোফাইলে VIP আপডেট এবং এক্সপায়ারি সেট করা
+    const { error: profileErr } = await _supabase
+        .from('profiles')
+        .update({ is_vip: true, expiry_date: finalDateStr })
+        .eq('email', email);
+
+    // ২. পেমেন্ট রিকোয়েস্ট স্ট্যাটাস 'approved' করা
+    if (!profileErr) {
+        await _supabase.from('payment_requests').update({ status: 'approved' }).eq('id', requestId);
+        alert(`Success! User ${email} is now VIP until ${finalDateStr}`);
+        loadRequests();
+    } else {
+        alert("Error updating user: " + profileErr.message);
+    }
+}
+loadRequests();
+</script>
+
 </body>
 </html>
