@@ -117,47 +117,53 @@
         function closeModal() { document.getElementById('pModal').style.display = 'none'; }
 
         async function submitOrder() {
-            const userContact = document.getElementById('mInfo').value;
-            const userTrx = document.getElementById('trxId').value;
-            const method = document.getElementById('mth').value;
-            const btn = document.querySelector('.buy-btn');
+    const userContact = document.getElementById('mInfo').value;
+    const userTrx = document.getElementById('trxId').value;
+    const method = document.getElementById('mth').value;
+    const btn = document.querySelector('.buy-btn');
 
-            if(!userContact || !userTrx) {
-                alert("দয়া করে সব তথ্য পূরণ করুন।");
-                return;
-            }
+    if(!userContact || !userTrx) {
+        alert("সব তথ্য দিন!");
+        return;
+    }
 
-            btn.innerText = "Processing...";
-            btn.disabled = true;
+    btn.innerText = "Processing...";
+    btn.disabled = true;
 
-            try {
-                const { data: { session } } = await _supabase.auth.getSession();
-                const email = session?.user?.email || "guest@user.com";
+    try {
+        const { data: { session } } = await _supabase.auth.getSession();
+        const email = session?.user?.email || "guest@user.com";
 
-                // --- সংশোধিত ইনসার্ট লজিক ---
-                const { error } = await _supabase.from('payment_requests').insert([{
-                    user_email: email,
-                    mobile: userContact,
-                    plan_name: selectedPlan.name,
-                    duration: parseInt(selectedPlan.days),
-                    amount: selectedPlan.price,
-                    payment_method: method,
-                    currency: isLocal ? 'BDT' : 'USDT',
-                    transaction_id: userTrx, // TrxID এখন সঠিক কলামে যাবে
-                    status: 'pending'        // স্ট্যাটাস সবসময় 'pending' থাকবে
-                }]);
+        // ডাটাবেস কলামের নামগুলো আপনার Supabase টেবিলের সাথে মিলিয়ে নিন
+        const payload = {
+            user_email: email,
+            mobile: userContact,
+            plan_name: selectedPlan.name,
+            duration: parseInt(selectedPlan.days),
+            amount: selectedPlan.price,
+            payment_method: method,
+            currency: isLocal ? 'BDT' : 'USDT',
+            transaction_id: userTrx, // <--- নিশ্চিত করুন টেবিলে এই বানান আছে
+            status: 'pending'        // <--- এটা হুবহু 'pending' হতে হবে
+        };
 
-                if(!error) {
-                    alert("✅ Success! Admin will verify your payment.");
-                    location.reload();
-                } else { throw error; }
-            } catch (err) {
-                alert("Error: " + err.message);
-            } finally {
-                btn.innerText = "SUBMIT REQUEST";
-                btn.disabled = false;
-            }
+        const { error } = await _supabase.from('payment_requests').insert([payload]);
+
+        if(!error) {
+            alert("✅ Request Sent! Check Admin Panel.");
+            location.reload();
+        } else {
+            throw error;
         }
+    } catch (err) {
+        alert("Error: " + err.message);
+        console.log("Full Error:", err);
+    } finally {
+        btn.innerText = "SUBMIT REQUEST";
+        btn.disabled = false;
+    }
+}
+
         detectUser();
     </script>
 </body>
