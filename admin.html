@@ -123,37 +123,41 @@
 
         // --- মূল সমস্যা সমাধান (Load Requests Function) ---
         async function loadRequests() {
-            // ডাটাবেস থেকে সকল 'pending' রিকোয়েস্ট নিয়ে আসা
-            const { data: requests, error } = await _supabase
-                .from('payment_requests')
-                .select('*')
-                .ilike('status', 'pending'); // কেস সেনসিটিভ সমস্যা এড়াতে ilike ব্যবহার করা হয়েছে
+    const list = document.getElementById('payment-list');
+    list.innerHTML = "চেক করা হচ্ছে...";
 
-            if (error) {
-                console.error("Fetch Error:", error);
-                document.getElementById('payment-list').innerHTML = "Error loading data.";
-                return;
-            }
+    // কোনো ফিল্টার ছাড়া সব ডাটা নিয়ে আসছি
+    const { data: requests, error } = await _supabase
+        .from('payment_requests')
+        .select('*');
 
-            const list = document.getElementById('payment-list');
-            if (requests && requests.length > 0) {
-                list.innerHTML = requests.map(req => `
-                    <div class="req-card">
-                        <p>👤 <b>User:</b> ${req.user_email}</p>
-                        <p>📦 <b>Plan:</b> ${req.plan_name} (${req.duration} Days)</p>
-                        <p>💳 <b>Method:</b> ${req.payment_method} | <b>Num:</b> ${req.mobile}</p>
-                        <p>🆔 <b>Transaction ID:</b></p>
-                        <div class="trx-box">${req.transaction_id || 'No ID Provided'}</div>
-                        <div style="margin-top:15px; display:flex; gap:10px;">
-                            <button class="btn-post" style="padding:10px; font-size:0.8rem; flex:1;" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">APPROVE</button>
-                            <button class="btn-post" style="padding:10px; font-size:0.8rem; background:#ef4444; color:white; flex:1;" onclick="rejectRequest(${req.id})">REJECT</button>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                list.innerHTML = "<p style='text-align:center; color:#94a3b8;'>No pending requests found.</p>";
-            }
-        }
+    if (error) {
+        list.innerHTML = "Error: " + error.message;
+        return;
+    }
+
+    if (requests && requests.length > 0) {
+        // উল্টোভাবে সাজানো যাতে নতুন গুলো উপরে থাকে
+        const sortedReq = requests.reverse(); 
+        
+        list.innerHTML = sortedReq.map(req => `
+            <div class="req-card" style="border: 1px solid ${req.status === 'pending' ? '#00ff88' : '#334155'}">
+                <p>👤 <b>Email:</b> ${req.user_email}</p>
+                <p>🆔 <b>TrxID:</b> <span class="trx-box">${req.transaction_id || 'খালি (Null)'}</span></p>
+                <p>🚦 <b>Status:</b> ${req.status}</p>
+                <p>📱 <b>Mobile:</b> ${req.mobile} | 📦 <b>Plan:</b> ${req.plan_name}</p>
+                
+                ${req.status === 'pending' ? `
+                <div style="margin-top:15px; display:flex; gap:10px;">
+                    <button class="btn-post" style="padding:10px; flex:1;" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">APPROVE</button>
+                    <button class="btn-post" style="padding:10px; background:#ef4444; color:white; flex:1;" onclick="rejectRequest(${req.id})">REJECT</button>
+                </div>` : `<p style="color:gray; text-align:center;">Action Taken: ${req.status}</p>`}
+            </div>
+        `).join('');
+    } else {
+        list.innerHTML = "ডাটাবেস একদম খালি! কোনো রিকোয়েস্ট পাওয়া যায়নি।";
+    }
+}
 
         // পেমেন্ট এপ্রুভ এবং মেয়াদ নির্ধারণ
         async function approveUser(email, days, requestId) {
