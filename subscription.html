@@ -3,55 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Subscription | Sports Pro</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>VIP Subscription | Premium Access</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; text-align: center; }
-        .plan-card { 
-            background: #1e293b; border: 1px solid #00ff88; padding: 20px; 
-            margin: 15px auto; width: 80%; max-width: 400px; border-radius: 10px; cursor: pointer;
+        :root {
+            --gold: #facc15;
+            --neon-green: #00ff88;
+            --dark-bg: #0f172a;
+            --glass: rgba(30, 41, 59, 0.7);
         }
-        .payment-modal {
-            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #1e293b; padding: 30px; border-radius: 15px; border: 2px solid #facc15; z-index: 100; width: 90%;
+
+        body { 
+            background: var(--dark-bg); color: white; 
+            font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px;
         }
-        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
-        .btn-confirm { background: #facc15; color: black; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; }
+
+        .sub-container { max-width: 450px; margin: auto; }
+
+        .header-title { text-align: center; margin-bottom: 30px; }
+        .header-title h2 { color: var(--gold); font-size: 1.8rem; margin: 0; }
+        .header-title p { color: #94a3b8; font-size: 0.9rem; }
+
+        /* Plan Cards */
+        .plan-card {
+            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
+            padding: 20px; border-radius: 15px; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; transition: 0.3s;
+        }
+        .plan-card:hover { border-color: var(--neon-green); transform: scale(1.02); }
+        .plan-card.popular { border: 2px solid var(--gold); position: relative; }
+        .popular-tag {
+            position: absolute; top: -10px; right: 20px; background: var(--gold);
+            color: #000; font-size: 0.6rem; padding: 2px 10px; border-radius: 5px; font-weight: bold;
+        }
+
+        .plan-info h4 { margin: 0; font-size: 1.1rem; }
+        .plan-info span { font-size: 0.8rem; color: #94a3b8; }
+
+        /* Payment Modal */
+        #payment-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 100; justify-content: center; align-items: center;
+        }
+        .modal-box {
+            background: #1e293b; width: 90%; max-width: 400px; padding: 25px;
+            border-radius: 20px; border: 1px solid var(--gold); position: relative;
+        }
+
+        .method-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 12px; margin-top: 15px; display: flex;
+            align-items: center; gap: 15px; cursor: pointer; color: white; width: 100%;
+        }
+        .method-btn:hover { background: rgba(0,255,136,0.1); border-color: var(--neon-green); }
+
+        .copy-box {
+            background: #0f172a; padding: 10px; border-radius: 8px;
+            display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
+        }
+        .trx-input {
+            width: 100%; padding: 12px; margin-top: 15px; border-radius: 8px;
+            border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box;
+        }
+        .btn-submit {
+            width: 100%; padding: 15px; background: var(--gold); color: #000;
+            border: none; border-radius: 10px; font-weight: bold; margin-top: 20px; cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <h2>Choose Your VIP Plan</h2>
-    <div id="plans-list">
-        <div class="plan-card" onclick="openPayment('7 Days')">7 Days Access</div>
-        <div class="plan-card" onclick="openPayment('1 Month')">1 Month Access</div>
-        <div class="plan-card" onclick="openPayment('6 Months')">6 Months Access</div>
+<div class="sub-container">
+    <div class="header-title">
+        <h2>PREMIUM ACCESS</h2>
+        <p>Choose your plan to unlock VIP predictions</p>
     </div>
 
-    <div id="payment-modal" class="payment-modal">
-        <h3 id="selected-plan">Plan: 7 Days</h3>
-        <p>Pay via: <strong>bKash / Nagad / Rocket</strong></p>
-        <p style="color: #00ff88;">Number: 017XXXXXXXX</p>
-        <input type="text" id="trx-id" placeholder="Enter Transaction ID">
-        <button class="btn-confirm" onclick="submitPayment()">Submit for Verification</button>
-        <button onclick="document.getElementById('payment-modal').style.display='none'" style="background:none; color:red; border:none; margin-top:10px;">Cancel</button>
+    <div class="plan-card" onclick="openPayment('7 Days')">
+        <div class="plan-info">
+            <h4>7 Days VIP</h4>
+            <span>Weekly Basic Access</span>
+        </div>
+        <i class="fas fa-chevron-right" style="color:var(--gold)"></i>
     </div>
 
-    <script>
-        function openPayment(plan) {
-            document.getElementById('selected-plan').innerText = "Plan: " + plan;
-            document.getElementById('payment-modal').style.display = 'block';
-        }
+    <div class="plan-card popular" onclick="openPayment('1 Month')">
+        <div class="popular-tag">MOST POPULAR</div>
+        <div class="plan-info">
+            <h4>1 Month VIP</h4>
+            <span>Full Monthly Signals</span>
+        </div>
+        <i class="fas fa-chevron-right" style="color:var(--gold)"></i>
+    </div>
 
-        function submitPayment() {
-            const trx = document.getElementById('trx-id').value;
-            if(trx) {
-                alert("আপনার পেমেন্ট রিকোয়েস্ট পাঠানো হয়েছে। অ্যাডমিন ভেরিফাই করে আপনার VIP স্ট্যাটাস সক্রিয় করে দিবেন।");
-                window.location.href = 'vip.html';
-            } else {
-                alert("দয়া করে Transaction ID দিন।");
-            }
+    <div class="plan-card" onclick="openPayment('1 Year')">
+        <div class="plan-info">
+            <h4>1 Year VIP</h4>
+            <span>Unlimited Annual Access</span>
+        </div>
+        <i class="fas fa-chevron-right" style="color:var(--gold)"></i>
+    </div>
+</div>
+
+<div id="payment-modal">
+    <div class="modal-box">
+        <h3 id="display-plan" style="color:var(--gold); margin-top:0;">Plan: 1 Month</h3>
+        
+        <p style="font-size:0.8rem; color:#94a3b8;">Select your preferred payment method:</p>
+
+        <button class="method-btn" onclick="showDetails('crypto')">
+            <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" width="25">
+            <div style="text-align:left;">
+                <div style="font-weight:bold;">USDT (TRC20)</div>
+                <div style="font-size:0.7rem; color:#94a3b8;">International Crypto Payment</div>
+            </div>
+        </button>
+
+        <button class="method-btn" onclick="showDetails('local')">
+            <img src="https://seeklogo.com/images/B/bkash-logo-FBB258B90F-seeklogo.com.png" width="25">
+            <div style="text-align:left;">
+                <div style="font-weight:bold;">Local Wallet</div>
+                <div style="font-size:0.7rem; color:#94a3b8;">bKash / Nagad / Rocket</div>
+            </div>
+        </button>
+
+        <div id="payment-details" style="display:none; margin-top:20px; border-top:1px solid #334155; pt-20px;">
+            <p id="addr-label" style="font-size:0.8rem; margin-bottom:5px; color:var(--neon-green);"></p>
+            <div class="copy-box">
+                <span id="payment-addr" style="font-size:0.7rem;">PLEASE_SELECT_METHOD</span>
+                <i class="far fa-copy" style="cursor:pointer;" onclick="copyAddr()"></i>
+            </div>
+            <input type="text" class="trx-input" id="trx-id" placeholder="Enter Transaction ID (TrxID)">
+            <button class="btn-submit" onclick="submitTrx()">SUBMIT PAYMENT</button>
+        </div>
+
+        <button onclick="closeModal()" style="background:none; border:none; color:#ff4444; margin-top:15px; width:100%; cursor:pointer;">Close</button>
+    </div>
+</div>
+
+<script>
+    function openPayment(plan) {
+        document.getElementById('display-plan').innerText = "Plan: " + plan;
+        document.getElementById('payment-modal').style.display = 'flex';
+    }
+
+    function showDetails(type) {
+        const details = document.getElementById('payment-details');
+        const addrLabel = document.getElementById('addr-label');
+        const addrText = document.getElementById('payment-addr');
+        details.style.display = 'block';
+
+        if(type === 'crypto') {
+            addrLabel.innerText = "Send USDT (TRC20) to this address:";
+            addrText.innerText = "T9yD...your_usdt_address"; // আপনার অ্যাড্রেস এখানে দিন
+        } else {
+            addrLabel.innerText = "Send Money (Cash Out) to:";
+            addrText.innerText = "017XXXXXXXX (bKash/Nagad)"; // আপনার নাম্বার এখানে দিন
         }
-    </script>
+    }
+
+    function copyAddr() {
+        const addr = document.getElementById('payment-addr').innerText;
+        navigator.clipboard.writeText(addr);
+        alert("Address Copied!");
+    }
+
+    function submitTrx() {
+        const trx = document.getElementById('trx-id').value;
+        if(trx.length < 5) {
+            alert("Please enter a valid Transaction ID.");
+            return;
+        }
+        // Rule 6: Manual verification notice
+        alert("পেমেন্ট রিকোয়েস্ট সফল হয়েছে! অ্যাডমিন আপনার Transaction ID চেক করে ১-২ ঘণ্টার মধ্যে VIP স্ট্যাটাস সক্রিয় করে দিবেন।");
+        window.location.href = 'vip.html';
+    }
+
+    function closeModal() {
+        document.getElementById('payment-modal').style.display = 'none';
+        document.getElementById('payment-details').style.display = 'none';
+    }
+</script>
+
 </body>
 </html>
