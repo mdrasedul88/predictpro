@@ -149,27 +149,43 @@
                 const isUnlocked = unlockedList.includes(matchId);
                 
                 listContainer.innerHTML += `
-                    <div class="prediction-card">
-                        <span class="badge">${match.category || 'Cricket'}</span>
-                        <div class="match-title">${match.match_name}</div>
-                        <div class="stats-grid">
-                            <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
-                            <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
-                        </div>
-                        ${isUnlocked ? `
-                            <div class="unlocked-content" style="background:#0f172a; padding:15px; border:2px solid #22c55e; border-radius:12px; margin-top:10px;">
-                                <p style="color:#22c55e; font-weight:bold; font-size:12px;">SUCCESSFULLY UNLOCKED:</p>
-                                <div style="color:#fff; font-weight:800; font-size:1.1rem; margin-top:5px;">${match.description}</div>
-                            </div>
-                        ` : `
-                            <div class="lock-overlay">
-                                <button class="btn-unlock" onclick="handleUnlockProcess('${matchId}', ${!!user})">
-                                    <i class="fas fa-play-circle"></i> UNLOCK NOW
-                                </button>
-                            </div>
-                        `}
-                    </div>
-                `;
+    <div class="prediction-card vip-style">
+        <div class="card-header">
+            <span class="badge blinking">${match.category || 'CRICKET'}</span>
+            <span class="date-time">
+                <i class="far fa-calendar-alt"></i> Today 
+                <i class="far fa-clock"></i> ${match.match_time ? new Date(match.match_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'LIVE'}
+            </span>
+        </div>
+        
+        <div class="match-title">${match.match_name}</div>
+        
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-label">PICK</span>
+                <span class="stat-value pick-text">${match.pick}</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">ODDS</span>
+                <span class="stat-value odds-text">${match.odds}</span>
+            </div>
+        </div>
+
+        ${isUnlocked ? `
+            <div class="unlocked-content-vip">
+                <div class="success-banner">SUCCESSFULLY UNLOCKED</div>
+                <div class="description-text">${match.description}</div>
+            </div>
+        ` : `
+            <div class="lock-overlay-vip">
+                <button class="btn-unlock-vip" onclick="handleUnlockProcess('${matchId}', ${!!user})">
+                    <i class="fas fa-play-circle"></i> UNLOCK NOW
+                </button>
+            </div>
+        `}
+    </div>
+`;
+
             });
         } catch (err) {
             console.error("Critical Error:", err);
