@@ -162,39 +162,51 @@
     }
 
     async function attemptUnlock(matchId, isLoggedIn) {
-        if(!isLoggedIn) {
-            alert("Please login to your account to unlock free predictions.");
-            window.location.href = 'login.html';
-            return;
-        }
+    if(!isLoggedIn) {
+        alert("Please login to your account to unlock free predictions.");
+        window.location.href = 'login.html';
+        return;
+    }
 
-        // অ্যাড টাইমার শুরু
-        const modal = document.getElementById('ad-modal');
-        const timerDisplay = document.getElementById('timer');
-        modal.style.display = 'flex';
+    const modal = document.getElementById('ad-modal');
+    const timerDisplay = document.getElementById('timer');
+    modal.style.display = 'flex';
+    
+    let timeLeft = 15;
+    const countdown = setInterval(async () => {
+        timeLeft--;
+        timerDisplay.innerText = timeLeft;
         
-        let timeLeft = 15;
-        const countdown = setInterval(async () => {
-            timeLeft--;
-            timerDisplay.innerText = timeLeft;
+        if(timeLeft <= 0) {
+            clearInterval(countdown);
             
-            if(timeLeft <= 0) {
-                clearInterval(countdown);
-                modal.style.display = 'none';
-                
-                // ডাটাবেসে চিরস্থায়ী আনলক হিসেবে সেভ করা
+            try {
                 const { data: { user } } = await _supabase.auth.getUser();
+                
+                // ১. ডাটাবেসে আনলক রেকর্ড সেভ করা
                 const { error } = await _supabase.from('unlocked_predictions').insert([
                     { user_id: user.id, prediction_id: matchId }
                 ]);
 
                 if(!error) {
-                    alert("Success! Prediction unlocked forever.");
-                    loadFreeData();
+                    modal.style.display = 'none';
+                    alert("Success! Prediction unlocked.");
+                    
+                    // ২. পেজ রিফ্রেশ না করে সরাসরি ডাটা দেখানোর জন্য এটি কল করুন
+                    loadFreeData(); 
+                } else {
+                    console.error("Insert Error:", error);
+                    alert("Something went wrong. Please try again.");
+                    modal.style.display = 'none';
                 }
+            } catch (err) {
+                console.error("Critical Error:", err);
+                modal.style.display = 'none';
             }
-        }, 1000);
-    }
+        }
+    }, 1000);
+}
+
 
     loadFreeData();
 </script>
