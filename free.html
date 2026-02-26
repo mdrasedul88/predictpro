@@ -112,61 +112,67 @@
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function loadFreeData() {
-        const listContainer = document.getElementById('predictions-list');
-        try {
-            const { data: { user } } = await _supabase.auth.getUser();
+    const listContainer = document.getElementById('predictions-list');
+    try {
+        const { data: { user } } = await _supabase.auth.getUser();
 
-            // ১. সব প্রেডিকশন আনা
-            const { data: matches, error: mErr } = await _supabase.from('free_predictions').select('*');
-            if (mErr) throw mErr;
+        // ১. সব প্রেডিকশন আনা
+        const { data: matches, error: mErr } = await _supabase.from('free_predictions').select('*');
+        if (mErr) throw mErr;
 
-            // ২. এই ইউজার কোনটা আনলক করেছে তা চেক করা
-            let unlockedIds = [];
-            if (user) {
-                const { data: uData } = await _supabase
-                    .from('unlocked_predictions')
-                    .select('prediction_id')
-                    .eq('user_id', user.id);
-                if (uData) unlockedIds = uData.map(d => String(d.prediction_id));
+        // ২. আনলক করা লিস্ট আনা এবং সেগুলোকে Number-এ রূপান্তর করা
+        let unlockedIds = [];
+        if (user) {
+            const { data: uData } = await _supabase
+                .from('unlocked_predictions')
+                .select('prediction_id')
+                .eq('user_id', user.id);
+            
+            if (uData) {
+                // এখানে নিশ্চিত করছি যে আইডিগুলো যেন অবশ্যই Number হিসেবে থাকে
+                unlockedIds = uData.map(d => Number(d.prediction_id));
             }
-
-            if (!matches || matches.length === 0) {
-                listContainer.innerHTML = "<p style='text-align:center;'>No predictions available.</p>";
-                return;
-            }
-
-            listContainer.innerHTML = '';
-            matches.forEach(match => {
-                const mid = String(match.id);
-                const isUnlocked = unlockedIds.includes(mid);
-                
-                listContainer.innerHTML += `
-                    <div class="prediction-card">
-                        <span class="badge">${match.category || 'VIP'}</span>
-                        <div class="match-title">${match.match_name}</div>
-                        <div class="stats-grid">
-                            <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
-                            <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
-                        </div>
-                        ${isUnlocked ? `
-                            <div class="unlocked-content" style="background:rgba(34, 197, 94, 0.1); border:1px solid #22c55e; padding:15px; border-radius:12px; margin-top:10px;">
-                                <span style="color:#22c55e; font-weight:bold; font-size:12px;">ANALYSIS UNLOCKED:</span>
-                                <div style="color:#fff; font-weight:800; font-size:1.1rem; margin-top:5px;">${match.description}</div>
-                            </div>
-                        ` : `
-                            <div class="lock-overlay" id="lock-${mid}">
-                                <button class="btn-unlock" onclick="finalUnlockFlow('${mid}', ${!!user})">
-                                    <i class="fas fa-play-circle"></i> UNLOCK NOW
-                                </button>
-                            </div>
-                        `}
-                    </div>
-                `;
-            });
-        } catch (err) {
-            console.error(err);
         }
+
+        if (!matches || matches.length === 0) {
+            listContainer.innerHTML = "<p style='text-align:center;'>No active predictions.</p>";
+            return;
+        }
+
+        listContainer.innerHTML = '';
+        matches.forEach(match => {
+            // ম্যাচের আইডিকেও Number এ রূপান্তর করে চেক করা
+            const matchId = Number(match.id);
+            const isUnlocked = unlockedIds.includes(matchId);
+            
+            listContainer.innerHTML += `
+                <div class="prediction-card">
+                    <span class="badge">${match.category || 'VIP'}</span>
+                    <div class="match-title">${match.match_name}</div>
+                    <div class="stats-grid">
+                        <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
+                        <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
+                    </div>
+                    ${isUnlocked ? `
+                        <div class="unlocked-content" style="background:rgba(34, 197, 94, 0.1); border:1px solid #22c55e; padding:15px; border-radius:12px; margin-top:10px;">
+                            <span style="color:#22c55e; font-weight:bold; font-size:12px;">ANALYSIS:</span>
+                            <div style="color:#fff; font-weight:800; font-size:1.1rem; margin-top:5px;">${match.description}</div>
+                        </div>
+                    ` : `
+                        <div class="lock-overlay">
+                            <button class="btn-unlock" onclick="finalUnlockFlow('${matchId}', ${!!user})">
+                                <i class="fas fa-play-circle"></i> UNLOCK NOW
+                            </button>
+                        </div>
+                    `}
+                </div>
+            `;
+        });
+    } catch (err) {
+        console.error("Load Error:", err);
     }
+}
+
 
     async function finalUnlockFlow(mId, isLoggedIn) {
         if (!isLoggedIn) {
