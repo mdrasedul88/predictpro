@@ -122,20 +122,17 @@
     const method = document.getElementById('mth').value;
     const btn = document.querySelector('.buy-btn');
 
-    if(!userContact || !userTrx) {
-        alert("সব তথ্য দিন!");
-        return;
-    }
+    if(!userContact || !userTrx) { alert("সব তথ্য দিন!"); return; }
 
-    btn.innerText = "Processing...";
+    btn.innerText = "Sending...";
     btn.disabled = true;
 
     try {
         const { data: { session } } = await _supabase.auth.getSession();
         const email = session?.user?.email || "guest@user.com";
 
-        // ডাটাবেস কলামের নামগুলো আপনার Supabase টেবিলের সাথে মিলিয়ে নিন
-        const payload = {
+        // ডাটাবেসে অবজেক্ট পাঠানো হচ্ছে - বানান গুলো আপনার সুপাবেস শিট অনুযায়ী হুবহু মিলিয়ে নিন
+        const { error } = await _supabase.from('payment_requests').insert([{
             user_email: email,
             mobile: userContact,
             plan_name: selectedPlan.name,
@@ -143,26 +140,23 @@
             amount: selectedPlan.price,
             payment_method: method,
             currency: isLocal ? 'BDT' : 'USDT',
-            transaction_id: userTrx, // <--- নিশ্চিত করুন টেবিলে এই বানান আছে
-            status: 'pending'        // <--- এটা হুবহু 'pending' হতে হবে
-        };
-
-        const { error } = await _supabase.from('payment_requests').insert([payload]);
+            transaction_id: String(userTrx), // জোর করে স্ট্রিং করা হলো
+            status: 'pending'               // জোর করে ছোট হাতের পেন্ডিং
+        }]);
 
         if(!error) {
-            alert("✅ Request Sent! Check Admin Panel.");
+            alert("✅ সফলভাবে পাঠানো হয়েছে!");
             location.reload();
-        } else {
-            throw error;
-        }
+        } else { throw error; }
     } catch (err) {
-        alert("Error: " + err.message);
-        console.log("Full Error:", err);
+        alert("ভুল হয়েছে: " + err.message);
+        console.error(err);
     } finally {
         btn.innerText = "SUBMIT REQUEST";
         btn.disabled = false;
     }
 }
+
 
         detectUser();
     </script>
