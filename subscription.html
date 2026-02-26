@@ -8,78 +8,90 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --neon: #00ff88; --bg: #020617; --card: #0f172a; --text-gray: #94a3b8; }
-        body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-top: 80px; /* Space for fixed nav */ }
+        body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-top: 85px; }
         
         /* Fixed Navigation Bar */
         .navbar { 
             position: fixed; top: 0; left: 0; width: 100%; 
-            background: rgba(15, 23, 42, 0.9); 
-            backdrop-filter: blur(10px); 
-            border-bottom: 1px solid rgba(0, 255, 136, 0.2); 
-            padding: 18px 0; z-index: 1001; text-align: center; 
+            background: rgba(2, 6, 23, 0.85); 
+            backdrop-filter: blur(12px); 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+            padding: 15px 0; z-index: 1001; text-align: center; 
         }
-        .navbar h1 { color: var(--neon); font-size: 1.1rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-        .navbar p { color: var(--text-gray); font-size: 0.65rem; margin: 2px 0 0 0; }
+        .navbar h1 { color: var(--neon); font-size: 1.2rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .navbar p { color: var(--text-gray); font-size: 0.7rem; margin: 3px 0 0 0; opacity: 0.8; }
 
-        /* স্লিম গ্রিড */
-        .plan-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 12px; width: 100%; max-width: 320px; margin-top: 5px; }
+        /* ছবির মতো ২-কলাম স্লিম গ্রিড */
+        .plan-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); /* পাশাপাশি ২ট কার্ড */
+            gap: 10px; 
+            width: 100%; 
+            max-width: 400px; 
+            margin-top: 5px; 
+        }
         
-        /* স্লিম কার্ড ডিজাইন */
+        /* ছবির মতো স্লিম কার্ড ডিজাইন */
         .plan-card { 
-            background: var(--card); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            border-radius: 20px; 
-            padding: 15px; /* প্যাডিং কমানো হয়েছে */
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            border-radius: 18px; 
+            padding: 12px; 
             text-align: center; 
             transition: 0.3s; 
             position: relative;
+            overflow: hidden;
         }
-        .plan-card:hover { border-color: var(--neon); transform: translateY(-3px); }
+        .plan-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--neon); opacity: 0.3;
+        }
         
         .days-badge { 
-            font-size: 0.55rem; 
+            font-size: 0.5rem; 
             background: rgba(0, 255, 136, 0.1); 
             color: var(--neon); 
-            padding: 3px 10px; 
-            border-radius: 20px; 
-            font-weight: bold; 
+            padding: 2px 8px; 
+            border-radius: 10px; 
+            font-weight: bold;
+            text-transform: uppercase;
         }
         
-        .plan-name { font-size: 1rem; font-weight: 700; margin: 8px 0 4px 0; color: #fff; }
+        .plan-name { font-size: 0.85rem; font-weight: 600; margin: 8px 0 2px 0; color: #fff; }
         
-        /* স্লিম প্রাইস বক্স */
-        .price-box { margin-bottom: 10px; }
-        .price-box .amount { font-size: 1.8rem; font-weight: 900; color: white; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        /* ছবির মতো প্রাইস স্টাইল */
+        .price-box { margin-bottom: 8px; }
+        .price-box .amount { font-size: 1.4rem; font-weight: 800; color: white; }
+        .price-box .sub { font-size: 0.6rem; color: var(--text-gray); font-weight: normal; }
         
-        /* স্লিম ফিচার লিস্ট */
-        .feature-list { text-align: left; margin: 10px 0; padding: 0 5px; }
-        .feature-item { font-size: 0.75rem; color: #cbd5e1; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
-        .feature-item i { color: var(--neon); font-size: 0.8rem; }
+        /* ফিচার লিস্ট অনেক স্লিম করা হয়েছে */
+        .feature-list { text-align: left; margin: 8px 0; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; }
+        .feature-item { font-size: 0.65rem; color: #cbd5e1; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+        .feature-item i { color: var(--neon); font-size: 0.7rem; }
 
-        /* স্লিম বাটন */
+        /* ছবির মতো উজ্জ্বল বাটন */
         .buy-btn { 
-            background: #ffffff; 
-            color: black; 
+            background: var(--neon); 
+            color: #000; 
             border: none; 
             width: 100%; 
-            padding: 10px; 
-            border-radius: 12px; 
-            font-weight: 800; 
+            padding: 8px; 
+            border-radius: 10px; 
+            font-weight: 700; 
             cursor: pointer; 
             margin-top: 5px; 
-            font-size: 0.75rem; 
+            font-size: 0.7rem; 
             text-transform: uppercase; 
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
         }
-        .buy-btn:hover { background: var(--neon); }
 
         /* Modal Styles */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
-        .modal-content { background: #111827; width: 100%; max-width: 320px; padding: 20px; border-radius: 20px; border: 1px solid #334155; position: relative; }
-        .admin-number-box { background: rgba(0, 255, 136, 0.1); border: 1px dashed var(--neon); padding: 10px; border-radius: 10px; margin: 12px 0; font-size: 0.75rem; text-align: left; }
-        .admin-number-box b { color: var(--neon); font-size: 0.9rem; display: block; margin-top: 4px; }
-        .input-group { text-align: left; margin-bottom: 12px; }
-        .input-group label { font-size: 0.7rem; color: var(--text-gray); margin-bottom: 4px; display: block; }
-        .input-group input, .input-group select { width: 100%; padding: 10px; background: #020617; border: 1px solid #334155; border-radius: 8px; color: white; font-size: 0.85rem; outline: none; box-sizing: border-box; }
+        .modal-content { background: #0f172a; width: 100%; max-width: 300px; padding: 20px; border-radius: 20px; border: 1px solid rgba(0, 255, 136, 0.2); position: relative; }
+        .admin-number-box { background: rgba(0, 255, 136, 0.05); border: 1px dashed rgba(0, 255, 136, 0.3); padding: 10px; border-radius: 10px; margin: 12px 0; font-size: 0.75rem; text-align: left; }
+        .admin-number-box b { color: var(--neon); display: block; }
+        .input-group { text-align: left; margin-bottom: 10px; }
+        .input-group label { font-size: 0.65rem; color: var(--text-gray); margin-bottom: 3px; display: block; }
+        .input-group input, .input-group select { width: 100%; padding: 8px; background: #020617; border: 1px solid #334155; border-radius: 8px; color: white; font-size: 0.8rem; outline: none; box-sizing: border-box; }
         .close-btn { position: absolute; top: 12px; right: 15px; color: var(--text-gray); font-size: 1.1rem; cursor: pointer; }
     </style>
 </head>
@@ -95,21 +107,21 @@
     <div id="pModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h3 style="margin:0; font-size: 1rem;">Secure Checkout</h3>
+            <h3 style="margin:0; font-size: 0.9rem;">Secure Checkout</h3>
             <div id="adminInfo" class="admin-number-box"></div>
             <div class="input-group">
-                <label>Payment Method</label>
+                <label>Method</label>
                 <select id="mth" onchange="updateUI()"></select>
             </div>
             <div class="input-group">
-                <label id="phoneLabel">Your Number/Wallet</label>
-                <input type="text" id="mInfo" placeholder="e.g. 017XXXXXXXX">
+                <label id="phoneLabel">Your Number</label>
+                <input type="text" id="mInfo" placeholder="017XXXXXXXX">
             </div>
             <div class="input-group">
-                <label>Transaction ID (TrxID)</label>
-                <input type="text" id="trxId" placeholder="Paste TrxID here">
+                <label>TrxID</label>
+                <input type="text" id="trxId" placeholder="Paste here">
             </div>
-            <button class="buy-btn" style="background: var(--neon);" onclick="submitOrder()">SUBMIT REQUEST</button>
+            <button class="buy-btn" onclick="submitOrder()">SUBMIT</button>
         </div>
     </div>
 
@@ -145,7 +157,7 @@
                 .order('duration_days', { ascending: true });
 
             if (error) {
-                document.getElementById('plan-list').innerHTML = "Failed to load plans.";
+                document.getElementById('plan-list').innerHTML = "Failed...";
                 return;
             }
 
@@ -156,17 +168,19 @@
 
                 return `
                     <div class="plan-card">
-                        <span class="days-badge">${p.duration_days} DAYS ACCESS</span>
+                        <span class="days-badge">${p.duration_days} DAYS</span>
                         <div class="plan-name">${p.plan_name}</div>
-                        <div class="price-box"><span class="amount">${symbol}${price}</span></div>
+                        <div class="price-box">
+                            <span class="amount">${symbol}${price}</span>
+                            <span class="sub">/life</span>
+                        </div>
                         
                         <div class="feature-list">
-                            <div class="feature-item"><i class="fas fa-bolt"></i> Daily 5+ VIP Signals</div>
-                            <div class="feature-item"><i class="fas fa-check-circle"></i> 95% Accuracy Rate</div>
-                            <div class="feature-item"><i class="fas fa-headset"></i> 24/7 Admin Support</div>
+                            <div class="feature-item"><i class="fas fa-check-circle"></i> VIP Signals</div>
+                            <div class="feature-item"><i class="fas fa-check-circle"></i> 95% Accu.</div>
                         </div>
 
-                        <button class="buy-btn" onclick="openModal('${p.plan_name}', ${p.duration_days}, '${symbol}${price}')">GET STARTED</button>
+                        <button class="buy-btn" onclick="openModal('${p.plan_name}', ${p.duration_days}, '${symbol}${price}')">GET ACCESS</button>
                     </div>`;
             }).join('');
         }
@@ -182,7 +196,7 @@
         function updateUI() {
             const method = document.getElementById('mth').value;
             const infoBox = document.getElementById('adminInfo');
-            infoBox.innerHTML = `Send exactly <b>${selectedPlan.price}</b> to this <b>${method}</b>:<br><b>${MY_PAYMENT[method]}</b>`;
+            infoBox.innerHTML = `Send <b>${selectedPlan.price}</b> to:<br><b>${MY_PAYMENT[method]}</b>`;
         }
 
         function closeModal() { document.getElementById('pModal').style.display = 'none'; }
@@ -191,11 +205,11 @@
             const userContact = document.getElementById('mInfo').value;
             const userTrx = document.getElementById('trxId').value;
             const method = document.getElementById('mth').value;
-            const btn = document.querySelector('.buy-btn');
+            const btn = document.querySelector('#pModal .buy-btn');
 
             if(!userContact || !userTrx) { alert("সব তথ্য দিন!"); return; }
 
-            btn.innerText = "Sending...";
+            btn.innerText = "Processing...";
             btn.disabled = true;
 
             try {
@@ -203,15 +217,10 @@
                 const email = session?.user?.email || "guest@user.com";
 
                 const { error } = await _supabase.from('payment_requests').insert([{
-                    user_email: email,
-                    mobile: userContact,
-                    plan_name: selectedPlan.name,
-                    duration: parseInt(selectedPlan.days),
-                    amount: selectedPlan.price,
-                    payment_method: method,
-                    currency: isLocal ? 'BDT' : 'USDT',
-                    transaction_id: String(userTrx),
-                    status: 'pending'
+                    user_email: email, mobile: userContact, plan_name: selectedPlan.name,
+                    duration: parseInt(selectedPlan.days), amount: selectedPlan.price,
+                    payment_method: method, currency: isLocal ? 'BDT' : 'USDT',
+                    transaction_id: String(userTrx), status: 'pending'
                 }]);
 
                 if(!error) {
@@ -221,11 +230,10 @@
             } catch (err) {
                 alert("Error: " + err.message);
             } finally {
-                btn.innerText = "GET STARTED";
+                btn.innerText = "SUBMIT";
                 btn.disabled = false;
             }
         }
-
         detectUser();
     </script>
 </body>
