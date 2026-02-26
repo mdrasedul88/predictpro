@@ -123,39 +123,30 @@
 
         // --- মূল সমস্যা সমাধান (Load Requests Function) ---
         async function loadRequests() {
-    const list = document.getElementById('payment-list');
-    list.innerHTML = "চেক করা হচ্ছে...";
-
-    // কোনো ফিল্টার ছাড়া সব ডাটা নিয়ে আসছি
     const { data: requests, error } = await _supabase
         .from('payment_requests')
         .select('*');
 
-    if (error) {
-        list.innerHTML = "Error: " + error.message;
-        return;
-    }
+    const list = document.getElementById('payment-list');
+    if (error) { list.innerHTML = "Error!"; return; }
 
     if (requests && requests.length > 0) {
-        // উল্টোভাবে সাজানো যাতে নতুন গুলো উপরে থাকে
-        const sortedReq = requests.reverse(); 
-        
-        list.innerHTML = sortedReq.map(req => `
-            <div class="req-card" style="border: 1px solid ${req.status === 'pending' ? '#00ff88' : '#334155'}">
+        list.innerHTML = requests.reverse().map(req => `
+            <div class="req-card" style="padding:15px; border-radius:12px; background:#0f172a; margin-bottom:10px; border:1px solid #1e293b;">
                 <p>👤 <b>Email:</b> ${req.user_email}</p>
-                <p>🆔 <b>TrxID:</b> <span class="trx-box">${req.transaction_id || 'খালি (Null)'}</span></p>
-                <p>🚦 <b>Status:</b> ${req.status}</p>
+                <p>🆔 <b style="color:#00ff88;">TrxID:</b> <span class="trx-box">${req.transaction_id || 'N/A'}</span></p>
+                <p>🚦 <b>Status:</b> <span style="color:${req.status === 'pending' ? '#facc15' : '#00ff88'}">${req.status}</span></p>
                 <p>📱 <b>Mobile:</b> ${req.mobile} | 📦 <b>Plan:</b> ${req.plan_name}</p>
                 
                 ${req.status === 'pending' ? `
-                <div style="margin-top:15px; display:flex; gap:10px;">
-                    <button class="btn-post" style="padding:10px; flex:1;" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">APPROVE</button>
-                    <button class="btn-post" style="padding:10px; background:#ef4444; color:white; flex:1;" onclick="rejectRequest(${req.id})">REJECT</button>
-                </div>` : `<p style="color:gray; text-align:center;">Action Taken: ${req.status}</p>`}
+                <div style="margin-top:10px; display:flex; gap:10px;">
+                    <button class="btn-post" style="background:#00ff88; color:black; padding:8px; flex:1; border-radius:5px;" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">APPROVE</button>
+                    <button class="btn-post" style="background:#ef4444; color:white; padding:8px; flex:1; border-radius:5px;" onclick="rejectRequest(${req.id})">REJECT</button>
+                </div>` : ''}
             </div>
         `).join('');
     } else {
-        list.innerHTML = "ডাটাবেস একদম খালি! কোনো রিকোয়েস্ট পাওয়া যায়নি।";
+        list.innerHTML = "No requests found.";
     }
 }
 
