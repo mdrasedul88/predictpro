@@ -25,54 +25,48 @@
         .page-header { text-align: center; margin-bottom: 30px; }
         .page-header h1 { color: var(--premium-purple); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* VIP কার্ড ডিজাইন আপডেট */
+        /* VIP কার্ডের প্রিমিয়াম ডিজাইন */
         .prediction-card {
-            background: rgba(30, 41, 59, 0.7);
+            background: #1e1e2e;
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             padding: 20px;
             margin-bottom: 20px;
-            position: relative;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .card-header-vip {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
+        .card-header-vip { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 
-        /* Blinking Effect */
+        /* Blinking Badge */
         .badge.blinking {
-            background: var(--premium-purple);
-            color: white;
+            background: var(--premium-purple); color: white;
             animation: blinker 1.5s linear infinite;
+            padding: 4px 12px; border-radius: 20px; font-size: 0.65rem; font-weight: 800;
         }
         @keyframes blinker { 50% { opacity: 0.3; } }
 
         .date-time { font-size: 0.7rem; color: var(--text-gray); }
-
         .match-title { font-size: 1.3rem; font-weight: 700; margin: 15px 0; text-align: center; color: #fff; }
 
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        /* আপনার ছবি অনুযায়ী স্ট্যাটাস গ্রিড */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .stat-box {
             background: rgba(255,255,255,0.03);
             border: 1px solid var(--glass-border);
-            padding: 12px; border-radius: 15px; text-align: center;
+            padding: 12px; border-radius: 18px; text-align: center;
         }
+        .stat-label { font-size: 0.65rem; color: var(--text-gray); text-transform: uppercase; display: block; margin-bottom: 4px; letter-spacing: 1px; }
+        .stat-value { font-size: 1.1rem; font-weight: 800; color: var(--premium-purple); text-transform: uppercase; }
         
-        /* লকের সময় স্টাইল */
-        .stat-value.locked { color: #444; filter: blur(3px); }
-        .stat-value.unlocked { color: var(--premium-purple); font-weight: 800; }
+        /* লকের সময় ঝাপসা লুক */
+        .stat-value.locked { filter: blur(5px); opacity: 0.5; }
 
-        /* আনলক বাটন স্টাইল */
+        /* আনলক বাটন */
+        .lock-container { position: relative; }
         .btn-unlock-vip {
-            background: var(--premium-purple);
-            color: white; border: none;
-            padding: 15px; border-radius: 15px;
-            font-weight: 800; width: 100%;
-            cursor: pointer; text-transform: uppercase;
+            background: var(--premium-purple); color: white; border: none;
+            padding: 16px; border-radius: 16px; font-weight: 800; width: 100%;
+            cursor: pointer; text-transform: uppercase; margin-top: 5px;
             box-shadow: 0 5px 15px rgba(123, 97, 255, 0.3);
         }
 
@@ -139,7 +133,7 @@
             }
 
             if (!matches || matches.length === 0) {
-                listContainer.innerHTML = "<p style='text-align:center;'>No match data available.</p>";
+                listContainer.innerHTML = "<p style='text-align:center;'>No active predictions available.</p>";
                 return;
             }
 
@@ -161,29 +155,31 @@
                         <div class="stats-grid">
                             <div class="stat-box">
                                 <span class="stat-label">PICK</span>
-                                <span class="stat-value ${isUnlocked ? 'unlocked' : 'locked'}">${isUnlocked ? match.pick : '***'}</span>
+                                <span class="stat-value ${isUnlocked ? '' : 'locked'}">${isUnlocked ? match.pick : 'LOCKED'}</span>
                             </div>
                             <div class="stat-box">
                                 <span class="stat-label">ODDS</span>
-                                <span class="stat-value ${isUnlocked ? 'unlocked' : 'locked'}">${isUnlocked ? match.odds : '0.00'}</span>
+                                <span class="stat-value ${isUnlocked ? '' : 'locked'}">${isUnlocked ? match.odds : '0.00'}</span>
                             </div>
                         </div>
 
-                        ${isUnlocked ? `
-                            <div class="unlocked-result-box">
-                                <div style="color:#22c55e; font-size:10px; font-weight:900; margin-bottom:5px;">SUCCESSFULLY UNLOCKED</div>
-                                <div style="font-size:1.2rem; font-weight:800;">${match.description}</div>
-                            </div>
-                        ` : `
-                            <button class="btn-unlock-vip" onclick="handleUnlockProcess('${matchId}', ${!!user})">
-                                <i class="fas fa-play-circle"></i> UNLOCK NOW TO SEE
-                            </button>
-                        `}
+                        <div class="lock-container">
+                            ${isUnlocked ? `
+                                <div class="unlocked-result-box">
+                                    <div style="color:#22c55e; font-size:10px; font-weight:900; margin-bottom:5px;">SUCCESSFULLY UNLOCKED</div>
+                                    <div style="font-size:1.2rem; font-weight:800; color:#fff;">${match.description}</div>
+                                </div>
+                            ` : `
+                                <button class="btn-unlock-vip" onclick="handleUnlockProcess('${matchId}', ${!!user})">
+                                    <i class="fas fa-play-circle"></i> UNLOCK NOW
+                                </button>
+                            `}
+                        </div>
                     </div>
                 `;
             });
         } catch (err) {
-            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Sync Error. Please Refresh.</p>";
+            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Syncing Error. Please refresh.</p>";
         }
     }
 
@@ -202,7 +198,7 @@
                     const { error: insError } = await _supabase.from('unlocked_predictions').insert([{ user_id: user.id, prediction_id: parseInt(mId) }]);
                     if (insError) throw insError;
                     modal.style.display = 'none';
-                    alert("Unlocked Successfully!");
+                    alert("Success! Prediction Unlocked.");
                     window.location.reload(); 
                 } catch (e) { alert("Error: " + e.message); modal.style.display = 'none'; }
             }
