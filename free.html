@@ -116,50 +116,54 @@
         try {
             const { data: { user } } = await _supabase.auth.getUser();
 
-            // ১. সব ম্যাচ লোড করা
-            const { data: matches, error: mErr } = await _supabase.from('free_predictions').select('*');
+            // ১. সব প্রেডিকশন নিয়ে আসা
+            const { data: matches, error: mErr } = await _supabase
+                .from('free_predictions')
+                .select('*');
+
             if (mErr) throw mErr;
 
-            // ২. আনলক করা আইডিগুলো আনা এবং সবগুলোকে String-এ রূপান্তর করা
-            let unlockedIdsSet = new Set();
+            // ২. এই ইউজারের আনলক করা সব ডাটা নিয়ে আসা
+            let unlockedList = [];
             if (user) {
-                const { data: uData } = await _supabase
+                const { data: uData, error: uErr } = await _supabase
                     .from('unlocked_predictions')
                     .select('prediction_id')
                     .eq('user_id', user.id);
                 
                 if (uData) {
-                    // ID টাইপ যাই হোক, String বানিয়ে সেভ করছি যেন চেক করতে সুবিধা হয়
-                    uData.forEach(d => unlockedIdsSet.add(String(d.prediction_id)));
+                    // ডাটাবেস থেকে আসা আইডিগুলোকে স্ট্রিং বানিয়ে একটি লিস্টে রাখা
+                    unlockedList = uData.map(item => String(item.prediction_id));
                 }
             }
 
             if (!matches || matches.length === 0) {
-                listContainer.innerHTML = "<p style='text-align:center;'>No match data found.</p>";
+                listContainer.innerHTML = "<p style='text-align:center;'>No match data.</p>";
                 return;
             }
 
             listContainer.innerHTML = '';
             matches.forEach(match => {
-                const currentMatchId = String(match.id);
-                const isUnlocked = unlockedIdsSet.has(currentMatchId);
+                const matchId = String(match.id);
+                // চেক করা: এই ম্যাচের আইডি কি আনলক লিস্টে আছে?
+                const isUnlocked = unlockedList.includes(matchId);
                 
                 listContainer.innerHTML += `
                     <div class="prediction-card">
-                        <span class="badge">${match.category || 'VIP'}</span>
+                        <span class="badge">${match.category || 'Cricket'}</span>
                         <div class="match-title">${match.match_name}</div>
                         <div class="stats-grid">
                             <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
                             <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
                         </div>
                         ${isUnlocked ? `
-                            <div class="unlocked-content" style="background:rgba(34, 197, 94, 0.1); border:1px solid #22c55e; padding:15px; border-radius:12px; margin-top:10px;">
-                                <p style="color:#22c55e; font-weight:bold; font-size:12px; margin-bottom:5px;">PREDICTION UNLOCKED:</p>
-                                <div style="color:#fff; font-weight:800; font-size:1.1rem;">${match.description}</div>
+                            <div class="unlocked-content" style="background:#0f172a; padding:15px; border:2px solid #22c55e; border-radius:12px; margin-top:10px;">
+                                <p style="color:#22c55e; font-weight:bold; font-size:12px;">SUCCESSFULLY UNLOCKED:</p>
+                                <div style="color:#fff; font-weight:800; font-size:1.1rem; margin-top:5px;">${match.description}</div>
                             </div>
                         ` : `
                             <div class="lock-overlay">
-                                <button class="btn-unlock" onclick="startUnlockFlow('${currentMatchId}', ${!!user})">
+                                <button class="btn-unlock" onclick="handleUnlockProcess('${matchId}', ${!!user})">
                                     <i class="fas fa-play-circle"></i> UNLOCK NOW
                                 </button>
                             </div>
@@ -168,13 +172,14 @@
                 `;
             });
         } catch (err) {
-            console.error(err);
+            console.error("Critical Error:", err);
+            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Syncing Error. Please refresh.</p>";
         }
     }
 
-    async function startUnlockFlow(mId, isLoggedIn) {
+    async function handleUnlockProcess(mId, isLoggedIn) {
         if (!isLoggedIn) {
-            alert("Please login first.");
+            alert("Please login first!");
             window.location.href = 'login.html';
             return;
         }
@@ -183,12 +188,12 @@
         modal.style.display = 'flex';
         let timeLeft = 15;
         
-        const timer = setInterval(async () => {
+        const countdown = setInterval(async () => {
             timeLeft--;
             document.getElementById('timer').innerText = timeLeft;
             
             if (timeLeft <= 0) {
-                clearInterval(timer);
+                clearInterval(countdown);
                 try {
                     const { data: { user } } = await _supabase.auth.getUser();
                     
@@ -203,12 +208,12 @@
                     if (insError) throw insError;
 
                     modal.style.display = 'none';
-                    alert("Success! Prediction Unlocked.");
+                    alert("Unlocked Successfully!");
                     
-                    // পেজটি রিফ্রেশ করা যাতে নতুন ডাটা অনুযায়ী কার্ড আপডেট হয়
+                    // পেজ রিলোড করা যাতে নতুন ডাটা অনুযায়ী বাটন চলে যায়
                     window.location.reload(); 
                 } catch (e) {
-                    alert("Database Sync Error: " + e.message);
+                    alert("Sync Error: " + e.message);
                     modal.style.display = 'none';
                 }
             }
@@ -217,7 +222,6 @@
 
     document.addEventListener('DOMContentLoaded', loadFreeData);
 </script>
-
 
 
 </body>
