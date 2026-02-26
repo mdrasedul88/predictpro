@@ -8,33 +8,118 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 20px auto; padding: 15px; }
-        
-        /* Account Info Section */
-        .account-card { background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; margin-bottom: 20px; }
-        .user-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 15px; }
-        .user-header i { font-size: 3rem; color: #00ff88; }
-        .user-header h2 { margin: 0; font-size: 1.2rem; color: #fff; }
-        
-        /* Menu Items */
-        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0f172a; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.3s; border: 1px solid transparent; }
-        .menu-item:hover { border-color: #00ff88; }
-        .menu-left { display: flex; align-items: center; gap: 12px; }
-        .menu-left i { color: #00ff88; width: 20px; }
-        
-        /* Sub-info Box (Hidden by default) */
-        #account-details { display: none; background: #020617; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
-        .info-label { color: #94a3b8; }
-        .info-value { color: #fff; font-weight: bold; }
+        :root {
+            /* ছবির সেই প্রিমিয়াম কালার প্যালেট */
+            --premium-purple: #7b61ff; 
+            --dark-bg: #050505; 
+            --card-glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glow: rgba(123, 97, 255, 0.3);
+            --text-secondary: #94a3b8;
+        }
 
-        /* AdSense Friendly Links */
-        .legal-links { margin-top: 30px; text-align: center; font-size: 0.8rem; }
-        .legal-links a { color: #94a3b8; text-decoration: none; margin: 0 10px; }
-        .legal-links a:hover { color: #00ff88; }
+        body { 
+            background: var(--dark-bg); 
+            background-image: radial-gradient(circle at 50% 10%, #1a103d 0%, #050505 100%);
+            color: white; 
+            font-family: 'Poppins', 'Segoe UI', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            min-height: 100vh;
+        }
 
-        .btn-logout { background: #ef4444; color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .container { max-width: 500px; margin: 20px auto; padding: 15px; }
+        
+        /* Account Info Section - ছবির মতো গ্লাস লুক */
+        .account-card { 
+            background: var(--card-glass); 
+            backdrop-filter: blur(15px);
+            border-radius: 24px; 
+            padding: 25px; 
+            border: 1px solid var(--glass-border); 
+            margin-bottom: 20px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .user-header { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            margin-bottom: 25px; 
+            border-bottom: 1px solid var(--glass-border); 
+            padding-bottom: 20px; 
+        }
+
+        /* ইউজার আইকন গ্লোয়িং ইফেক্ট */
+        .user-header i { 
+            font-size: 3.5rem; 
+            color: var(--premium-purple); 
+            text-shadow: 0 0 15px var(--glow);
+        }
+
+        .user-header h2 { margin: 0; font-size: 1.3rem; font-weight: 800; color: #fff; }
+        
+        /* Menu Items - স্লিম এবং প্রিমিয়াম */
+        .menu-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 15px; 
+            background: rgba(0, 0, 0, 0.3); 
+            border-radius: 15px; 
+            margin-bottom: 12px; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            border: 1px solid var(--glass-border); 
+        }
+
+        .menu-item:hover { 
+            border-color: var(--premium-purple); 
+            background: rgba(123, 97, 255, 0.05);
+            transform: scale(1.02);
+        }
+
+        .menu-left { display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 0.9rem; }
+        .menu-left i { color: var(--premium-purple); width: 20px; font-size: 1.1rem; }
+        
+        /* Sub-info Box */
+        #account-details { 
+            display: none; 
+            background: rgba(0, 0, 0, 0.5); 
+            padding: 15px; 
+            border-radius: 15px; 
+            margin-bottom: 15px; 
+            border: 1px solid rgba(123, 97, 255, 0.1);
+        }
+
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem; }
+        .info-label { color: var(--text-secondary); }
+        .info-value { color: #fff; font-weight: 600; }
+
+        /* Legal Links */
+        .legal-links { margin-top: 30px; text-align: center; font-size: 0.75rem; }
+        .legal-links a { color: var(--text-secondary); text-decoration: none; margin: 0 10px; transition: 0.3s; }
+        .legal-links a:hover { color: var(--premium-purple); }
+
+        /* Logout Button - প্রিমিয়াম রেড */
+        .btn-logout { 
+            background: linear-gradient(45deg, #ef4444, #b91c1c); 
+            color: white; 
+            border: none; 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 15px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            margin-top: 15px; 
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+            transition: 0.3s;
+        }
+
+        .btn-logout:hover { transform: translateY(-2px); filter: brightness(1.1); }
     </style>
 </head>
 <body>
@@ -45,7 +130,7 @@
             <i class="fas fa-user-circle"></i>
             <div>
                 <h2 id="display-name">Loading...</h2>
-                <span id="display-status" style="font-size: 0.8rem; color: #00ff88;">Free Member</span>
+                <span id="display-status" style="font-size: 0.75rem; color: var(--premium-purple); font-weight: bold; text-transform: uppercase;">Free Member</span>
             </div>
         </div>
 
@@ -54,7 +139,7 @@
                 <i class="fas fa-id-card"></i>
                 <span>Account Information</span>
             </div>
-            <i class="fas fa-chevron-down" id="arrow"></i>
+            <i class="fas fa-chevron-down" id="arrow" style="font-size: 0.8rem; color: var(--text-secondary);"></i>
         </div>
 
         <div id="account-details">
@@ -81,7 +166,7 @@
                 <i class="fas fa-user-shield"></i>
                 <span>Privacy Policy</span>
             </div>
-            <i class="fas fa-external-link-alt" style="font-size: 0.8rem; color: #94a3b8;"></i>
+            <i class="fas fa-external-link-alt" style="font-size: 0.7rem; color: var(--text-secondary);"></i>
         </div>
 
         <div class="menu-item" onclick="window.location.href='terms.html'">
@@ -89,7 +174,7 @@
                 <i class="fas fa-file-contract"></i>
                 <span>Terms & Conditions</span>
             </div>
-            <i class="fas fa-external-link-alt" style="font-size: 0.8rem; color: #94a3b8;"></i>
+            <i class="fas fa-external-link-alt" style="font-size: 0.7rem; color: var(--text-secondary);"></i>
         </div>
 
         <button class="btn-logout" onclick="logout()">Logout</button>
