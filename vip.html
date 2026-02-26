@@ -3,65 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Predictions | Sports Pro</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>VIP Premium Predictions | Sports Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; }
-        .container { max-width: 600px; margin: 20px auto; padding: 15px; }
-        
-        /* Rule 8: Header/Footer visibility logic */
+        :root {
+            --gold: #facc15;
+            --neon-green: #00ff88;
+            --dark-bg: #0f172a;
+            --card-gradient: linear-gradient(145deg, #1e293b, #0f172a);
+        }
+
+        body { 
+            background: var(--dark-bg); color: white; 
+            font-family: 'Segoe UI', Roboto, sans-serif; margin: 0; 
+        }
+
+        /* Rule 8: Header & Footer logic */
         header, footer { display: none; }
 
-        /* Match Card Styling */
-        .match-card { 
-            background: #1e293b; border-radius: 15px; padding: 18px; 
-            margin-bottom: 20px; border: 1px solid #334155; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-        .match-header { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 12px; }
-        .category-tag { background: #facc15; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
-        
-        .vs-text { font-size: 1.2rem; font-weight: 800; color: #fff; text-align: center; margin: 10px 0; }
-        .info-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px; }
+        .container { max-width: 500px; margin: auto; padding: 20px; }
 
-        /* Specific Blur Logic */
-        .prediction-box {
-            display: flex; gap: 10px; margin-top: 10px;
+        .vip-title {
+            text-align: center; font-size: 1.8rem; font-weight: 800;
+            background: linear-gradient(to right, var(--neon-green), var(--gold));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
         }
-        .predict-item { flex: 1; background: #0f172a; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #334155; }
-        .label { display: block; font-size: 0.7rem; color: #00ff88; margin-bottom: 5px; font-weight: bold; }
-        
-        .blur-val { filter: blur(6px); user-select: none; color: #94a3b8; }
-        .clear-val { font-weight: bold; color: #fff; font-size: 1rem; }
 
-        /* Unlock Button Area */
-        .unlock-section { margin-top: 15px; text-align: center; }
-        .btn-unlock {
-            width: 100%; background: #00ff88; color: #020617; border: none; padding: 12px;
-            border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;
+        /* Match Card - Premium Look */
+        .match-card {
+            background: var(--card-gradient);
+            border-radius: 20px; padding: 20px; margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            position: relative; overflow: hidden;
         }
-        .btn-unlock:hover { background: #05d675; }
+
+        .match-card::after {
+            content: ''; position: absolute; top: 0; right: 0;
+            width: 100px; height: 100px;
+            background: radial-gradient(circle, rgba(250, 204, 21, 0.1) 0%, transparent 70%);
+        }
+
+        .card-top { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .category-tag { 
+            background: rgba(0, 255, 136, 0.1); color: var(--neon-green);
+            padding: 4px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: bold;
+        }
+
+        .vs-display { 
+            font-size: 1.3rem; font-weight: 800; text-align: center; 
+            margin: 15px 0; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .match-meta { 
+            display: flex; justify-content: space-around; 
+            font-size: 0.8rem; color: #94a3b8; margin-bottom: 20px;
+        }
+
+        /* Rule 1: Specific Blur Logic */
+        .prediction-area {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+        }
+
+        .predict-box {
+            background: rgba(15, 23, 42, 0.6); padding: 12px;
+            border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .label { display: block; font-size: 0.65rem; color: var(--gold); font-weight: bold; margin-bottom: 5px; }
+
+        .blur-text { 
+            filter: blur(8px); user-select: none; pointer-events: none; 
+            font-weight: bold; color: #fff;
+        }
+
+        .clear-text { font-weight: bold; color: var(--neon-green); font-size: 1.1rem; }
+
+        /* Rule 1: Unlock Overlay */
+        .unlock-btn {
+            width: 100%; margin-top: 20px; padding: 14px;
+            background: linear-gradient(45deg, var(--neon-green), #05d675);
+            color: #020617; border: none; border-radius: 12px;
+            font-weight: 800; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
+        }
     </style>
 </head>
 <body>
 
-<header id="site-header">
-    <nav style="padding: 15px; background: #1e293b; text-align: center; border-bottom: 1px solid #334155;">
-        <a href="index.html" style="color: white; text-decoration: none; margin: 0 10px;">Home</a>
-        <a href="profile.html" style="color: white; text-decoration: none; margin: 0 10px;">Profile</a>
-    </nav>
+<header id="site-header" style="background: #1e293b; padding: 15px; text-align: center;">
+    <a href="index.html" style="color:white; text-decoration:none;">HOME</a> | 
+    <a href="profile.html" style="color:white; text-decoration:none;">PROFILE</a>
 </header>
 
 <div class="container">
-    <h2 style="text-align: center; color: #00ff88; margin-bottom: 25px;">Premium VIP List</h2>
-    <div id="vip-container">
-        <p style="text-align: center; color: #94a3b8;">Loading VIP Matches...</p>
+    <h1 class="vip-title">PREMIUM VIP</h1>
+    <div id="vip-list-container">
+        <p style="text-align:center;">Analyzing Premium Matches...</p>
     </div>
 </div>
 
-<footer id="site-footer" style="padding: 20px; text-align: center; background: #1e293b; margin-top: 50px;">
-    <p>&copy; 2026 Sports Pro VIP</p>
+<footer id="site-footer" style="padding: 20px; text-align: center; border-top: 1px solid #1e293b;">
+    <p style="color:#475569; font-size: 0.8rem;">&copy; 2026 Sports Pro International</p>
 </footer>
 
 <script>
@@ -69,73 +114,71 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    async function init() {
+    async function checkVipFlow() {
         const { data: { session } } = await _supabase.auth.getSession();
-        let isVip = false;
+        let isUserPremium = false;
 
         if (session) {
+            // Rule 8: Account exists, show header/footer
             document.getElementById('site-header').style.display = 'block';
             document.getElementById('site-footer').style.display = 'block';
 
-            // Check VIP status and expiry
+            // Rules 3 & 7: Check Profile Status
             const { data: profile } = await _supabase.from('profiles').select('*').eq('id', session.user.id).single();
             if (profile && profile.is_vip) {
-                const expiry = profile.expiry_date ? new Date(profile.expiry_date) : null;
-                if (expiry && expiry > new Date()) {
-                    isVip = true;
-                }
+                const expiry = new Date(profile.expiry_date);
+                if (expiry > new Date()) isUserPremium = true;
             }
         }
-        renderVIPData(isVip, !!session);
+
+        fetchAndRenderMatches(isUserPremium, !!session);
     }
 
-    async function renderVIPData(isVip, isLoggedIn) {
-        // Fetching matches from 'vip_matches' table
+    async function fetchAndRenderMatches(isPremium, isLoggedIn) {
+        // Fetching from 'vip_matches' table
         const { data: matches, error } = await _supabase.from('vip_matches').select('*');
-        const container = document.getElementById('vip-container');
+        const container = document.getElementById('vip-list-container');
 
         if (error || !matches || matches.length === 0) {
-            container.innerHTML = "<p style='text-align:center; color:#94a3b8;'>বর্তমানে কোনো VIP প্রেডিকশন নেই।</p>";
+            container.innerHTML = "<p style='text-align:center; color:#94a3b8;'>No VIP signals at the moment.</p>";
             return;
         }
 
         container.innerHTML = matches.map(m => `
             <div class="match-card">
-                <div class="match-header">
-                    <span class="category-tag">${m.category || 'Sports'}</span>
-                    <span style="font-size: 0.75rem; color:#94a3b8;"><i class="far fa-calendar-alt"></i> ${m.match_time ? new Date(m.match_time).toLocaleDateString() : 'Today'}</span>
+                <div class="card-top">
+                    <span class="category-tag">${m.category || 'VIP'}</span>
+                    <span style="font-size:0.7rem; color:#94a3b8;">${new Date(m.created_at).toLocaleDateString()}</span>
                 </div>
                 
-                <div class="vs-text">${m.match_name}</div>
+                <div class="vs-display">${m.match_name}</div>
                 
-                <div class="info-row">
-                    <span><i class="far fa-clock"></i> ${m.match_time ? new Date(m.match_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Live'}</span>
-                    <span><i class="fas fa-trophy"></i> VIP Premium</span>
+                <div class="match-meta">
+                    <span><i class="far fa-clock"></i> Live Signal</span>
+                    <span><i class="fas fa-bolt"></i> 99% Accuracy</span>
                 </div>
 
-                <div class="prediction-box">
-                    <div class="predict-item">
-                        <span class="label">WINNER</span>
-                        <span class="${isVip ? 'clear-val' : 'blur-val'}">${isVip ? m.description : 'HIDDEN'}</span>
+                <div class="prediction-area">
+                    <div class="predict-box">
+                        <span class="label">PICK</span>
+                        <span class="${isPremium ? 'clear-text' : 'blur-text'}">${isPremium ? m.description : 'HIDDEN'}</span>
                     </div>
-                    <div class="predict-item">
+                    <div class="predict-box">
                         <span class="label">ODDS</span>
-                        <span class="${isVip ? 'clear-val' : 'blur-val'}">${isVip ? (m.odds || '1.80') : '0.00'}</span>
+                        <span class="${isPremium ? 'clear-text' : 'blur-text'}">${isPremium ? (m.odds || '1.95') : '0.00'}</span>
                     </div>
                 </div>
 
-                ${!isVip ? `
-                <div class="unlock-section">
-                    <button class="btn-unlock" onclick="handleUnlockAction(${isLoggedIn})">
-                        <i class="fas fa-unlock-alt"></i> Unlock Full Prediction
-                    </button>
-                </div>
+                ${!isPremium ? `
+                <button class="unlock-btn" onclick="handleUnlock(${isLoggedIn})">
+                    <i class="fas fa-lock-open"></i> Unlock Now
+                </button>
                 ` : ''}
             </div>
         `).join('');
     }
 
-    function handleUnlockAction(isLoggedIn) {
+    function handleUnlock(isLoggedIn) {
         if (!isLoggedIn) {
             window.location.href = 'login.html'; // Rule 2
         } else {
@@ -143,7 +186,7 @@
         }
     }
 
-    window.onload = init;
+    window.onload = checkVipFlow;
 </script>
 </body>
 </html>
