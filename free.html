@@ -107,6 +107,7 @@
 <script src="js/footer.js"></script>
 
 <script>
+    // Supabase Configuration with Cache-Bust
     const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -114,20 +115,16 @@
     async function loadFreeData() {
         const listContainer = document.getElementById('predictions-list');
         try {
-            // ইউজারের তথ্য চেক করা
             const { data: { user } } = await _supabase.auth.getUser();
 
-            // ১. ডাটাবেস থেকে ডাটা আনা (এটাই মেইন পার্ট)
+            // Fetch Predictions
             const { data: matches, error: matchError } = await _supabase
                 .from('free_predictions')
                 .select('*');
 
-            if (matchError) {
-                console.error("Match Error:", matchError);
-                throw matchError;
-            }
+            if (matchError) throw matchError;
 
-            // ২. আনলক করা লিস্ট চেক করা
+            // Fetch Unlocked List
             let unlockedIds = [];
             if (user) {
                 const { data: unlockedData } = await _supabase
@@ -140,20 +137,18 @@
                 }
             }
 
-            // ডাটা না থাকলে মেসেজ
             if (!matches || matches.length === 0) {
-                listContainer.innerHTML = `
-                    <div style="text-align:center; padding:20px;">
-                        <p style="color:var(--text-gray);">No predictions found in database.</p>
-                        <button onclick="location.reload()" style="background:var(--premium-purple); border:none; color:white; padding:10px 20px; border-radius:10px;">Retry Sync</button>
-                    </div>`;
+                listContainer.innerHTML = "<p style='text-align:center;'>No match data found.</p>";
                 return;
             }
 
             listContainer.innerHTML = '';
             matches.forEach(match => {
-                const mID = String(match.id);
-                const isUnlocked = unlockedIds.includes(mID);
+                // Ensure ID is a valid string
+                const matchIDString = match.id ? String(match.id) : null;
+                if (!matchIDString) return;
+
+                const isUnlocked = unlockedIds.includes(matchIDString);
                 
                 listContainer.innerHTML += `
                     <div class="prediction-card">
@@ -164,13 +159,13 @@
                             <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
                         </div>
                         ${isUnlocked ? `
-                            <div class="unlocked-content" style="border: 1px solid var(--premium-purple); padding:10px; border-radius:15px; background:rgba(123, 97, 255, 0.1);">
-                                <span style="font-size:10px; color:var(--premium-purple);">UNLOCKED RESULT:</span>
-                                <div style="font-weight: 800; color: #fff; margin-top:5px;">${match.description}</div>
+                            <div class="unlocked-content" style="background:#1a1a2e; padding:15px; border:1px solid #7b61ff; border-radius:12px;">
+                                <span style="color:#7b61ff; font-weight:bold; font-size:12px;">PREDICTION:</span>
+                                <div style="font-weight: 800; color: #fff; font-size:1.1rem; margin-top:5px;">${match.description}</div>
                             </div>
                         ` : `
                             <div class="lock-overlay">
-                                <button class="btn-unlock" onclick="handleUnlock('${mID}', ${!!user})">
+                                <button class="btn-unlock" onclick="handleFinalUnlock('${matchIDString}', ${!!user})">
                                     <i class="fas fa-play-circle"></i> Unlock Prediction
                                 </button>
                             </div>
@@ -179,12 +174,18 @@
                 `;
             });
         } catch (err) {
-            console.error("Sync Error Detail:", err);
-            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Sync Error: " + err.message + "</p>";
+            console.error(err);
+            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Sync Error. Check Internet.</p>";
         }
     }
 
-    async function handleUnlock(mId, isLoggedIn) {
+    async function handleFinalUnlock(mId, isLoggedIn) {
+        // ID check to prevent "null/undefined" error
+        if (!mId || mId === "undefined" || mId === "null") {
+            alert("Match ID error. Please hard refresh the page.");
+            return;
+        }
+
         if (!isLoggedIn) {
             alert("Please login first.");
             window.location.href = 'login.html';
@@ -198,20 +199,29 @@
         const timer = setInterval(async () => {
             timeLeft--;
             document.getElementById('timer').innerText = timeLeft;
+            
             if (timeLeft <= 0) {
                 clearInterval(timer);
                 try {
                     const { data: { user } } = await _supabase.auth.getUser();
+                    
+                    // Force converting to Integer to match BigInt type
+                    const numericId = parseInt(mId);
+                    
                     const { error: insError } = await _supabase
                         .from('unlocked_predictions')
-                        .insert([{ user_id: user.id, prediction_id: parseInt(mId) }]);
+                        .insert([{ 
+                            user_id: user.id, 
+                            prediction_id: numericId 
+                        }]);
 
                     if (insError) throw insError;
+
                     modal.style.display = 'none';
-                    alert("Unlocked Successfully!");
+                    alert("Success! Prediction Unlocked.");
                     loadFreeData();
                 } catch (e) {
-                    alert("Error: " + e.message);
+                    alert("Database Sync Error: " + e.message);
                     modal.style.display = 'none';
                 }
             }
@@ -220,9 +230,6 @@
 
     document.addEventListener('DOMContentLoaded', loadFreeData);
 </script>
-
-
-
 
 </body>
 </html>
