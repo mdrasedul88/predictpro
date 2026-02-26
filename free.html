@@ -25,47 +25,62 @@
         .page-header { text-align: center; margin-bottom: 30px; }
         .page-header h1 { color: var(--premium-purple); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; }
 
+        /* VIP কার্ড ডিজাইন আপডেট */
         .prediction-card {
-            background: var(--card-glass);
-            backdrop-filter: blur(15px);
+            background: rgba(30, 41, 59, 0.7);
             border: 1px solid var(--glass-border);
             border-radius: 24px;
             padding: 20px;
             margin-bottom: 20px;
             position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .badge {
-            background: rgba(123, 97, 255, 0.2);
-            color: var(--premium-purple);
-            padding: 4px 12px; border-radius: 20px;
-            font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
+        .card-header-vip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
         }
 
-        .match-title { font-size: 1.2rem; font-weight: 700; margin: 15px 0; text-align: center; }
+        /* Blinking Effect */
+        .badge.blinking {
+            background: var(--premium-purple);
+            color: white;
+            animation: blinker 1.5s linear infinite;
+        }
+        @keyframes blinker { 50% { opacity: 0.3; } }
+
+        .date-time { font-size: 0.7rem; color: var(--text-gray); }
+
+        .match-title { font-size: 1.3rem; font-weight: 700; margin: 15px 0; text-align: center; color: #fff; }
 
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .stat-box {
             background: rgba(255,255,255,0.03);
             border: 1px solid var(--glass-border);
-            padding: 10px; border-radius: 12px; text-align: center;
+            padding: 12px; border-radius: 15px; text-align: center;
         }
-        .stat-label { font-size: 0.65rem; color: var(--text-gray); text-transform: uppercase; display: block; }
-        .stat-value { font-size: 1rem; font-weight: 800; color: var(--premium-purple); }
+        
+        /* লকের সময় স্টাইল */
+        .stat-value.locked { color: #444; filter: blur(3px); }
+        .stat-value.unlocked { color: var(--premium-purple); font-weight: 800; }
 
-        .lock-overlay {
-            text-align: center; padding: 15px;
-            background: rgba(0,0,0,0.4); border-radius: 15px; border: 1px dashed var(--premium-purple);
+        /* আনলক বাটন স্টাইল */
+        .btn-unlock-vip {
+            background: var(--premium-purple);
+            color: white; border: none;
+            padding: 15px; border-radius: 15px;
+            font-weight: 800; width: 100%;
+            cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(123, 97, 255, 0.3);
         }
-        .btn-unlock {
-            background: var(--premium-purple); color: white; border: none;
-            padding: 12px 20px; border-radius: 12px; font-weight: 800;
-            width: 100%; cursor: pointer; transition: 0.3s; text-transform: uppercase;
-        }
-        .unlocked-content {
-            background: rgba(123, 97, 255, 0.1);
-            padding: 15px; border-radius: 15px; border: 1px solid var(--premium-purple);
-            text-align: center; animation: fadeIn 0.5s ease;
+
+        .unlocked-result-box {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px dashed #22c55e;
+            padding: 15px; border-radius: 15px;
+            text-align: center; margin-top: 10px;
         }
 
         #ad-modal {
@@ -73,8 +88,6 @@
             background: rgba(0,0,0,0.98); z-index: 9999;
             justify-content: center; align-items: center; flex-direction: column;
         }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -116,129 +129,86 @@
         try {
             const { data: { user } } = await _supabase.auth.getUser();
 
-            // ১. সব প্রেডিকশন নিয়ে আসা
-            const { data: matches, error: mErr } = await _supabase
-                .from('free_predictions')
-                .select('*');
-
+            const { data: matches, error: mErr } = await _supabase.from('free_predictions').select('*');
             if (mErr) throw mErr;
 
-            // ২. এই ইউজারের আনলক করা সব ডাটা নিয়ে আসা
             let unlockedList = [];
             if (user) {
-                const { data: uData, error: uErr } = await _supabase
-                    .from('unlocked_predictions')
-                    .select('prediction_id')
-                    .eq('user_id', user.id);
-                
-                if (uData) {
-                    // ডাটাবেস থেকে আসা আইডিগুলোকে স্ট্রিং বানিয়ে একটি লিস্টে রাখা
-                    unlockedList = uData.map(item => String(item.prediction_id));
-                }
+                const { data: uData } = await _supabase.from('unlocked_predictions').select('prediction_id').eq('user_id', user.id);
+                if (uData) unlockedList = uData.map(item => String(item.prediction_id));
             }
 
             if (!matches || matches.length === 0) {
-                listContainer.innerHTML = "<p style='text-align:center;'>No match data.</p>";
+                listContainer.innerHTML = "<p style='text-align:center;'>No match data available.</p>";
                 return;
             }
 
             listContainer.innerHTML = '';
             matches.forEach(match => {
                 const matchId = String(match.id);
-                // চেক করা: এই ম্যাচের আইডি কি আনলক লিস্টে আছে?
                 const isUnlocked = unlockedList.includes(matchId);
-                
+                const timeStr = match.match_time ? new Date(match.match_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'LIVE';
+
                 listContainer.innerHTML += `
-    <div class="prediction-card vip-style">
-        <div class="card-header">
-            <span class="badge blinking">${match.category || 'CRICKET'}</span>
-            <span class="date-time">
-                <i class="far fa-calendar-alt"></i> Today 
-                <i class="far fa-clock"></i> ${match.match_time ? new Date(match.match_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'LIVE'}
-            </span>
-        </div>
-        
-        <div class="match-title">${match.match_name}</div>
-        
-        <div class="stats-grid">
-            <div class="stat-box">
-                <span class="stat-label">PICK</span>
-                <span class="stat-value pick-text">${match.pick}</span>
-            </div>
-            <div class="stat-box">
-                <span class="stat-label">ODDS</span>
-                <span class="stat-value odds-text">${match.odds}</span>
-            </div>
-        </div>
+                    <div class="prediction-card">
+                        <div class="card-header-vip">
+                            <span class="badge blinking">${match.category || 'VIP'}</span>
+                            <span class="date-time"><i class="far fa-calendar-alt"></i> Today <i class="far fa-clock"></i> ${timeStr}</span>
+                        </div>
+                        
+                        <div class="match-title">${match.match_name}</div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <span class="stat-label">PICK</span>
+                                <span class="stat-value ${isUnlocked ? 'unlocked' : 'locked'}">${isUnlocked ? match.pick : '***'}</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="stat-label">ODDS</span>
+                                <span class="stat-value ${isUnlocked ? 'unlocked' : 'locked'}">${isUnlocked ? match.odds : '0.00'}</span>
+                            </div>
+                        </div>
 
-        ${isUnlocked ? `
-            <div class="unlocked-content-vip">
-                <div class="success-banner">SUCCESSFULLY UNLOCKED</div>
-                <div class="description-text">${match.description}</div>
-            </div>
-        ` : `
-            <div class="lock-overlay-vip">
-                <button class="btn-unlock-vip" onclick="handleUnlockProcess('${matchId}', ${!!user})">
-                    <i class="fas fa-play-circle"></i> UNLOCK NOW
-                </button>
-            </div>
-        `}
-    </div>
-`;
-
+                        ${isUnlocked ? `
+                            <div class="unlocked-result-box">
+                                <div style="color:#22c55e; font-size:10px; font-weight:900; margin-bottom:5px;">SUCCESSFULLY UNLOCKED</div>
+                                <div style="font-size:1.2rem; font-weight:800;">${match.description}</div>
+                            </div>
+                        ` : `
+                            <button class="btn-unlock-vip" onclick="handleUnlockProcess('${matchId}', ${!!user})">
+                                <i class="fas fa-play-circle"></i> UNLOCK NOW TO SEE
+                            </button>
+                        `}
+                    </div>
+                `;
             });
         } catch (err) {
-            console.error("Critical Error:", err);
-            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Syncing Error. Please refresh.</p>";
+            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Sync Error. Please Refresh.</p>";
         }
     }
 
     async function handleUnlockProcess(mId, isLoggedIn) {
-        if (!isLoggedIn) {
-            alert("Please login first!");
-            window.location.href = 'login.html';
-            return;
-        }
-
+        if (!isLoggedIn) { alert("Please login first!"); window.location.href = 'login.html'; return; }
         const modal = document.getElementById('ad-modal');
         modal.style.display = 'flex';
         let timeLeft = 15;
-        
         const countdown = setInterval(async () => {
             timeLeft--;
             document.getElementById('timer').innerText = timeLeft;
-            
             if (timeLeft <= 0) {
                 clearInterval(countdown);
                 try {
                     const { data: { user } } = await _supabase.auth.getUser();
-                    
-                    // ডাটাবেসে ইনসার্ট করা
-                    const { error: insError } = await _supabase
-                        .from('unlocked_predictions')
-                        .insert([{ 
-                            user_id: user.id, 
-                            prediction_id: parseInt(mId) 
-                        }]);
-
+                    const { error: insError } = await _supabase.from('unlocked_predictions').insert([{ user_id: user.id, prediction_id: parseInt(mId) }]);
                     if (insError) throw insError;
-
                     modal.style.display = 'none';
                     alert("Unlocked Successfully!");
-                    
-                    // পেজ রিলোড করা যাতে নতুন ডাটা অনুযায়ী বাটন চলে যায়
                     window.location.reload(); 
-                } catch (e) {
-                    alert("Sync Error: " + e.message);
-                    modal.style.display = 'none';
-                }
+                } catch (e) { alert("Error: " + e.message); modal.style.display = 'none'; }
             }
         }, 1000);
     }
-
     document.addEventListener('DOMContentLoaded', loadFreeData);
 </script>
-
-
 </body>
 </html>
