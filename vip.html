@@ -11,43 +11,43 @@
         body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; }
         .container { max-width: 600px; margin: 20px auto; padding: 15px; }
         
-        /* Header & Footer Hide by Default (Rule 8) */
+        /* Rule 8: Header & Footer hidden by default */
         header, footer { display: none; }
 
-        /* Match Card Styling (Rule 1) */
+        /* Rule 1: Match Card Styling */
         .match-card { 
             background: #1e293b; border-radius: 12px; padding: 20px; 
             margin-bottom: 20px; border: 1px solid #334155; position: relative; overflow: hidden;
         }
         .match-title { font-size: 1.1rem; font-weight: bold; color: #00ff88; margin-bottom: 10px; }
         
-        /* Blur Effect (Rule 1) */
+        /* Rule 1: Blur effect for hidden content */
         .prediction-blur { 
             filter: blur(8px); user-select: none; pointer-events: none; 
             background: rgba(15, 23, 42, 0.6); padding: 10px; border-radius: 8px; margin-top: 10px;
         }
         
-        /* Unlock Overlay (Rule 1) */
+        /* Rule 1: Overlay with Unlock button */
         .lock-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
-            background: rgba(30, 41, 59, 0.4); z-index: 5;
+            background: rgba(30, 41, 59, 0.5); z-index: 5;
         }
         .btn-unlock {
             background: #00ff88; color: #020617; border: none; padding: 10px 20px;
             border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,255,136,0.3);
         }
 
-        /* Success View */
         .prediction-show { color: #fff; background: #0f172a; padding: 15px; border-radius: 8px; border: 1px dashed #00ff88; }
+        .category-badge { background: #334155; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; color: #facc15; }
     </style>
 </head>
 <body>
 
 <header id="site-header">
-    <nav style="padding: 15px; background: #1e293b; text-align: center;">
-        <a href="index.html" style="color: white; text-decoration: none;">Home</a> | 
-        <a href="profile.html" style="color: white; text-decoration: none;">Profile</a>
+    <nav style="padding: 15px; background: #1e293b; text-align: center; border-bottom: 1px solid #334155;">
+        <a href="index.html" style="color: white; text-decoration: none; margin: 0 10px;">Home</a>
+        <a href="profile.html" style="color: white; text-decoration: none; margin: 0 10px;">Profile</a>
     </nav>
 </header>
 
@@ -58,7 +58,7 @@
     </div>
 </div>
 
-<footer id="site-footer" style="padding: 20px; text-align: center; background: #1e293b; margin-top: 50px;">
+<footer id="site-footer" style="padding: 20px; text-align: center; background: #1e293b; margin-top: 50px; border-top: 1px solid #334155;">
     <p>&copy; 2026 Sports Pro VIP</p>
 </footer>
 
@@ -71,50 +71,60 @@
         const { data: { session } } = await _supabase.auth.getSession();
         let hasVipAccess = false;
 
-        // শর্ত ৮: লগইন থাকলে হেডার-ফুটার দেখাবে
+        // Rule 8: If logged in, show header and footer
         if (session) {
             document.getElementById('site-header').style.display = 'block';
             document.getElementById('site-footer').style.display = 'block';
 
-            // শর্ত ৩ ও ৭: VIP ও Expiry চেক
+            // Rules 3 & 7: Check VIP status and Expiry
             const { data: profile } = await _supabase.from('profiles').select('*').eq('id', session.user.id).single();
             if (profile && profile.is_vip) {
-                const expiry = new Date(profile.expiry_date);
-                if (expiry > new Date()) {
+                const expiry = profile.expiry_date ? new Date(profile.expiry_date) : null;
+                if (expiry && expiry > new Date()) {
                     hasVipAccess = true;
                 }
             }
         }
 
-        loadMatchesFromSheet(hasVipAccess, !!session);
+        loadMatches(hasVipAccess, !!session);
     }
 
-    async function loadMatchesFromSheet(isVip, isLoggedIn) {
-        // শর্ত ১: ডাটাবেস থেকে প্রেডিকশন নিয়ে আসা
-        const { data: matches, error } = await _supabase.from('Vip_matches').select('*');
+    async function loadMatches(isVip, isLoggedIn) {
+        // Fetching from 'vip_matches' (case-sensitive as per table editor)
+        const { data: matches, error } = await _supabase.from('vip_matches').select('*');
         
         const container = document.getElementById('vip-container');
         
-        if (error || !matches || matches.length === 0) {
+        if (error) {
+            console.error("Fetch Error:", error.message);
+            container.innerHTML = `<p style='text-align:center; color:red;'>Error loading data. Please check RLS Policies.</p>`;
+            return;
+        }
+
+        if (!matches || matches.length === 0) {
             container.innerHTML = "<p style='text-align:center;'>No VIP matches found.</p>";
             return;
         }
 
         container.innerHTML = matches.map(m => `
             <div class="match-card">
-                <div class="match-title">${m.match_name}</div>
-                <div style="font-size: 0.8rem; color: #94a3b8;">Time: ${new Date(m.match_time).toLocaleString()}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div class="match-title">${m.match_name}</div>
+                    <span class="category-badge">${m.category || 'VIP'}</span>
+                </div>
                 
                 ${isVip ? `
                     <div class="prediction-show">
-                        <strong>Premium Tip:</strong><br>${m.description}
+                        <strong style="color:#00ff88;">Premium Tip:</strong><br>${m.description}
                     </div>
                 ` : `
                     <div class="prediction-blur">
-                        <strong>Prediction:</strong> This content is hidden. Please unlock to view the premium tip.
+                        <strong>Prediction:</strong> This premium content is hidden. Please unlock to view the tip.
                     </div>
                     <div class="lock-overlay">
-                        <button class="btn-unlock" onclick="handleUnlock(${isLoggedIn})">Unlock Now</button>
+                        <button class="btn-unlock" onclick="handleUnlock(${isLoggedIn})">
+                            <i class="fas fa-lock"></i> Unlock Now
+                        </button>
                     </div>
                 `}
             </div>
@@ -123,10 +133,10 @@
 
     function handleUnlock(isLoggedIn) {
         if (!isLoggedIn) {
-            // শর্ত ২: লগইন না থাকলে লগইন পেজে পাঠাবে
+            // Rule 2: If no account, go to login
             window.location.href = 'login.html';
         } else {
-            // শর্ত ৪: লগইন থাকলে সাবস্ক্রিপশন পেজে পাঠাবে
+            // Rule 4: If account exists but no subscription, go to subscription page
             window.location.href = 'subscription.html';
         }
     }
