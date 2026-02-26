@@ -3,33 +3,49 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // CSS ইনজেক্ট করা হচ্ছে প্রিমিয়াম লুকের জন্য
+    // CSS আপডেট করা হয়েছে আপনার পাঠানো ছবির কালার থিম অনুযায়ী
     const style = document.createElement('style');
     style.innerHTML = `
         .premium-header {
             display: flex; justify-content: space-between; align-items: center; 
-            padding: 12px 20px; background: rgba(15, 23, 42, 0.9); 
-            backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px 20px; background: rgba(5, 5, 5, 0.8); 
+            backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: sticky; top: 0; z-index: 1000;
         }
         .logo-text {
-            color: #00ff88; font-weight: 900; font-size: 1.3rem; 
-            letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+            color: #ffffff; font-weight: 900; font-size: 1.2rem; 
+            letter-spacing: 2px; text-shadow: 0 0 15px rgba(123, 97, 255, 0.5);
             cursor: pointer;
+            text-transform: uppercase;
         }
         .right-section {
             display: flex; align-items: center; gap: 15px;
         }
-        .bell-icon { color: #94a3b8; font-size: 1.2rem; transition: 0.3s; position: relative; cursor: pointer; }
+        .bell-icon { color: #94a3b8; font-size: 1.1rem; transition: 0.3s; position: relative; cursor: pointer; }
         .bell-icon::after {
-            content: ''; position: absolute; top: -2px; right: -2px;
-            width: 7px; height: 7px; background: #ef4444; border-radius: 50%;
-            border: 2px solid #0f172a;
+            content: ''; position: absolute; top: -1px; right: -1px;
+            width: 7px; height: 7px; background: #7b61ff; border-radius: 50%;
+            border: 2px solid #050505;
+            box-shadow: 0 0 5px #7b61ff;
         }
-        .user-hi { color: #00ff88; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+        .user-hi { 
+            color: #7b61ff; 
+            font-size: 0.8rem; 
+            font-weight: 800; 
+            cursor: pointer; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
         .btn-login {
-            background: #00ff88; color: #020617; padding: 8px 16px; 
-            border-radius: 8px; font-weight: bold; border: none; cursor: pointer;
+            background: #7b61ff; color: #ffffff; padding: 8px 18px; 
+            border-radius: 10px; font-weight: 800; border: none; cursor: pointer;
+            font-size: 0.75rem; text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(123, 97, 255, 0.3);
+            transition: 0.3s;
+        }
+        .btn-login:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(123, 97, 255, 0.5);
         }
     `;
     document.head.appendChild(style);
@@ -38,7 +54,6 @@
         const headerRoot = document.getElementById('header-root');
         if (!headerRoot) return;
 
-        // দ্রুত লোড হওয়ার জন্য লোকাল স্টোরেজ চেক
         const cachedUser = JSON.parse(localStorage.getItem('sb-cclfxvmpgkytzebuhwpj-auth-token'));
         let authHtml = `<button onclick="window.location.href='login.html'" class="btn-login">Login</button>`;
 
@@ -46,10 +61,8 @@
             authHtml = renderUserSection();
         }
 
-        // প্রাথমিক রেন্ডার
         renderHeader(headerRoot, authHtml);
 
-        // সুপাবেস থেকে লেটেস্ট সেশন চেক
         const { data: { user } } = await supabaseClient.auth.getUser();
         
         if (user) {
