@@ -18,7 +18,6 @@
         .btn-vip { background: #facc15; color: #000; }
         .btn-premium { background: linear-gradient(45deg, #00ff88, #05d675); color: #000; }
         .section-divider { margin: 40px 0; border: 1px dashed #334155; }
-        
         .req-card { background: #0f172a; border: 1px solid #1e293b; padding: 15px; margin-bottom: 15px; border-radius: 12px; font-size: 0.85rem; }
         .req-card p { margin: 5px 0; color: #cbd5e1; }
         .req-card b { color: #00ff88; }
@@ -40,6 +39,7 @@
         <label>Analysis Description</label>
         <textarea id="mDesc" rows="4" placeholder="Write match analysis..."></textarea>
         <button class="btn-post" id="publishBtn" onclick="publishMatch()">Publish Now</button>
+        
         <div class="section-divider"></div>
 
         <h2 style="color: #facc15;"><i class="fas fa-star"></i> Post VIP Prediction</h2>
@@ -54,14 +54,6 @@
         <label>Match Time (Direct Text)</label>
         <input type="text" id="vTime" placeholder="e.g. 7:30 PM">
         <button class="btn-post btn-premium" onclick="publishVipMatch()">Publish VIP Signal</button>
-        <div class="section-divider"></div>
-
-        <h2><i class="fas fa-crown"></i> User VIP Management</h2>
-        <label>User Registered Email</label>
-        <input type="email" id="userEmail" placeholder="user@gmail.com">
-        <label>VIP Expiry Date</label>
-        <input type="date" id="expiryDate">
-        <button class="btn-post btn-vip" id="vipBtn" onclick="makeUserVIP()">Activate VIP Status</button>
     </div>
 
     <div class="admin-box">
@@ -101,38 +93,22 @@
             else { alert("Success! VIP Match Published."); location.reload(); }
         }
 
-        async function makeUserVIP() {
-            const pass = document.getElementById('adminKey').value;
-            const email = document.getElementById('userEmail').value;
-            const expiry = document.getElementById('expiryDate').value;
-            if(pass !== "35895") { alert("Wrong Admin Password!"); return; }
-            const btn = document.getElementById('vipBtn');
-            btn.innerText = "Updating...";
-            btn.disabled = true;
-            try {
-                const { error } = await _supabase.from('profiles').update({ is_vip: true, expiry_date: expiry }).eq('email', email.trim());
-                if (error) alert("Database Error: " + error.message);
-                else { alert("Success! " + email + " is now a VIP Member."); location.reload(); }
-            } catch (err) { alert("Error: " + err.message); }
-            finally { btn.innerText = "Activate VIP Status"; btn.disabled = false; }
-        }
-
         async function loadRequests() {
-            const { data: requests, error } = await _supabase.from('payment_requests').select('*');
             const list = document.getElementById('payment-list');
-            if (error) { list.innerHTML = "Error!"; return; }
+            const { data: requests, error } = await _supabase.from('payment_requests').select('*');
+            if (error) { list.innerHTML = "Error loading!"; return; }
 
             if (requests && requests.length > 0) {
                 list.innerHTML = requests.reverse().map(req => `
-                    <div class="req-card" style="padding:15px; border-radius:12px; background:#0f172a; margin-bottom:10px; border:1px solid #1e293b;">
+                    <div class="req-card">
                         <p>👤 <b>Email:</b> ${req.user_email}</p>
                         <p>🆔 <b style="color:#00ff88;">TrxID:</b> <span class="trx-box">${req.transaction_id || 'N/A'}</span></p>
                         <p>🚦 <b>Status:</b> <span style="color:${req.status === 'pending' ? '#facc15' : '#00ff88'}">${req.status}</span></p>
                         <p>📱 <b>Mobile:</b> ${req.mobile} | 📦 <b>Plan:</b> ${req.plan_name}</p>
                         ${req.status === 'pending' ? `
                         <div style="margin-top:10px; display:flex; gap:10px;">
-                            <button class="btn-post" style="background:#00ff88; color:black; padding:8px; flex:1; border-radius:5px;" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">APPROVE</button>
-                            <button class="btn-post" style="background:#ef4444; color:white; padding:8px; flex:1; border-radius:5px;" onclick="rejectRequest(${req.id})">REJECT</button>
+                            <button class="btn-post" style="background:#00ff88; color:black; padding:8px; flex:1;" onclick="approveUser('${req.user_email}', ${req.duration}, ${req.id})">APPROVE</button>
+                            <button class="btn-post" style="background:#ef4444; color:white; padding:8px; flex:1;" onclick="rejectRequest(${req.id})">REJECT</button>
                         </div>` : ''}
                     </div>
                 `).join('');
@@ -141,15 +117,14 @@
 
         async function approveUser(email, days, requestId) {
             const pass = document.getElementById('adminKey').value;
-            if(pass !== "35895") { alert("Password please!"); return; }
+            if(pass !== "35895") { alert("Password needed!"); return; }
 
-            // তারিখ ক্যালকুলেশন
             let expiryDate = new Date();
             expiryDate.setDate(expiryDate.getDate() + parseInt(days));
             const finalDateStr = expiryDate.toISOString().split('T')[0];
 
             try {
-                // ১. প্রোফাইল আপডেট (Profiles table এ ইমেইল ফিল্ডটি চেক করুন)
+                // ১. প্রোফাইল আপডেট (প্রথমে চেক করা হচ্ছে প্রোফাইল আছে কি না)
                 const { error: profileErr } = await _supabase
                     .from('profiles')
                     .update({ is_vip: true, expiry_date: finalDateStr })
@@ -157,18 +132,13 @@
 
                 if (profileErr) throw profileErr;
 
-                // ২. রিকোয়েস্ট স্ট্যাটাস আপডেট
-                const { error: reqErr } = await _supabase
-                    .from('payment_requests')
-                    .update({ status: 'approved' })
-                    .eq('id', requestId);
-
-                if (reqErr) throw reqErr;
-
-                alert(`SUCCESS! ${email} is VIP until ${finalDateStr}`);
-                loadRequests(); 
+                // ২. পেমেন্ট রিকোয়েস্ট আপডেট
+                await _supabase.from('payment_requests').update({ status: 'approved' }).eq('id', requestId);
+                
+                alert(`SUCCESS! ${email} UNLOCKED until ${finalDateStr}`);
+                loadRequests();
             } catch (err) {
-                alert("Update failed: " + err.message);
+                alert("Critical Error: " + err.message);
                 console.error(err);
             }
         }
@@ -176,10 +146,8 @@
         async function rejectRequest(requestId) {
             const pass = document.getElementById('adminKey').value;
             if(pass !== "35895") { alert("Password!"); return; }
-            if(confirm("Reject this request?")) {
-                await _supabase.from('payment_requests').update({ status: 'rejected' }).eq('id', requestId);
-                loadRequests();
-            }
+            await _supabase.from('payment_requests').update({ status: 'rejected' }).eq('id', requestId);
+            loadRequests();
         }
 
         loadRequests();
