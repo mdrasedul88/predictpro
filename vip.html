@@ -3,68 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Premium Signals | Sports Pro</title>
+    <title>VIP Premium Signals</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --gold: #facc15; --neon-green: #00ff88; --dark-bg: #0f172a;
+            --gold: #facc15; --neon-green: #00ff88; --dark-bg: #060b18;
         }
-        body { background: var(--dark-bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; }
-        .container { max-width: 500px; margin: auto; padding: 20px; }
-        header, footer { display: none; } /* Rule 8: Logic in JS */
+        body { background: var(--dark-bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 450px; margin: auto; padding: 10px; }
+        header, footer { display: none; } /* Rule 8 */
 
-        /* Blinking Animation */
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        /* Blinking & Glow Animations */
+        @keyframes glow-cricket { 0%, 100% { box-shadow: 0 0 5px #00ff88; } 50% { box-shadow: 0 0 15px #00ff88; } }
+        @keyframes glow-football { 0%, 100% { box-shadow: 0 0 5px #3b82f6; } 50% { box-shadow: 0 0 15px #3b82f6; } }
+        @keyframes glow-basketball { 0%, 100% { box-shadow: 0 0 5px #f97316; } 50% { box-shadow: 0 0 15px #f97316; } }
 
-        /* Category Specific Colors */
-        .badge-cricket { background: #00ff88; color: #000; box-shadow: 0 0 10px #00ff88; animation: blink 1.5s infinite; }
-        .badge-football { background: #3b82f6; color: #fff; box-shadow: 0 0 10px #3b82f6; animation: blink 1.5s infinite; }
-        .badge-basketball { background: #f97316; color: #fff; box-shadow: 0 0 10px #f97316; animation: blink 1.5s infinite; }
-        .badge-default { background: var(--gold); color: #000; animation: blink 1.5s infinite; }
+        .badge-cricket { background: #00ff88; color: #000; animation: glow-cricket 2s infinite; }
+        .badge-football { background: #3b82f6; color: #fff; animation: glow-football 2s infinite; }
+        .badge-basketball { background: #f97316; color: #fff; animation: glow-basketball 2s infinite; }
 
+        /* Slim Card Styling */
         .match-card {
-            background: linear-gradient(145deg, #1e293b, #0f172a);
-            border-radius: 20px; padding: 25px; margin-bottom: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.05); position: relative;
+            background: linear-gradient(145deg, #111827, #060b18);
+            border-radius: 15px; padding: 15px; margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.08); position: relative;
         }
-        .category-badge { 
-            padding: 4px 12px; border-radius: 50px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase;
-        }
-        .vs-text { font-size: 1.5rem; font-weight: 800; text-align: center; margin: 20px 0; color: #fff; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .category-badge { padding: 2px 10px; border-radius: 50px; font-size: 0.6rem; font-weight: bold; text-transform: uppercase; }
+        .live-tag { font-size: 0.65rem; color: #94a3b8; display: flex; align-items: center; gap: 4px; }
+
+        .vs-text { font-size: 1.1rem; font-weight: 700; text-align: center; margin: 5px 0 12px 0; color: #fff; }
         
-        /* Prediction Boxes */
-        .prediction-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .prediction-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .predict-box { 
-            background: rgba(15, 23, 42, 0.8); padding: 15px; border-radius: 12px; 
-            text-align: center; border: 1px solid rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.03); padding: 8px; border-radius: 10px; 
+            text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .label { display: block; font-size: 0.7rem; color: var(--gold); margin-bottom: 5px; font-weight: bold; }
-        .blur-val { filter: blur(10px); user-select: none; }
-        .clear-val { color: var(--neon-green); font-weight: bold; font-size: 1.2rem; }
+        .label { display: block; font-size: 0.6rem; color: var(--gold); margin-bottom: 2px; font-weight: bold; }
+        .blur-val { filter: blur(6px); user-select: none; font-size: 0.9rem; opacity: 0.7; }
+        .clear-val { color: var(--neon-green); font-weight: bold; font-size: 1rem; }
 
         .unlock-btn {
-            width: 100%; margin-top: 25px; padding: 15px; border-radius: 12px;
+            width: 100%; margin-top: 12px; padding: 10px; border-radius: 10px;
             background: linear-gradient(45deg, var(--neon-green), #05d675);
-            color: #020617; border: none; font-weight: 800; cursor: pointer; text-transform: uppercase;
+            color: #020617; border: none; font-weight: 800; font-size: 0.8rem; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<header id="site-header" style="background: #1e293b; padding: 15px; text-align: center; border-bottom: 1px solid #334155;">
-    <a href="index.html" style="color:white; text-decoration:none; margin: 0 10px;">HOME</a> | 
-    <a href="profile.html" style="color:white; text-decoration:none; margin: 0 10px;">PROFILE</a>
+<header id="site-header" style="background: #0f172a; padding: 12px; text-align: center; border-bottom: 1px solid #1e293b;">
+    <nav><a href="index.html" style="color:white; text-decoration:none; margin:0 10px; font-size:0.9rem;">HOME</a> | 
+    <a href="profile.html" style="color:white; text-decoration:none; margin:0 10px; font-size:0.9rem;">PROFILE</a></nav>
 </header>
 
 <div class="container">
-    <h1 style="text-align:center; color: var(--neon-green); letter-spacing: 2px;">PREMIUM VIP</h1>
+    <h2 style="text-align:center; color: var(--neon-green); font-size: 1.4rem; margin: 15px 0;">PREMIUM VIP</h2>
     <div id="vip-list">
-        <p style="text-align:center; color: #94a3b8;">Loading Secure Signals...</p>
+        <p style="text-align:center; color: #4b5563;">Loading...</p>
     </div>
 </div>
 
-<footer id="site-footer" style="padding: 20px; text-align: center; color: #475569; font-size: 0.8rem;">
+<footer id="site-footer" style="padding: 15px; text-align: center; color: #4b5563; font-size: 0.7rem;">
     &copy; 2026 Sports Pro International
 </footer>
 
@@ -76,44 +77,35 @@
     async function init() {
         const { data: { session } } = await _supabase.auth.getSession();
         let isVip = false;
-
         if (session) {
             document.getElementById('site-header').style.display = 'block';
             document.getElementById('site-footer').style.display = 'block';
             const { data: profile } = await _supabase.from('profiles').select('*').eq('id', session.user.id).single();
             if (profile && profile.is_vip && new Date(profile.expiry_date) > new Date()) isVip = true;
         }
-        loadVipMatches(isVip, !!session);
+        loadMatches(isVip, !!session);
     }
 
-    async function loadVipMatches(isVip, isLoggedIn) {
-        const { data: matches, error } = await _supabase.from('vip_matches').select('*');
+    async function loadMatches(isVip, isLoggedIn) {
+        const { data: matches } = await _supabase.from('vip_matches').select('*');
         const list = document.getElementById('vip-list');
-
-        if (error || !matches || matches.length === 0) {
-            list.innerHTML = "<p style='text-align:center;'>No Live Signals.</p>";
-            return;
-        }
+        if (!matches || matches.length === 0) { list.innerHTML = "<p style='text-align:center;'>No signals.</p>"; return; }
 
         list.innerHTML = matches.map(m => {
-            // Fix Invalid Date
-            const mDate = m.created_at ? new Date(m.created_at).toLocaleDateString() : 'LIVE';
-            
-            // Dynamic Blinking Class
             const cat = (m.category || '').toLowerCase();
-            let badgeClass = 'badge-default';
-            if (cat.includes('cricket')) badgeClass = 'badge-cricket';
-            else if (cat.includes('football')) badgeClass = 'badge-football';
-            else if (cat.includes('basketball')) badgeClass = 'badge-basketball';
+            let bClass = 'badge-default';
+            if (cat.includes('cricket')) bClass = 'badge-cricket';
+            else if (cat.includes('football')) bClass = 'badge-football';
+            else if (cat.includes('basketball')) bClass = 'badge-basketball';
 
             return `
             <div class="match-card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span class="category-badge ${badgeClass}">${m.category || 'VIP'}</span>
-                    <span style="font-size:0.7rem; color:#94a3b8;"><i class="far fa-calendar-alt"></i> ${mDate}</span>
+                <div class="card-header">
+                    <span class="category-badge ${bClass}">${m.category || 'VIP'}</span>
+                    <span class="live-tag"><i class="fas fa-circle" style="color:#ef4444; font-size:0.5rem;"></i> LIVE</span>
                 </div>
                 <div class="vs-text">${m.match_name}</div>
-                <div class="prediction-grid">
+                <div class="prediction-row">
                     <div class="predict-box">
                         <span class="label">PICK</span>
                         <span class="${isVip ? 'clear-val' : 'blur-val'}">${isVip ? m.description : 'WINNER'}</span>
@@ -123,7 +115,7 @@
                         <span class="${isVip ? 'clear-val' : 'blur-val'}">${isVip ? (m.odds || '1.90') : '0.00'}</span>
                     </div>
                 </div>
-                ${!isVip ? `<button class="unlock-btn" onclick="location.href='${isLoggedIn ? 'subscription.html' : 'login.html'}'"><i class="fas fa-lock"></i> Unlock Now</button>` : ''}
+                ${!isVip ? `<button class="unlock-btn" onclick="location.href='${isLoggedIn ? 'subscription.html' : 'login.html'}'"><i class="fas fa-unlock"></i> UNLOCK NOW</button>` : ''}
             </div>`;
         }).join('');
     }
