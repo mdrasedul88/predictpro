@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Free Predictions | Sports Pro</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Free VIP Predictions | Sports Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -13,80 +12,72 @@
             --dark-bg: #050505; 
             --card-glass: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.1);
-            --glow: rgba(123, 97, 255, 0.3);
             --text-gray: #94a3b8;
         }
 
         body { 
             background: var(--dark-bg); 
             background-image: radial-gradient(circle at 50% 10%, #1a103d 0%, #050505 100%);
-            color: white; 
-            font-family: 'Poppins', sans-serif; 
-            margin: 0; padding: 0; 
+            color: white; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
         }
 
-        .container { max-width: 500px; margin: auto; padding: 15px; }
+        .container { max-width: 500px; margin: auto; padding: 20px; padding-bottom: 100px; }
+        .page-header { text-align: center; margin-bottom: 30px; }
+        .page-header h1 { color: var(--premium-purple); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; }
 
-        .page-title { text-align: center; margin: 20px 0; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #fff; }
-
-        #free-predictions { display: grid; gap: 20px; padding-bottom: 80px; }
-
-        /* কার্ড ডিজাইন */
+        /* কার্ড ডিজাইন - আপনার স্ক্রিনশট অনুযায়ী */
         .prediction-card {
             background: var(--card-glass);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(15px);
             border: 1px solid var(--glass-border);
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 20px;
+            margin-bottom: 20px;
             position: relative;
-            overflow: hidden;
-            transition: 0.3s;
         }
 
-        .match-info { margin-bottom: 15px; }
-        .match-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 5px; }
-        .match-cat { font-size: 0.7rem; color: var(--premium-purple); text-transform: uppercase; font-weight: 800; }
-
-        /* লক করা সেকশন */
-        .locked-overlay {
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px dashed var(--premium-purple);
+        .badge {
+            background: rgba(123, 97, 255, 0.2);
+            color: var(--premium-purple);
+            padding: 4px 12px; border-radius: 20px;
+            font-size: 0.65rem; font-weight: 800; text-transform: uppercase;
         }
 
-        .locked-overlay i { font-size: 2rem; color: var(--premium-purple); margin-bottom: 10px; }
-        
+        .match-title { font-size: 1.2rem; font-weight: 700; margin: 15px 0; text-align: center; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            padding: 10px; border-radius: 12px; text-align: center;
+        }
+        .stat-label { font-size: 0.65rem; color: var(--text-gray); text-transform: uppercase; display: block; }
+        .stat-value { font-size: 1rem; font-weight: 800; color: var(--premium-purple); }
+
+        /* লক/আনলক সেকশন */
+        .lock-overlay {
+            text-align: center; padding: 15px;
+            background: rgba(0,0,0,0.4); border-radius: 15px; border: 1px dashed var(--premium-purple);
+        }
         .btn-unlock {
-            background: var(--premium-purple);
-            color: white; border: none; padding: 10px 20px;
-            border-radius: 10px; font-weight: 700; cursor: pointer;
-            margin-top: 10px; width: 100%; transition: 0.3s;
+            background: var(--premium-purple); color: white; border: none;
+            padding: 12px 20px; border-radius: 12px; font-weight: 800;
+            width: 100%; cursor: pointer; transition: 0.3s; text-transform: uppercase;
+        }
+        .unlocked-content {
+            background: rgba(123, 97, 255, 0.1);
+            padding: 15px; border-radius: 15px; border: 1px solid var(--premium-purple);
+            text-align: center; animation: fadeIn 0.5s ease;
         }
 
-        /* আনলক হওয়ার পর ডাটা লুক */
-        .unlocked-data {
-            display: none;
-            background: rgba(123, 97, 255, 0.1);
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid var(--premium-purple);
-            animation: fadeIn 0.5s ease;
+        /* অ্যাড মডাল */
+        #ad-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.98); z-index: 9999;
+            justify-content: center; align-items: center; flex-direction: column;
         }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* টাইমার মাস্ক */
-        #ad-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 10000;
-            justify-content: center; align-items: center; flex-direction: column; padding: 20px;
-        }
     </style>
 </head>
 <body>
@@ -94,21 +85,23 @@
 <div id="header-root"></div>
 
 <div class="container">
-    <h2 class="page-title">Free Predictions</h2>
-    <div id="free-predictions">
-        <p style="text-align: center; color: var(--text-gray);">Checking for today's matches...</p>
+    <div class="page-header">
+        <h1>🏆 FREE PREMIUM VIP</h1>
+        <p style="color: var(--text-gray); font-size: 0.8rem;">Watch Ad to Unlock Expert Predictions</p>
+    </div>
+
+    <div id="predictions-list">
+        <p style="text-align: center; color: var(--text-gray);">Syncing with server...</p>
     </div>
 </div>
 
 <div id="ad-modal">
-    <div style="text-align: center;">
-        <h3 style="color: var(--premium-purple);">Watching Ad to Unlock...</h3>
-        <p id="timer-text" style="font-size: 2rem; font-weight: 800; margin: 20px 0;">15</p>
-        <div style="width: 300px; height: 250px; background: #222; margin: auto; border: 1px solid #444;">
-            <p style="color: #666; padding-top: 100px;">Ad Unit Will Load Here</p>
-        </div>
-        <p style="color: var(--text-gray); font-size: 0.8rem; margin-top: 20px;">Don't close this window until the timer ends.</p>
+    <h2 style="color: var(--premium-purple);">UNLOKING PREDICTION</h2>
+    <p id="timer" style="font-size: 3rem; font-weight: 900; margin: 20px 0;">15</p>
+    <div id="adsense-area" style="width: 300px; height: 250px; background: #111; border: 1px solid #333; display: flex; align-items: center; justify-content: center;">
+        <span style="color: #444;">ADSENSE AD UNIT</span>
     </div>
+    <p style="color: var(--text-gray); margin-top: 20px; font-size: 0.8rem;">Please wait while the ad completes...</p>
 </div>
 
 <div id="footer-root"></div>
@@ -117,64 +110,93 @@
 <script src="js/footer.js"></script>
 
 <script>
-    const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
-    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
-    const _supabase = window.supabase.createClient(S_URL, S_KEY);
+    const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    async function loadFreeMatches() {
-        const container = document.getElementById('free-predictions');
-        const { data, error } = await _supabase.from('matches').select('*').order('match_time', { ascending: false });
+    async function loadFreeData() {
+        const listContainer = document.getElementById('predictions-list');
+        const { data: { user } } = await _supabase.auth.getUser();
 
-        if (error || !data) { container.innerHTML = "No matches found."; return; }
+        // ১. সব ফ্রি প্রেডিকশন আনা
+        const { data: matches, error } = await _supabase.from('free_predictions').select('*').order('match_time', {ascending: false});
+        
+        // ২. ইউজারের আনলক করা লিস্ট চেক করা
+        let unlockedIds = [];
+        if(user) {
+            const { data: unlockedData } = await _supabase.from('unlocked_predictions').select('prediction_id').eq('user_id', user.id);
+            unlockedIds = unlockedData ? unlockedData.map(d => d.prediction_id) : [];
+        }
 
-        container.innerHTML = '';
-        data.forEach(match => {
-            container.innerHTML += `
-                <div class="prediction-card" id="card-${match.id}">
-                    <div class="match-info">
-                        <span class="match-cat">${match.category}</span>
-                        <div class="match-name">${match.match_name}</div>
-                    </div>
+        if(error) { listContainer.innerHTML = "Error loading data."; return; }
+        
+        listContainer.innerHTML = '';
+        matches.forEach(match => {
+            const isUnlocked = unlockedIds.includes(match.id);
+            
+            listContainer.innerHTML += `
+                <div class="prediction-card">
+                    <span class="badge">${match.category}</span>
+                    <div class="match-title">${match.match_name}</div>
                     
-                    <div id="locked-${match.id}" class="locked-overlay">
-                        <i class="fas fa-lock"></i>
-                        <span style="font-size:0.8rem;">Watch a short ad to see prediction</span>
-                        <button class="btn-unlock" onclick="startAd('${match.id}')">WATCH AD & UNLOCK</button>
+                    <div class="stats-grid">
+                        <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
+                        <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
                     </div>
 
-                    <div id="unlocked-${match.id}" class="unlocked-data">
-                        <div style="font-size:0.75rem; color:var(--text-gray);">Prediction:</div>
-                        <div style="font-weight:800; color:var(--premium-purple); font-size:1.1rem;">${match.description}</div>
-                    </div>
+                    ${isUnlocked ? `
+                        <div class="unlocked-content">
+                            <span class="stat-label">Analysis Result</span>
+                            <div style="font-weight: 800; font-size: 1.1rem; color: #fff;">${match.description}</div>
+                        </div>
+                    ` : `
+                        <div class="lock-overlay">
+                            <button class="btn-unlock" onclick="attemptUnlock('${match.id}', ${!!user})">
+                                <i class="fas fa-play-circle"></i> Unlock Prediction
+                            </button>
+                        </div>
+                    `}
                 </div>
             `;
         });
     }
 
-    function startAd(matchId) {
+    async function attemptUnlock(matchId, isLoggedIn) {
+        if(!isLoggedIn) {
+            alert("Please login to your account to unlock free predictions.");
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // অ্যাড টাইমার শুরু
         const modal = document.getElementById('ad-modal');
-        const timerText = document.getElementById('timer-text');
+        const timerDisplay = document.getElementById('timer');
         modal.style.display = 'flex';
         
-        let count = 15; // ১৫ সেকেন্ডের অ্যাড টাইম
-        const interval = setInterval(() => {
-            count--;
-            timerText.innerText = count;
-            if (count <= 0) {
-                clearInterval(interval);
+        let timeLeft = 15;
+        const countdown = setInterval(async () => {
+            timeLeft--;
+            timerDisplay.innerText = timeLeft;
+            
+            if(timeLeft <= 0) {
+                clearInterval(countdown);
                 modal.style.display = 'none';
-                unlockPrediction(matchId);
+                
+                // ডাটাবেসে চিরস্থায়ী আনলক হিসেবে সেভ করা
+                const { data: { user } } = await _supabase.auth.getUser();
+                const { error } = await _supabase.from('unlocked_predictions').insert([
+                    { user_id: user.id, prediction_id: matchId }
+                ]);
+
+                if(!error) {
+                    alert("Success! Prediction unlocked forever.");
+                    loadFreeData();
+                }
             }
         }, 1000);
     }
 
-    function unlockPrediction(matchId) {
-        document.getElementById(`locked-${matchId}`).style.display = 'none';
-        document.getElementById(`unlocked-${matchId}`).style.display = 'block';
-    }
-
-    loadFreeMatches();
+    loadFreeData();
 </script>
 </body>
 </html>
-
