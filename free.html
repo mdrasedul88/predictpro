@@ -21,62 +21,60 @@
             color: white; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
         }
 
-        .container { max-width: 500px; margin: auto; padding: 20px; padding-bottom: 100px; }
-        .page-header { text-align: center; margin-bottom: 20px; } /* Margin ৩০% কমানো হয়েছে */
-        .page-header h1 { color: var(--premium-purple); font-size: 1.4rem; text-transform: uppercase; letter-spacing: 2px; } /* ফন্ট সাইজ সামান্য কমানো হয়েছে */
+        .container { max-width: 500px; margin: auto; padding: 15px; padding-bottom: 80px; } /* থিকনেস কমানো হয়েছে */
+        .page-header { text-align: center; margin-bottom: 15px; } 
+        .page-header h1 { color: var(--premium-purple); font-size: 1.3rem; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* VIP কার্ডের ডিজাইন (থিকনেস কমানো হয়েছে) */
+        /* VIP কার্ডের ডিজাইন (থিকনেস আরও ১০% কমানো হয়েছে) */
         .prediction-card {
             background: #1e1e2e;
             border: 1px solid var(--glass-border);
-            border-radius: 18px; /* ব্যাসার্ধ ৩০% কমানো হয়েছে */
-            padding: 14px; /* Padding ৩০% কমানো হয়েছে (২০px থেকে ১৪px) */
-            margin-bottom: 14px; /* Margin ৩০% কমানো হয়েছে */
+            border-radius: 15px; 
+            padding: 12px; /* Padding আরও ১০% কমানো হয়েছে */
+            margin-bottom: 12px; /* Margin আরও ১০% কমানো হয়েছে */
             position: relative;
             box-shadow: 0 8px 25px rgba(0,0,0,0.5);
         }
 
-        .card-header-vip { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; } /* Margin কমানো হয়েছে */
+        .card-header-vip { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 
-        /* Blinking Badge */
         .badge.blinking {
             background: var(--premium-purple); color: white;
             animation: blinker 1.5s linear infinite;
-            padding: 3px 10px; border-radius: 15px; font-size: 0.6rem; font-weight: 800; /* Padding এবং ফন্ট সাইজ কমানো হয়েছে */
+            padding: 3px 10px; border-radius: 15px; font-size: 0.6rem; font-weight: 800;
         }
         @keyframes blinker { 50% { opacity: 0.3; } }
 
-        .date-time { font-size: 0.65rem; color: var(--text-gray); } /* ফন্ট সাইজ কমানো হয়েছে */
-        .match-title { font-size: 1.1rem; font-weight: 700; margin: 10px 0; text-align: center; color: #fff; } /* Margin এবং ফন্ট সাইজ কমানো হয়েছে */
+        .date-time { font-size: 0.6rem; color: var(--text-gray); }
+        .match-title { font-size: 1rem; font-weight: 700; margin: 8px 0; text-align: center; color: #fff; }
 
-        /* স্ট্যাটাস গ্রিড (থিকনেস কমানো হয়েছে) */
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; } /* Gap এবং Margin কমানো হয়েছে */
+        /* স্ট্যাটাস গ্রিড */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
         .stat-box {
             background: rgba(255,255,255,0.03);
             border: 1px solid var(--glass-border);
-            padding: 8px; border-radius: 12px; text-align: center; /* Padding এবং ব্যাসার্ধ কমানো হয়েছে */
+            padding: 6px; border-radius: 10px; text-align: center;
         }
-        .stat-label { font-size: 0.6rem; color: var(--text-gray); text-transform: uppercase; display: block; margin-bottom: 2px; letter-spacing: 1px; } /* Margin এবং ফন্ট সাইজ কমানো হয়েছে */
-        .stat-value { font-size: 1rem; font-weight: 800; color: var(--premium-purple); text-transform: uppercase; } /* ফন্ট সাইজ কমানো হয়েছে */
+        .stat-label { font-size: 0.55rem; color: var(--text-gray); text-transform: uppercase; display: block; margin-bottom: 2px; }
+        .stat-value { font-size: 0.95rem; font-weight: 800; color: var(--premium-purple); text-transform: uppercase; }
         
-        /* লকের সময় ঝাপসা লুক */
-        .stat-value.locked { filter: blur(4px); opacity: 0.5; } /* Blur সামান্য কমানো হয়েছে */
+        .stat-value.locked { filter: blur(4px); opacity: 0.5; }
 
-        /* আনলক বাটন (থিকনেস কমানো হয়েছে) */
         .lock-container { position: relative; }
         .btn-unlock-vip {
             background: var(--premium-purple); color: white; border: none;
-            padding: 12px; border-radius: 12px; font-weight: 800; width: 100%; /* Padding এবং ব্যাসার্ধ কমানো হয়েছে */
+            padding: 10px; border-radius: 10px; font-weight: 800; width: 100%;
             cursor: pointer; text-transform: uppercase; margin-top: 5px;
-            font-size: 0.9rem; /* ফন্ট সাইজ সামান্য কমানো হয়েছে */
+            font-size: 0.85rem;
             box-shadow: 0 4px 12px rgba(123, 97, 255, 0.3);
         }
 
+        /* গ্রিন সার্কেল/বর্ডার সরিয়ে ক্লিন লুক দেওয়া হয়েছে */
         .unlocked-result-box {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px dashed #22c55e;
-            padding: 10px; border-radius: 12px; /* Padding এবং ব্যাসার্ধ কমানো হয়েছে */
-            text-align: center; margin-top: 8px;
+            background: transparent; /* ব্যাকগ্রাউন্ড সরানো হয়েছে */
+            border: none; /* গ্রিন ডটেড বর্ডার সরানো হয়েছে */
+            padding: 5px; 
+            text-align: center; margin-top: 5px;
         }
 
         #ad-modal {
@@ -93,7 +91,8 @@
 <div class="container">
     <div class="page-header">
         <h1>🏆 FREE PREMIUM VIP</h1>
-        <p style="color: var(--text-gray); font-size: 0.75rem;">Watch Ad to Unlock Expert Predictions</p> </div>
+        <p style="color: var(--text-gray); font-size: 0.7rem;">Watch Ad to Unlock Expert Predictions</p>
+    </div>
 
     <div id="predictions-list">
         <p style="text-align: center; color: var(--text-gray);">Connecting to server...</p>
@@ -124,7 +123,6 @@
         try {
             const { data: { user } } = await _supabase.auth.getUser();
 
-            // এখানে .order যোগ করা হয়েছে যাতে নতুন প্রেডিকশন উপরে থাকে
             const { data: matches, error: mErr } = await _supabase
                 .from('free_predictions')
                 .select('*')
@@ -172,8 +170,8 @@
                         <div class="lock-container">
                             ${isUnlocked ? `
                                 <div class="unlocked-result-box">
-                                    <div style="color:#22c55e; font-size:9px; font-weight:900; margin-bottom:4px;">SUCCESSFULLY UNLOCKED</div>
-                                    <div style="font-size:1.1rem; font-weight:800; color:#fff;">${match.description}</div>
+                                    <div style="color:#22c55e; font-size:9px; font-weight:900; margin-bottom:2px;">SUCCESSFULLY UNLOCKED</div>
+                                    <div style="font-size:1rem; font-weight:800; color:#fff;">${match.description}</div>
                                 </div>
                             ` : `
                                 <button class="btn-unlock-vip" onclick="handleUnlockProcess('${matchId}', ${!!user})">
