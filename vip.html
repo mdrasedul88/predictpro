@@ -5,73 +5,133 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIP Predictions | Sports Pro</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; }
-        .match-card { background: #1e293b; padding: 20px; margin: 15px; border-radius: 12px; position: relative; border: 1px solid #334155; }
-        .blur-text { filter: blur(6px); user-select: none; margin: 10px 0; background: #0f172a; padding: 10px; border-radius: 5px; }
-        .lock-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.6); }
-        .btn-unlock { background: #00ff88; color: #000; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        header, footer { display: none; } /* শুরুতে হাইড থাকবে */
+        body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .container { max-width: 600px; margin: 20px auto; padding: 15px; }
+        
+        /* Header & Footer Hide by Default (Rule 8) */
+        header, footer { display: none; }
+
+        /* Match Card Styling (Rule 1) */
+        .match-card { 
+            background: #1e293b; border-radius: 12px; padding: 20px; 
+            margin-bottom: 20px; border: 1px solid #334155; position: relative; overflow: hidden;
+        }
+        .match-title { font-size: 1.1rem; font-weight: bold; color: #00ff88; margin-bottom: 10px; }
+        
+        /* Blur Effect (Rule 1) */
+        .prediction-blur { 
+            filter: blur(8px); user-select: none; pointer-events: none; 
+            background: rgba(15, 23, 42, 0.6); padding: 10px; border-radius: 8px; margin-top: 10px;
+        }
+        
+        /* Unlock Overlay (Rule 1) */
+        .lock-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(30, 41, 59, 0.4); z-index: 5;
+        }
+        .btn-unlock {
+            background: #00ff88; color: #020617; border: none; padding: 10px 20px;
+            border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,255,136,0.3);
+        }
+
+        /* Success View */
+        .prediction-show { color: #fff; background: #0f172a; padding: 15px; border-radius: 8px; border: 1px dashed #00ff88; }
     </style>
 </head>
 <body>
 
-<header id="main-header"> </header>
+<header id="site-header">
+    <nav style="padding: 15px; background: #1e293b; text-align: center;">
+        <a href="index.html" style="color: white; text-decoration: none;">Home</a> | 
+        <a href="profile.html" style="color: white; text-decoration: none;">Profile</a>
+    </nav>
+</header>
 
 <div class="container">
-    <h2 style="text-align: center; color: #00ff88; margin-top: 20px;">Premium VIP Predictions</h2>
-    <div id="vip-list"> </div>
+    <h2 style="text-align: center; color: #00ff88; margin-bottom: 30px;">Premium VIP Predictions</h2>
+    <div id="vip-container">
+        <p style="text-align: center; color: #94a3b8;">Loading Predictions...</p>
+    </div>
 </div>
 
-<footer id="main-footer"> </footer>
+<footer id="site-footer" style="padding: 20px; text-align: center; background: #1e293b; margin-top: 50px;">
+    <p>&copy; 2026 Sports Pro VIP</p>
+</footer>
 
 <script>
     const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    async function checkUserAndLoad() {
+    async function initializeVIP() {
         const { data: { session } } = await _supabase.auth.getSession();
-        let isVip = false;
+        let hasVipAccess = false;
 
+        // শর্ত ৮: লগইন থাকলে হেডার-ফুটার দেখাবে
         if (session) {
-            // শর্ত ৮: একাউন্ট থাকলে হেডার-ফুটার দেখাবে
-            document.getElementById('main-header').style.display = 'block';
-            document.getElementById('main-footer').style.display = 'block';
+            document.getElementById('site-header').style.display = 'block';
+            document.getElementById('site-footer').style.display = 'block';
 
-            // শর্ত ৩ ও ৭: VIP স্ট্যাটাস ও এক্সপায়ারি চেক
+            // শর্ত ৩ ও ৭: VIP ও Expiry চেক
             const { data: profile } = await _supabase.from('profiles').select('*').eq('id', session.user.id).single();
-            if (profile && profile.is_vip && new Date(profile.expiry_date) > new Date()) {
-                isVip = true;
+            if (profile && profile.is_vip) {
+                const expiry = new Date(profile.expiry_date);
+                if (expiry > new Date()) {
+                    hasVipAccess = true;
+                }
             }
         }
 
-        const { data: matches } = await _supabase.from('vip_matches').select('*');
-        const list = document.getElementById('vip-list');
+        loadMatchesFromSheet(hasVipAccess, !!session);
+    }
 
-        list.innerHTML = matches.map(m => `
+    async function loadMatchesFromSheet(isVip, isLoggedIn) {
+        // শর্ত ১: ডাটাবেস থেকে প্রেডিকশন নিয়ে আসা
+        const { data: matches, error } = await _supabase.from('Vip_matches').select('*');
+        
+        const container = document.getElementById('vip-container');
+        
+        if (error || !matches || matches.length === 0) {
+            container.innerHTML = "<p style='text-align:center;'>No VIP matches found.</p>";
+            return;
+        }
+
+        container.innerHTML = matches.map(m => `
             <div class="match-card">
-                <h3>${m.match_name}</h3>
-                <div class="${isVip ? '' : 'blur-text'}">
-                    <strong>Prediction:</strong> ${isVip ? m.description : 'This content is hidden for non-vip members. Please unlock to see.'}
-                </div>
-                ${!isVip ? `<div class="lock-overlay"><button class="btn-unlock" onclick="handleUnlock(${!!session})">Unlock Now</button></div>` : ''}
+                <div class="match-title">${m.match_name}</div>
+                <div style="font-size: 0.8rem; color: #94a3b8;">Time: ${new Date(m.match_time).toLocaleString()}</div>
+                
+                ${isVip ? `
+                    <div class="prediction-show">
+                        <strong>Premium Tip:</strong><br>${m.description}
+                    </div>
+                ` : `
+                    <div class="prediction-blur">
+                        <strong>Prediction:</strong> This content is hidden. Please unlock to view the premium tip.
+                    </div>
+                    <div class="lock-overlay">
+                        <button class="btn-unlock" onclick="handleUnlock(${isLoggedIn})">Unlock Now</button>
+                    </div>
+                `}
             </div>
         `).join('');
     }
 
     function handleUnlock(isLoggedIn) {
         if (!isLoggedIn) {
-            // শর্ত ২: একাউন্ট না থাকলে লগইন পেজে পাঠাবে
+            // শর্ত ২: লগইন না থাকলে লগইন পেজে পাঠাবে
             window.location.href = 'login.html';
         } else {
-            // শর্ত ৪: একাউন্ট আছে কিন্তু VIP না হলে সাবস্ক্রিপশন পেজে পাঠাবে
+            // শর্ত ৪: লগইন থাকলে সাবস্ক্রিপশন পেজে পাঠাবে
             window.location.href = 'subscription.html';
         }
     }
 
-    window.onload = checkUserAndLoad;
+    window.onload = initializeVIP;
 </script>
 </body>
 </html>
