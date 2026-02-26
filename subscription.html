@@ -117,12 +117,15 @@
         function closeModal() { document.getElementById('pModal').style.display = 'none'; }
 
         async function submitOrder() {
-    const userContact = document.getElementById('mInfo').value;
-    const userTrx = document.getElementById('trxId').value;
+    const userContact = document.getElementById('mInfo').value; // আপনার নাম্বার
+    const userTrx = document.getElementById('trxId').value;    // ট্রানজেকশন আইডি
     const method = document.getElementById('mth').value;
     const btn = document.querySelector('.buy-btn');
 
-    if(!userContact || !userTrx) { alert("সব তথ্য দিন!"); return; }
+    if(!userContact || !userTrx) {
+        alert("সব তথ্য দিন!");
+        return;
+    }
 
     btn.innerText = "Sending...";
     btn.disabled = true;
@@ -131,7 +134,7 @@
         const { data: { session } } = await _supabase.auth.getSession();
         const email = session?.user?.email || "guest@user.com";
 
-        // ডাটাবেসে অবজেক্ট পাঠানো হচ্ছে - বানান গুলো আপনার সুপাবেস শিট অনুযায়ী হুবহু মিলিয়ে নিন
+        // এখানে আমরা নিশ্চিত করছি কোন ডাটা কোন কলামে যাবে
         const { error } = await _supabase.from('payment_requests').insert([{
             user_email: email,
             mobile: userContact,
@@ -140,17 +143,18 @@
             amount: selectedPlan.price,
             payment_method: method,
             currency: isLocal ? 'BDT' : 'USDT',
-            transaction_id: String(userTrx), // জোর করে স্ট্রিং করা হলো
-            status: 'pending'               // জোর করে ছোট হাতের পেন্ডিং
+            transaction_id: String(userTrx), // <--- এখানে TrxID যাবে
+            status: 'pending'               // <--- এখানে শুধু 'pending' লেখা থাকবে
         }]);
 
         if(!error) {
-            alert("✅ সফলভাবে পাঠানো হয়েছে!");
+            alert("✅ Request Submitted!");
             location.reload();
-        } else { throw error; }
+        } else {
+            throw error;
+        }
     } catch (err) {
-        alert("ভুল হয়েছে: " + err.message);
-        console.error(err);
+        alert("Error: " + err.message);
     } finally {
         btn.innerText = "SUBMIT REQUEST";
         btn.disabled = false;
