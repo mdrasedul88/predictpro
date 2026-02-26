@@ -112,77 +112,75 @@
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function loadFreeData() {
-    const listContainer = document.getElementById('predictions-list');
-    try {
-        const { data: { user } } = await _supabase.auth.getUser();
+        const listContainer = document.getElementById('predictions-list');
+        try {
+            const { data: { user } } = await _supabase.auth.getUser();
 
-        // ১. সব প্রেডিকশন আনা
-        const { data: matches, error: mErr } = await _supabase.from('free_predictions').select('*');
-        if (mErr) throw mErr;
+            // ১. সব ম্যাচ লোড করা
+            const { data: matches, error: mErr } = await _supabase.from('free_predictions').select('*');
+            if (mErr) throw mErr;
 
-        // ২. আনলক করা লিস্ট আনা এবং সেগুলোকে Number-এ রূপান্তর করা
-        let unlockedIds = [];
-        if (user) {
-            const { data: uData } = await _supabase
-                .from('unlocked_predictions')
-                .select('prediction_id')
-                .eq('user_id', user.id);
-            
-            if (uData) {
-                // এখানে নিশ্চিত করছি যে আইডিগুলো যেন অবশ্যই Number হিসেবে থাকে
-                unlockedIds = uData.map(d => Number(d.prediction_id));
+            // ২. আনলক করা আইডিগুলো আনা এবং সবগুলোকে String-এ রূপান্তর করা
+            let unlockedIdsSet = new Set();
+            if (user) {
+                const { data: uData } = await _supabase
+                    .from('unlocked_predictions')
+                    .select('prediction_id')
+                    .eq('user_id', user.id);
+                
+                if (uData) {
+                    // ID টাইপ যাই হোক, String বানিয়ে সেভ করছি যেন চেক করতে সুবিধা হয়
+                    uData.forEach(d => unlockedIdsSet.add(String(d.prediction_id)));
+                }
             }
-        }
 
-        if (!matches || matches.length === 0) {
-            listContainer.innerHTML = "<p style='text-align:center;'>No active predictions.</p>";
-            return;
-        }
+            if (!matches || matches.length === 0) {
+                listContainer.innerHTML = "<p style='text-align:center;'>No match data found.</p>";
+                return;
+            }
 
-        listContainer.innerHTML = '';
-        matches.forEach(match => {
-            // ম্যাচের আইডিকেও Number এ রূপান্তর করে চেক করা
-            const matchId = Number(match.id);
-            const isUnlocked = unlockedIds.includes(matchId);
-            
-            listContainer.innerHTML += `
-                <div class="prediction-card">
-                    <span class="badge">${match.category || 'VIP'}</span>
-                    <div class="match-title">${match.match_name}</div>
-                    <div class="stats-grid">
-                        <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
-                        <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
+            listContainer.innerHTML = '';
+            matches.forEach(match => {
+                const currentMatchId = String(match.id);
+                const isUnlocked = unlockedIdsSet.has(currentMatchId);
+                
+                listContainer.innerHTML += `
+                    <div class="prediction-card">
+                        <span class="badge">${match.category || 'VIP'}</span>
+                        <div class="match-title">${match.match_name}</div>
+                        <div class="stats-grid">
+                            <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
+                            <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
+                        </div>
+                        ${isUnlocked ? `
+                            <div class="unlocked-content" style="background:rgba(34, 197, 94, 0.1); border:1px solid #22c55e; padding:15px; border-radius:12px; margin-top:10px;">
+                                <p style="color:#22c55e; font-weight:bold; font-size:12px; margin-bottom:5px;">PREDICTION UNLOCKED:</p>
+                                <div style="color:#fff; font-weight:800; font-size:1.1rem;">${match.description}</div>
+                            </div>
+                        ` : `
+                            <div class="lock-overlay">
+                                <button class="btn-unlock" onclick="startUnlockFlow('${currentMatchId}', ${!!user})">
+                                    <i class="fas fa-play-circle"></i> UNLOCK NOW
+                                </button>
+                            </div>
+                        `}
                     </div>
-                    ${isUnlocked ? `
-                        <div class="unlocked-content" style="background:rgba(34, 197, 94, 0.1); border:1px solid #22c55e; padding:15px; border-radius:12px; margin-top:10px;">
-                            <span style="color:#22c55e; font-weight:bold; font-size:12px;">ANALYSIS:</span>
-                            <div style="color:#fff; font-weight:800; font-size:1.1rem; margin-top:5px;">${match.description}</div>
-                        </div>
-                    ` : `
-                        <div class="lock-overlay">
-                            <button class="btn-unlock" onclick="finalUnlockFlow('${matchId}', ${!!user})">
-                                <i class="fas fa-play-circle"></i> UNLOCK NOW
-                            </button>
-                        </div>
-                    `}
-                </div>
-            `;
-        });
-    } catch (err) {
-        console.error("Load Error:", err);
+                `;
+            });
+        } catch (err) {
+            console.error(err);
+        }
     }
-}
 
-
-
-    async function finalUnlockFlow(mId, isLoggedIn) {
+    async function startUnlockFlow(mId, isLoggedIn) {
         if (!isLoggedIn) {
             alert("Please login first.");
             window.location.href = 'login.html';
             return;
         }
 
-        document.getElementById('ad-modal').style.display = 'flex';
+        const modal = document.getElementById('ad-modal');
+        modal.style.display = 'flex';
         let timeLeft = 15;
         
         const timer = setInterval(async () => {
@@ -194,7 +192,7 @@
                 try {
                     const { data: { user } } = await _supabase.auth.getUser();
                     
-                    // ডাটাবেসে সেভ করা
+                    // ডাটাবেসে ইনসার্ট করা
                     const { error: insError } = await _supabase
                         .from('unlocked_predictions')
                         .insert([{ 
@@ -204,14 +202,14 @@
 
                     if (insError) throw insError;
 
-                    document.getElementById('ad-modal').style.display = 'none';
+                    modal.style.display = 'none';
                     alert("Success! Prediction Unlocked.");
                     
-                    // সবচেয়ে গুরুত্বপূর্ণ কাজ: ডাটা আবার লোড করা যাতে বাটন চলে যায়
+                    // পেজটি রিফ্রেশ করা যাতে নতুন ডাটা অনুযায়ী কার্ড আপডেট হয়
                     window.location.reload(); 
                 } catch (e) {
-                    alert("Error: " + e.message);
-                    document.getElementById('ad-modal').style.display = 'none';
+                    alert("Database Sync Error: " + e.message);
+                    modal.style.display = 'none';
                 }
             }
         }, 1000);
@@ -219,6 +217,7 @@
 
     document.addEventListener('DOMContentLoaded', loadFreeData);
 </script>
+
 
 
 </body>
