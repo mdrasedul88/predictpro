@@ -9,28 +9,20 @@
     <style>
         :root { --neon: #00ff88; --bg: #020617; --card: #0f172a; --text-gray: #94a3b8; }
         body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        
         .header { text-align: center; margin: 20px 0; }
         .header h1 { color: var(--neon); font-size: 1.6rem; margin: 0; text-transform: uppercase; }
         .header p { color: var(--text-gray); font-size: 0.8rem; margin-top: 5px; }
-
-        /* Compact & Slim Grid */
         .plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; width: 100%; max-width: 800px; margin-top: 10px; }
         .plan-card { background: var(--card); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 15px; text-align: center; transition: 0.3s; position: relative; }
         .plan-card:hover { border-color: var(--neon); transform: translateY(-5px); }
         .days-badge { font-size: 0.6rem; background: rgba(0, 255, 136, 0.1); color: var(--neon); padding: 3px 10px; border-radius: 20px; font-weight: bold; }
         .plan-name { font-size: 1rem; font-weight: 700; margin: 8px 0; }
         .price-box .amount { font-size: 1.8rem; font-weight: 800; color: white; }
-        
         .buy-btn { background: var(--neon); color: black; border: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 0.9rem; }
-
-        /* Professional Modal */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
         .modal-content { background: #111827; width: 100%; max-width: 360px; padding: 25px; border-radius: 25px; border: 1px solid #334155; position: relative; }
-        
         .admin-number-box { background: rgba(0, 255, 136, 0.1); border: 1px dashed var(--neon); padding: 12px; border-radius: 12px; margin: 15px 0; font-size: 0.8rem; text-align: left; line-height: 1.5; }
         .admin-number-box b { color: var(--neon); font-size: 1rem; display: block; margin-top: 4px; }
-
         .input-group { text-align: left; margin-bottom: 15px; }
         .input-group label { font-size: 0.75rem; color: var(--text-gray); margin-bottom: 5px; display: block; }
         .input-group input, .input-group select { width: 100%; padding: 12px; background: #020617; border: 1px solid #334155; border-radius: 10px; color: white; font-size: 0.9rem; outline: none; box-sizing: border-box; }
@@ -44,32 +36,25 @@
         <p>Send payment and paste TrxID to activate access</p>
     </div>
 
-    <div id="plan-list" class="plan-grid">
-        </div>
+    <div id="plan-list" class="plan-grid"></div>
 
     <div id="pModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
             <h3 style="margin:0">Secure Checkout</h3>
-            
-            <div id="adminInfo" class="admin-number-box">
-                </div>
-
+            <div id="adminInfo" class="admin-number-box"></div>
             <div class="input-group">
                 <label>Payment Method</label>
                 <select id="mth" onchange="updateUI()"></select>
             </div>
-
             <div class="input-group">
                 <label id="phoneLabel">Your Number/Wallet</label>
                 <input type="text" id="mInfo" placeholder="e.g. 017XXXXXXXX">
             </div>
-
             <div class="input-group">
                 <label>Transaction ID (TrxID)</label>
                 <input type="text" id="trxId" placeholder="Paste TrxID here">
             </div>
-
             <button class="buy-btn" onclick="submitOrder()">SUBMIT REQUEST</button>
         </div>
     </div>
@@ -79,10 +64,9 @@
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-        // --- আপনার পেমেন্ট ইনফো এখানে দিন ---
         const MY_PAYMENT = {
-            bKash: "01700000000 (Personal)",
-            Nagad: "01800000000 (Personal)",
+            bKash: "017XXXXXXXX (Personal)",
+            Nagad: "018XXXXXXXX (Personal)",
             USDT: "T9zBxxxxxxxxxxxxxxxxx (TRC20)",
             BTC: "bc1qxxxxxxxxxxxxxxxxx"
         };
@@ -101,34 +85,25 @@
 
         async function loadPlans() {
             const { data: plans, error } = await _supabase.from('subscription_plans').select('*').eq('is_active', true).order('duration_days', { ascending: true });
-            
-            if (error) { console.error(error); return; }
-            
+            if (error) return;
             const list = document.getElementById('plan-list');
             list.innerHTML = plans.map(p => {
                 const symbol = isLocal ? '৳' : '$';
-                // টাকা বা ডলারের হিসাব আপনি আপনার ডাটাবেস থেকেও আনতে পারেন
                 const price = isLocal ? (p.duration_days * 100) : (p.duration_days * 1.5);
-                
                 return `
                     <div class="plan-card">
                         <span class="days-badge">${p.duration_days} DAYS</span>
                         <div class="plan-name">${p.plan_name}</div>
                         <div class="price-box"><span class="amount">${symbol}${price}</span></div>
                         <button class="buy-btn" onclick="openModal('${p.plan_name}', ${p.duration_days}, '${symbol}${price}')">GET ACCESS</button>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
         }
 
         function openModal(name, days, price) {
             selectedPlan = { name, days, price };
             const mthSelect = document.getElementById('mth');
-            
-            mthSelect.innerHTML = isLocal ? 
-                `<option value="bKash">bKash</option><option value="Nagad">Nagad</option>` : 
-                `<option value="USDT">USDT (TRC20)</option><option value="BTC">Bitcoin</option>`;
-            
+            mthSelect.innerHTML = isLocal ? `<option value="bKash">bKash</option><option value="Nagad">Nagad</option>` : `<option value="USDT">USDT (TRC20)</option><option value="BTC">Bitcoin</option>`;
             updateUI();
             document.getElementById('pModal').style.display = 'flex';
         }
@@ -142,52 +117,47 @@
         function closeModal() { document.getElementById('pModal').style.display = 'none'; }
 
         async function submitOrder() {
-    const userContact = document.getElementById('mInfo').value; // আপনার নাম্বার ইনপুট আইডি
-    const userTrx = document.getElementById('trxId').value;    // ট্রানজেকশন আইডি ইনপুট
-    const method = document.getElementById('mth').value;      // পেমেন্ট মেথড সিলেক্ট
-    const btn = document.querySelector('.buy-btn');
+            const userContact = document.getElementById('mInfo').value;
+            const userTrx = document.getElementById('trxId').value;
+            const method = document.getElementById('mth').value;
+            const btn = document.querySelector('.buy-btn');
 
-    if(!userContact || !userTrx) {
-        alert("দয়া করে আপনার নাম্বার এবং Transaction ID দিন।");
-        return;
-    }
+            if(!userContact || !userTrx) {
+                alert("দয়া করে সব তথ্য পূরণ করুন।");
+                return;
+            }
 
-    btn.innerText = "Processing...";
-    btn.disabled = true;
+            btn.innerText = "Processing...";
+            btn.disabled = true;
 
-    try {
-        const { data: { session } } = await _supabase.auth.getSession();
-        const email = session?.user?.email || "guest@user.com";
+            try {
+                const { data: { session } } = await _supabase.auth.getSession();
+                const email = session?.user?.email || "guest@user.com";
 
-        // এখানে আমরা নিশ্চিত করছি কলামের নাম ডাটাবেসের সাথে মিলছে
-        const { error } = await _supabase.from('payment_requests').insert([{
-            user_email: email,
-            mobile: userContact,
-            plan_name: selectedPlan.name,
-            duration: selectedPlan.days,
-            amount: selectedPlan.price,
-            payment_method: method,
-            currency: isLocal ? 'BDT' : 'USDT',
-            transaction_id: userTrx,   // এই নাম ডাটাবেসের কলামের নামের সাথে মিলতে হবে
-            status: 'pending',
-            created_at: new Date()     // ম্যানুয়ালি টাইমস্ট্যাম্প পাঠানো হচ্ছে
-        }]);
+                // --- সংশোধিত ইনসার্ট লজিক ---
+                const { error } = await _supabase.from('payment_requests').insert([{
+                    user_email: email,
+                    mobile: userContact,
+                    plan_name: selectedPlan.name,
+                    duration: parseInt(selectedPlan.days),
+                    amount: selectedPlan.price,
+                    payment_method: method,
+                    currency: isLocal ? 'BDT' : 'USDT',
+                    transaction_id: userTrx, // TrxID এখন সঠিক কলামে যাবে
+                    status: 'pending'        // স্ট্যাটাস সবসময় 'pending' থাকবে
+                }]);
 
-        if(!error) {
-            alert("✅ Request Submitted Successfully!");
-            location.reload(); 
-        } else {
-            throw error;
+                if(!error) {
+                    alert("✅ Success! Admin will verify your payment.");
+                    location.reload();
+                } else { throw error; }
+            } catch (err) {
+                alert("Error: " + err.message);
+            } finally {
+                btn.innerText = "SUBMIT REQUEST";
+                btn.disabled = false;
+            }
         }
-    } catch (err) {
-        alert("Error: " + err.message);
-    } finally {
-        btn.innerText = "SUBMIT REQUEST";
-        btn.disabled = false;
-    }
-}
-
-
         detectUser();
     </script>
 </body>
