@@ -1,0 +1,12 @@
+<div class="subscription-container">
+    <h2>Choose Your VIP Plan</h2>
+    <div class="plan-card" onclick="openPayment('7 Days')">7 Days Access</div>
+    <div class="plan-card" onclick="openPayment('1 Month')">1 Month Access</div>
+    
+    <div id="payment-window" style="display:none;">
+        <h3>Pay via bKash / Nagad / Crypto</h3>
+        <p>Send money to: 017XXXXXXXX</p>
+        <input type="text" placeholder="Enter Transaction ID">
+        <button onclick="submitRequest()">Submit Payment</button>
+    </div>
+</div>
