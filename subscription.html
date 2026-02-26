@@ -36,7 +36,7 @@
         <p>Send payment and paste TrxID to activate access</p>
     </div>
 
-    <div id="plan-list" class="plan-grid"></div>
+    <div id="plan-list" class="plan-grid">Loading plans...</div>
 
     <div id="pModal" class="modal">
         <div class="modal-content">
@@ -84,12 +84,23 @@
         }
 
         async function loadPlans() {
-            const { data: plans, error } = await _supabase.from('subscription_plans').select('*').eq('is_active', true).order('duration_days', { ascending: true });
-            if (error) return;
+            const { data: plans, error } = await _supabase
+                .from('subscription_plans')
+                .select('*')
+                .eq('is_active', true)
+                .order('duration_days', { ascending: true });
+
+            if (error) {
+                document.getElementById('plan-list').innerHTML = "Failed to load plans.";
+                return;
+            }
+
             const list = document.getElementById('plan-list');
             list.innerHTML = plans.map(p => {
                 const symbol = isLocal ? '৳' : '$';
-                const price = isLocal ? (p.duration_days * 100) : (p.duration_days * 1.5);
+                // শিট থেকে সরাসরি দাম নেওয়া হচ্ছে
+                const price = isLocal ? p.price_bdt : p.price_usd;
+
                 return `
                     <div class="plan-card">
                         <span class="days-badge">${p.duration_days} DAYS</span>
@@ -117,50 +128,43 @@
         function closeModal() { document.getElementById('pModal').style.display = 'none'; }
 
         async function submitOrder() {
-    const userContact = document.getElementById('mInfo').value; // আপনার নাম্বার
-    const userTrx = document.getElementById('trxId').value;    // ট্রানজেকশন আইডি
-    const method = document.getElementById('mth').value;
-    const btn = document.querySelector('.buy-btn');
+            const userContact = document.getElementById('mInfo').value;
+            const userTrx = document.getElementById('trxId').value;
+            const method = document.getElementById('mth').value;
+            const btn = document.querySelector('.buy-btn');
 
-    if(!userContact || !userTrx) {
-        alert("সব তথ্য দিন!");
-        return;
-    }
+            if(!userContact || !userTrx) { alert("সব তথ্য দিন!"); return; }
 
-    btn.innerText = "Sending...";
-    btn.disabled = true;
+            btn.innerText = "Sending...";
+            btn.disabled = true;
 
-    try {
-        const { data: { session } } = await _supabase.auth.getSession();
-        const email = session?.user?.email || "guest@user.com";
+            try {
+                const { data: { session } } = await _supabase.auth.getSession();
+                const email = session?.user?.email || "guest@user.com";
 
-        // এখানে আমরা নিশ্চিত করছি কোন ডাটা কোন কলামে যাবে
-        const { error } = await _supabase.from('payment_requests').insert([{
-            user_email: email,
-            mobile: userContact,
-            plan_name: selectedPlan.name,
-            duration: parseInt(selectedPlan.days),
-            amount: selectedPlan.price,
-            payment_method: method,
-            currency: isLocal ? 'BDT' : 'USDT',
-            transaction_id: String(userTrx), // <--- এখানে TrxID যাবে
-            status: 'pending'               // <--- এখানে শুধু 'pending' লেখা থাকবে
-        }]);
+                const { error } = await _supabase.from('payment_requests').insert([{
+                    user_email: email,
+                    mobile: userContact,
+                    plan_name: selectedPlan.name,
+                    duration: parseInt(selectedPlan.days),
+                    amount: selectedPlan.price,
+                    payment_method: method,
+                    currency: isLocal ? 'BDT' : 'USDT',
+                    transaction_id: String(userTrx),
+                    status: 'pending'
+                }]);
 
-        if(!error) {
-            alert("✅ Request Submitted!");
-            location.reload();
-        } else {
-            throw error;
+                if(!error) {
+                    alert("✅ Request Submitted!");
+                    location.reload();
+                } else { throw error; }
+            } catch (err) {
+                alert("Error: " + err.message);
+            } finally {
+                btn.innerText = "SUBMIT REQUEST";
+                btn.disabled = false;
+            }
         }
-    } catch (err) {
-        alert("Error: " + err.message);
-    } finally {
-        btn.innerText = "SUBMIT REQUEST";
-        btn.disabled = false;
-    }
-}
-
 
         detectUser();
     </script>
