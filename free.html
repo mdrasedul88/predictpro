@@ -107,27 +107,27 @@
 <script src="js/footer.js"></script>
 
 <script>
-    // সার্ভার কানেকশন সেটিংস
     const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ১. ডাটা লোড করার মেইন ফাংশন
     async function loadFreeData() {
         const listContainer = document.getElementById('predictions-list');
-        if (!listContainer) return;
-
         try {
+            // ইউজারের তথ্য চেক করা
             const { data: { user } } = await _supabase.auth.getUser();
 
-            // প্রেডিকশন টেবিল থেকে ডাটা আনা
+            // ১. ডাটাবেস থেকে ডাটা আনা (এটাই মেইন পার্ট)
             const { data: matches, error: matchError } = await _supabase
                 .from('free_predictions')
                 .select('*');
 
-            if (matchError) throw matchError;
+            if (matchError) {
+                console.error("Match Error:", matchError);
+                throw matchError;
+            }
 
-            // ইউজার কোনগুলো আনলক করেছে তা চেক করা
+            // ২. আনলক করা লিস্ট চেক করা
             let unlockedIds = [];
             if (user) {
                 const { data: unlockedData } = await _supabase
@@ -140,17 +140,20 @@
                 }
             }
 
+            // ডাটা না থাকলে মেসেজ
             if (!matches || matches.length === 0) {
-                listContainer.innerHTML = "<p style='text-align:center; color:#94a3b8;'>No predictions available.</p>";
+                listContainer.innerHTML = `
+                    <div style="text-align:center; padding:20px;">
+                        <p style="color:var(--text-gray);">No predictions found in database.</p>
+                        <button onclick="location.reload()" style="background:var(--premium-purple); border:none; color:white; padding:10px 20px; border-radius:10px;">Retry Sync</button>
+                    </div>`;
                 return;
             }
 
             listContainer.innerHTML = '';
             matches.forEach(match => {
-                const matchID = match.id ? String(match.id) : null;
-                if (!matchID) return;
-
-                const isUnlocked = unlockedIds.includes(matchID);
+                const mID = String(match.id);
+                const isUnlocked = unlockedIds.includes(mID);
                 
                 listContainer.innerHTML += `
                     <div class="prediction-card">
@@ -161,13 +164,13 @@
                             <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
                         </div>
                         ${isUnlocked ? `
-                            <div class="unlocked-content" style="background:#1e293b; padding:12px; border-radius:10px; border:1px solid #334155; margin-top:10px;">
-                                <span style="color:#22c55e; font-size:11px; font-weight:bold;">● UNLOCKED ANALYSIS</span>
+                            <div class="unlocked-content" style="border: 1px solid var(--premium-purple); padding:10px; border-radius:15px; background:rgba(123, 97, 255, 0.1);">
+                                <span style="font-size:10px; color:var(--premium-purple);">UNLOCKED RESULT:</span>
                                 <div style="font-weight: 800; color: #fff; margin-top:5px;">${match.description}</div>
                             </div>
                         ` : `
                             <div class="lock-overlay">
-                                <button class="btn-unlock" onclick="handleProductionUnlock('${matchID}', ${!!user})">
+                                <button class="btn-unlock" onclick="handleUnlock('${mID}', ${!!user})">
                                     <i class="fas fa-play-circle"></i> Unlock Prediction
                                 </button>
                             </div>
@@ -176,20 +179,14 @@
                 `;
             });
         } catch (err) {
-            console.error(err);
-            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Sync Error. Please check Supabase Connection.</p>";
+            console.error("Sync Error Detail:", err);
+            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Sync Error: " + err.message + "</p>";
         }
     }
 
-    // ২. আনলক করার প্রসেস
-    async function handleProductionUnlock(mId, isLoggedIn) {
-        if (!mId || mId === "undefined") {
-            alert("Error: Data out of sync. Please refresh.");
-            return;
-        }
-
+    async function handleUnlock(mId, isLoggedIn) {
         if (!isLoggedIn) {
-            alert("Please login to your account.");
+            alert("Please login first.");
             window.location.href = 'login.html';
             return;
         }
@@ -201,36 +198,29 @@
         const timer = setInterval(async () => {
             timeLeft--;
             document.getElementById('timer').innerText = timeLeft;
-            
             if (timeLeft <= 0) {
                 clearInterval(timer);
                 try {
                     const { data: { user } } = await _supabase.auth.getUser();
-                    
-                    // এখানে আমরা নিশ্চিত করছি যে ডাটাবেসে Number ফরম্যাটে আইডি যাচ্ছে
                     const { error: insError } = await _supabase
                         .from('unlocked_predictions')
-                        .insert([{ 
-                            user_id: user.id, 
-                            prediction_id: parseInt(mId) 
-                        }]);
+                        .insert([{ user_id: user.id, prediction_id: parseInt(mId) }]);
 
                     if (insError) throw insError;
-
                     modal.style.display = 'none';
-                    alert("Success! Prediction Unlocked.");
-                    loadFreeData(); // ডাটা রিফ্রেশ
+                    alert("Unlocked Successfully!");
+                    loadFreeData();
                 } catch (e) {
-                    alert("Database Error: " + e.message);
+                    alert("Error: " + e.message);
                     modal.style.display = 'none';
                 }
             }
         }, 1000);
     }
 
-    // পেজ লোড হলে ফাংশন কল
     document.addEventListener('DOMContentLoaded', loadFreeData);
 </script>
+
 
 
 
