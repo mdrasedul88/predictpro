@@ -25,7 +25,6 @@
         .page-header { text-align: center; margin-bottom: 30px; }
         .page-header h1 { color: var(--premium-purple); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* কার্ড ডিজাইন - আপনার স্ক্রিনশট অনুযায়ী */
         .prediction-card {
             background: var(--card-glass);
             backdrop-filter: blur(15px);
@@ -54,7 +53,6 @@
         .stat-label { font-size: 0.65rem; color: var(--text-gray); text-transform: uppercase; display: block; }
         .stat-value { font-size: 1rem; font-weight: 800; color: var(--premium-purple); }
 
-        /* লক/আনলক সেকশন */
         .lock-overlay {
             text-align: center; padding: 15px;
             background: rgba(0,0,0,0.4); border-radius: 15px; border: 1px dashed var(--premium-purple);
@@ -63,6 +61,7 @@
             background: var(--premium-purple); color: white; border: none;
             padding: 12px 20px; border-radius: 12px; font-weight: 800;
             width: 100%; cursor: pointer; transition: 0.3s; text-transform: uppercase;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
         .unlocked-content {
             background: rgba(123, 97, 255, 0.1);
@@ -70,7 +69,6 @@
             text-align: center; animation: fadeIn 0.5s ease;
         }
 
-        /* অ্যাড মডাল */
         #ad-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.98); z-index: 9999;
@@ -96,7 +94,7 @@
 </div>
 
 <div id="ad-modal">
-    <h2 style="color: var(--premium-purple);">UNLOKING PREDICTION</h2>
+    <h2 style="color: var(--premium-purple);">UNLOCKING PREDICTION</h2>
     <p id="timer" style="font-size: 3rem; font-weight: 900; margin: 20px 0;">15</p>
     <div id="adsense-area" style="width: 300px; height: 250px; background: #111; border: 1px solid #333; display: flex; align-items: center; justify-content: center;">
         <span style="color: #444;">ADSENSE AD UNIT</span>
@@ -114,146 +112,136 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // ১. মেইন ডেটা লোড করার ফাংশন
     async function loadFreeData() {
         const listContainer = document.getElementById('predictions-list');
-        const { data: { user } } = await _supabase.auth.getUser();
-
-        // ১. সব ফ্রি প্রেডিকশন আনা
-        const { data: matches, error } = await _supabase.from('free_predictions').select('*').order('match_time', {ascending: false});
         
-        // ২. ইউজারের আনলক করা লিস্ট চেক করা
-        let unlockedIds = [];
-        if(user) {
-            const { data: unlockedData } = await _supabase.from('unlocked_predictions').select('prediction_id').eq('user_id', user.id);
-            unlockedIds = unlockedData ? unlockedData.map(d => d.prediction_id) : [];
-        }
+        try {
+            const { data: { user } } = await _supabase.auth.getUser();
 
-        if(error) { listContainer.innerHTML = "Error loading data."; return; }
-        
-        listContainer.innerHTML = '';
-        matches.forEach(match => {
-            const isUnlocked = unlockedIds.includes(match.id);
-            
-            listContainer.innerHTML += `
-                <div class="prediction-card">
-                    <span class="badge">${match.category}</span>
-                    <div class="match-title">${match.match_name}</div>
-                    
-                    <div class="stats-grid">
-                        <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
-                        <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
-                    </div>
+            // সব ফ্রি প্রেডিকশন আনা
+            const { data: matches, error: matchError } = await _supabase
+                .from('free_predictions')
+                .select('*')
+                .order('match_time', { ascending: false });
 
-                    ${isUnlocked ? `
-                        <div class="unlocked-content">
-                            <span class="stat-label">Analysis Result</span>
-                            <div style="font-weight: 800; font-size: 1.1rem; color: #fff;">${match.description}</div>
-                        </div>
-                    ` : `
-                        <div class="lock-overlay">
-                            <button class="btn-unlock" onclick="attemptUnlock('${match.id}', ${!!user})">
-                                <i class="fas fa-play-circle"></i> Unlock Prediction
-                            </button>
-                        </div>
-                    `}
-                </div>
-            `;
-        });
-    }
+            if (matchError) throw matchError;
 
-    // ১. কার্ড রেন্ডার করার সময় নিশ্চিত করা হয়েছে match.id ঠিকমতো বসছে
-function renderMatches(matches, unlockedIds, user) {
-    const listContainer = document.getElementById('predictions-list');
-    listContainer.innerHTML = '';
-    
-    matches.forEach(match => {
-        // নিশ্চিত করুন match.id স্ট্রিং বা নাম্বার হিসেবে আছে
-        const mID = match.id; 
-        const isUnlocked = unlockedIds.includes(mID);
-        
-        listContainer.innerHTML += `
-            <div class="prediction-card">
-                <span class="badge">${match.category}</span>
-                <div class="match-title">${match.match_name}</div>
+            // ইউজারের আনলক করা লিস্ট চেক করা
+            let unlockedIds = [];
+            if (user) {
+                const { data: unlockedData } = await _supabase
+                    .from('unlocked_predictions')
+                    .select('prediction_id')
+                    .eq('user_id', user.id);
                 
-                <div class="stats-grid">
-                    <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
-                    <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
-                </div>
-
-                ${isUnlocked ? `
-                    <div class="unlocked-content">
-                        <span class="stat-label">Expert Analysis</span>
-                        <div style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-top:5px;">${match.description}</div>
-                    </div>
-                ` : `
-                    <div class="lock-overlay" style="border: 1px dashed var(--premium-purple); padding: 15px; border-radius: 15px;">
-                        <button class="btn-unlock" onclick="attemptUnlock('${mID}', ${!!user})">
-                            <i class="fas fa-play-circle"></i> Unlock Prediction
-                        </button>
-                    </div>
-                `}
-            </div>
-        `;
-    });
-}
-
-// ২. আনলক ফাংশনটি এখন ভেরিয়েবল চেক করে ডাটা পাঠাবে
-async function attemptUnlock(matchId, isLoggedIn) {
-    // চেক করুন matchId কি আসলেই আছে?
-    if (!matchId || matchId === 'undefined') {
-        alert("Error: Match ID not found. Please refresh.");
-        return;
-    }
-
-    if(!isLoggedIn) {
-        alert("Please login to your account to unlock free predictions.");
-        window.location.href = 'login.html';
-        return;
-    }
-
-    const modal = document.getElementById('ad-modal');
-    const timerDisplay = document.getElementById('timer');
-    modal.style.display = 'flex';
-    
-    let timeLeft = 15;
-    const countdown = setInterval(async () => {
-        timeLeft--;
-        timerDisplay.innerText = timeLeft;
-        
-        if(timeLeft <= 0) {
-            clearInterval(countdown);
-            
-            const { data: { session } } = await _supabase.auth.getSession();
-            const userId = session?.user?.id;
-
-            // ডাটাবেসে ইনসার্ট করার আগে কনভার্ট করে নেওয়া হচ্ছে (BigInt এর জন্য)
-            const finalMatchId = parseInt(matchId);
-
-            const { error } = await _supabase
-                .from('unlocked_predictions')
-                .insert([{ 
-                    user_id: userId, 
-                    prediction_id: finalMatchId 
-                }]);
-
-            if(!error) {
-                modal.style.display = 'none';
-                alert("Success! Prediction unlocked forever.");
-                await loadFreeData(); // ডাটা রিফ্রেশ
-            } else {
-                console.error("DB Error:", error.message);
-                alert("Database Error: " + error.message);
-                modal.style.display = 'none';
+                if (unlockedData) {
+                    unlockedIds = unlockedData.map(d => parseInt(d.prediction_id));
+                }
             }
+
+            if (!matches || matches.length === 0) {
+                listContainer.innerHTML = "<p style='text-align:center;'>No predictions available.</p>";
+                return;
+            }
+
+            listContainer.innerHTML = '';
+            matches.forEach(match => {
+                const mID = parseInt(match.id);
+                const isUnlocked = unlockedIds.includes(mID);
+                
+                listContainer.innerHTML += `
+                    <div class="prediction-card">
+                        <span class="badge">${match.category}</span>
+                        <div class="match-title">${match.match_name}</div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
+                            <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
+                        </div>
+
+                        ${isUnlocked ? `
+                            <div class="unlocked-content">
+                                <span class="stat-label">Analysis Result</span>
+                                <div style="font-weight: 800; font-size: 1.1rem; color: #fff; margin-top:5px;">${match.description}</div>
+                            </div>
+                        ` : `
+                            <div class="lock-overlay">
+                                <button class="btn-unlock" onclick="attemptUnlock('${mID}', ${!!user})">
+                                    <i class="fas fa-play-circle"></i> Unlock Prediction
+                                </button>
+                            </div>
+                        `}
+                    </div>
+                `;
+            });
+
+        } catch (err) {
+            console.error("Load Error:", err.message);
+            listContainer.innerHTML = "<p style='text-align:center;'>Error loading data. Please refresh.</p>";
         }
-    }, 1000);
-}
+    }
 
+    // ২. আনলক করার লজিক
+    async function attemptUnlock(matchId, isLoggedIn) {
+        if (!matchId || matchId === 'undefined') {
+            alert("Error: Match ID is missing. Please refresh the page.");
+            return;
+        }
 
+        if (!isLoggedIn) {
+            alert("Please login to your account to unlock predictions.");
+            window.location.href = 'login.html';
+            return;
+        }
 
+        const modal = document.getElementById('ad-modal');
+        const timerDisplay = document.getElementById('timer');
+        modal.style.display = 'flex';
+        
+        let timeLeft = 15;
+        const countdown = setInterval(async () => {
+            timeLeft--;
+            timerDisplay.innerText = timeLeft;
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                
+                try {
+                    const { data: { user } } = await _supabase.auth.getUser();
+                    
+                    if (!user) {
+                        alert("Session expired. Please login again.");
+                        location.reload();
+                        return;
+                    }
 
-    loadFreeData();
+                    // ডাটাবেসে চিরস্থায়ী আনলক রেকর্ড সেভ করা
+                    const { error: insertError } = await _supabase
+                        .from('unlocked_predictions')
+                        .insert([{ 
+                            user_id: user.id, 
+                            prediction_id: parseInt(matchId) 
+                        }]);
+
+                    if (insertError && insertError.code !== '23505') { 
+                        throw insertError; // 23505 মানে অলরেডি ইনসার্ট করা আছে
+                    }
+
+                    modal.style.display = 'none';
+                    alert("Success! Prediction unlocked forever.");
+                    await loadFreeData(); // UI আপডেট
+
+                } catch (err) {
+                    console.error("Unlock Error:", err.message);
+                    alert("Database Error: " + err.message);
+                    modal.style.display = 'none';
+                }
+            }
+        }, 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadFreeData);
 </script>
 </body>
 </html>
