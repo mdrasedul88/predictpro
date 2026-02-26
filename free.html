@@ -116,14 +116,13 @@
         try {
             const { data: { user } } = await _supabase.auth.getUser();
 
-            // ১. ডাটাবেস থেকে সব প্রেডিকশন আনা
+            // ডাটা লোড করা
             const { data: matches, error: matchError } = await _supabase
                 .from('free_predictions')
                 .select('*');
 
             if (matchError) throw matchError;
 
-            // ২. ইউজার কোনগুলো আনলক করেছে তা চেক করা
             let unlockedIds = [];
             if (user) {
                 const { data: unlockedData } = await _supabase
@@ -137,77 +136,72 @@
             }
 
             if (!matches || matches.length === 0) {
-                listContainer.innerHTML = "<p style='text-align:center;'>No active matches found.</p>";
+                listContainer.innerHTML = "<p style='text-align:center;'>No predictions available right now.</p>";
                 return;
             }
 
             listContainer.innerHTML = '';
             matches.forEach(match => {
-                // আইডি স্ট্রিং হিসেবে সেভ করা যাতে বাটন ক্লিকে সমস্যা না হয়
-                const matchIdString = String(match.id);
-                const isUnlocked = unlockedIds.includes(matchIdString);
+                // আইডি চেক এবং স্ট্রিং কনভার্সন
+                if (!match.id) return; 
+                const matchID = String(match.id);
+                const isUnlocked = unlockedIds.includes(matchID);
                 
                 listContainer.innerHTML += `
                     <div class="prediction-card">
-                        <span class="badge">${match.category}</span>
+                        <span class="badge">${match.category || 'Cricket'}</span>
                         <div class="match-title">${match.match_name}</div>
                         <div class="stats-grid">
                             <div class="stat-box"><span class="stat-label">PICK</span><span class="stat-value">${match.pick}</span></div>
                             <div class="stat-box"><span class="stat-label">ODDS</span><span class="stat-value">${match.odds}</span></div>
                         </div>
-
                         ${isUnlocked ? `
                             <div class="unlocked-content">
-                                <span class="stat-label">Prediction Detail</span>
-                                <div style="font-weight: 800; color: #fff; font-size: 1.1rem;">${match.description}</div>
+                                <span class="stat-label">Analysis Result</span>
+                                <div style="font-weight: 800; color: #fff;">${match.description}</div>
                             </div>
                         ` : `
                             <div class="lock-overlay">
-                                <button class="btn-unlock" onclick="runUnlockFlow('${matchIdString}', ${!!user})">
-                                    <i class="fas fa-play-circle"></i> Unlock Prediction
+                                <button class="btn-unlock" onclick="handleMatchUnlock('${matchID}', ${!!user})">
+                                    <i class="fas fa-play-circle"></i> Unlock Now
                                 </button>
                             </div>
                         `}
                     </div>
                 `;
             });
-
         } catch (err) {
-            console.error("Load Error:", err);
-            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Sync Error. Please check Supabase Policy.</p>";
+            console.error("Database Error:", err);
+            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Sync Error. Check your internet or Supabase Policies.</p>";
         }
     }
 
-    // আনলক করার মেইন ফাংশন
-    async function runUnlockFlow(mId, isLoggedIn) {
-        // ১. আইডি চেক করা (যাতে undefined না হয়)
-        if (!mId || mId === "undefined") {
-            alert("Error: Invalid Match ID. Please hard refresh (Ctrl+F5).");
+    async function handleMatchUnlock(mId, isLoggedIn) {
+        if (!mId || mId === "undefined" || mId === "null") {
+            alert("Match ID error! Please refresh page twice.");
             return;
         }
 
-        // ২. লগইন চেক
         if (!isLoggedIn) {
-            alert("Please login to your account.");
+            alert("Login required to unlock.");
             window.location.href = 'login.html';
             return;
         }
 
         const modal = document.getElementById('ad-modal');
         modal.style.display = 'flex';
-        
         let timeLeft = 15;
+        
         const countdown = setInterval(async () => {
             timeLeft--;
             document.getElementById('timer').innerText = timeLeft;
             
             if (timeLeft <= 0) {
                 clearInterval(countdown);
-                
                 try {
                     const { data: { user } } = await _supabase.auth.getUser();
                     
-                    // ৩. ডাটাবেসে ইনসার্ট করা (ID-কে Number এ কনভার্ট করে)
+                    // এখানে আমরা Number() ব্যবহার করছি যাতে bigint এরর না আসে
                     const { error: insError } = await _supabase
                         .from('unlocked_predictions')
                         .insert([{ 
@@ -218,11 +212,10 @@
                     if (insError) throw insError;
 
                     modal.style.display = 'none';
-                    alert("Successful! Prediction Unlocked.");
-                    loadFreeData(); // রিফ্রেশ না করে ডাটা লোড করা
-
+                    alert("Success! Prediction Unlocked.");
+                    loadFreeData(); 
                 } catch (e) {
-                    alert("Database Error: " + e.message);
+                    alert("Sync Error: " + e.message);
                     modal.style.display = 'none';
                 }
             }
