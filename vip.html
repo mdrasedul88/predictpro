@@ -11,35 +11,37 @@
         body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; }
         .container { max-width: 600px; margin: 20px auto; padding: 15px; }
         
-        /* Rule 8: Header & Footer hidden by default */
+        /* Rule 8: Header/Footer visibility logic */
         header, footer { display: none; }
 
-        /* Rule 1: Match Card Styling */
+        /* Match Card Styling */
         .match-card { 
-            background: #1e293b; border-radius: 12px; padding: 20px; 
-            margin-bottom: 20px; border: 1px solid #334155; position: relative; overflow: hidden;
+            background: #1e293b; border-radius: 15px; padding: 18px; 
+            margin-bottom: 20px; border: 1px solid #334155; box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
-        .match-title { font-size: 1.1rem; font-weight: bold; color: #00ff88; margin-bottom: 10px; }
+        .match-header { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 12px; }
+        .category-tag { background: #facc15; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
         
-        /* Rule 1: Blur effect for hidden content */
-        .prediction-blur { 
-            filter: blur(8px); user-select: none; pointer-events: none; 
-            background: rgba(15, 23, 42, 0.6); padding: 10px; border-radius: 8px; margin-top: 10px;
-        }
-        
-        /* Rule 1: Overlay with Unlock button */
-        .lock-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-            background: rgba(30, 41, 59, 0.5); z-index: 5;
-        }
-        .btn-unlock {
-            background: #00ff88; color: #020617; border: none; padding: 10px 20px;
-            border-radius: 6px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(0,255,136,0.3);
-        }
+        .vs-text { font-size: 1.2rem; font-weight: 800; color: #fff; text-align: center; margin: 10px 0; }
+        .info-row { display: flex; justify-content: space-between; font-size: 0.85rem; color: #94a3b8; margin-bottom: 15px; }
 
-        .prediction-show { color: #fff; background: #0f172a; padding: 15px; border-radius: 8px; border: 1px dashed #00ff88; }
-        .category-badge { background: #334155; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; color: #facc15; }
+        /* Specific Blur Logic */
+        .prediction-box {
+            display: flex; gap: 10px; margin-top: 10px;
+        }
+        .predict-item { flex: 1; background: #0f172a; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #334155; }
+        .label { display: block; font-size: 0.7rem; color: #00ff88; margin-bottom: 5px; font-weight: bold; }
+        
+        .blur-val { filter: blur(6px); user-select: none; color: #94a3b8; }
+        .clear-val { font-weight: bold; color: #fff; font-size: 1rem; }
+
+        /* Unlock Button Area */
+        .unlock-section { margin-top: 15px; text-align: center; }
+        .btn-unlock {
+            width: 100%; background: #00ff88; color: #020617; border: none; padding: 12px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        .btn-unlock:hover { background: #05d675; }
     </style>
 </head>
 <body>
@@ -52,13 +54,13 @@
 </header>
 
 <div class="container">
-    <h2 style="text-align: center; color: #00ff88; margin-bottom: 30px;">Premium VIP Predictions</h2>
+    <h2 style="text-align: center; color: #00ff88; margin-bottom: 25px;">Premium VIP List</h2>
     <div id="vip-container">
-        <p style="text-align: center; color: #94a3b8;">Loading Predictions...</p>
+        <p style="text-align: center; color: #94a3b8;">Loading VIP Matches...</p>
     </div>
 </div>
 
-<footer id="site-footer" style="padding: 20px; text-align: center; background: #1e293b; margin-top: 50px; border-top: 1px solid #334155;">
+<footer id="site-footer" style="padding: 20px; text-align: center; background: #1e293b; margin-top: 50px;">
     <p>&copy; 2026 Sports Pro VIP</p>
 </footer>
 
@@ -67,81 +69,81 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    async function initializeVIP() {
+    async function init() {
         const { data: { session } } = await _supabase.auth.getSession();
-        let hasVipAccess = false;
+        let isVip = false;
 
-        // Rule 8: If logged in, show header and footer
         if (session) {
             document.getElementById('site-header').style.display = 'block';
             document.getElementById('site-footer').style.display = 'block';
 
-            // Rules 3 & 7: Check VIP status and Expiry
+            // Check VIP status and expiry
             const { data: profile } = await _supabase.from('profiles').select('*').eq('id', session.user.id).single();
             if (profile && profile.is_vip) {
                 const expiry = profile.expiry_date ? new Date(profile.expiry_date) : null;
                 if (expiry && expiry > new Date()) {
-                    hasVipAccess = true;
+                    isVip = true;
                 }
             }
         }
-
-        loadMatches(hasVipAccess, !!session);
+        renderVIPData(isVip, !!session);
     }
 
-    async function loadMatches(isVip, isLoggedIn) {
-        // Fetching from 'vip_matches' (case-sensitive as per table editor)
+    async function renderVIPData(isVip, isLoggedIn) {
+        // Fetching matches from 'vip_matches' table
         const { data: matches, error } = await _supabase.from('vip_matches').select('*');
-        
         const container = document.getElementById('vip-container');
-        
-        if (error) {
-            console.error("Fetch Error:", error.message);
-            container.innerHTML = `<p style='text-align:center; color:red;'>Error loading data. Please check RLS Policies.</p>`;
-            return;
-        }
 
-        if (!matches || matches.length === 0) {
-            container.innerHTML = "<p style='text-align:center;'>No VIP matches found.</p>";
+        if (error || !matches || matches.length === 0) {
+            container.innerHTML = "<p style='text-align:center; color:#94a3b8;'>বর্তমানে কোনো VIP প্রেডিকশন নেই।</p>";
             return;
         }
 
         container.innerHTML = matches.map(m => `
             <div class="match-card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div class="match-title">${m.match_name}</div>
-                    <span class="category-badge">${m.category || 'VIP'}</span>
+                <div class="match-header">
+                    <span class="category-tag">${m.category || 'Sports'}</span>
+                    <span style="font-size: 0.75rem; color:#94a3b8;"><i class="far fa-calendar-alt"></i> ${m.match_time ? new Date(m.match_time).toLocaleDateString() : 'Today'}</span>
                 </div>
                 
-                ${isVip ? `
-                    <div class="prediction-show">
-                        <strong style="color:#00ff88;">Premium Tip:</strong><br>${m.description}
+                <div class="vs-text">${m.match_name}</div>
+                
+                <div class="info-row">
+                    <span><i class="far fa-clock"></i> ${m.match_time ? new Date(m.match_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Live'}</span>
+                    <span><i class="fas fa-trophy"></i> VIP Premium</span>
+                </div>
+
+                <div class="prediction-box">
+                    <div class="predict-item">
+                        <span class="label">WINNER</span>
+                        <span class="${isVip ? 'clear-val' : 'blur-val'}">${isVip ? m.description : 'HIDDEN'}</span>
                     </div>
-                ` : `
-                    <div class="prediction-blur">
-                        <strong>Prediction:</strong> This premium content is hidden. Please unlock to view the tip.
+                    <div class="predict-item">
+                        <span class="label">ODDS</span>
+                        <span class="${isVip ? 'clear-val' : 'blur-val'}">${isVip ? (m.odds || '1.80') : '0.00'}</span>
                     </div>
-                    <div class="lock-overlay">
-                        <button class="btn-unlock" onclick="handleUnlock(${isLoggedIn})">
-                            <i class="fas fa-lock"></i> Unlock Now
-                        </button>
-                    </div>
-                `}
+                </div>
+
+                ${!isVip ? `
+                <div class="unlock-section">
+                    <button class="btn-unlock" onclick="handleUnlockAction(${isLoggedIn})">
+                        <i class="fas fa-unlock-alt"></i> Unlock Full Prediction
+                    </button>
+                </div>
+                ` : ''}
             </div>
         `).join('');
     }
 
-    function handleUnlock(isLoggedIn) {
+    function handleUnlockAction(isLoggedIn) {
         if (!isLoggedIn) {
-            // Rule 2: If no account, go to login
-            window.location.href = 'login.html';
+            window.location.href = 'login.html'; // Rule 2
         } else {
-            // Rule 4: If account exists but no subscription, go to subscription page
-            window.location.href = 'subscription.html';
+            window.location.href = 'subscription.html'; // Rule 4
         }
     }
 
-    window.onload = initializeVIP;
+    window.onload = init;
 </script>
 </body>
 </html>
