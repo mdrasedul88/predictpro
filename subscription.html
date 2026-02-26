@@ -7,98 +7,115 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --neon: #00ff88; --bg: #020617; --card: #0f172a; --text-gray: #94a3b8; }
-        body { background-color: var(--bg); color: white; font-family: 'Inter', sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding-top: 85px; }
-        
-        /* Fixed Navigation Bar */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap');
+
+        :root { 
+            --premium-purple: #7b61ff; 
+            --bg-dark: #050505; 
+            --card-glass: rgba(255, 255, 255, 0.05);
+            --glow: rgba(123, 97, 255, 0.3);
+        }
+
+        body { 
+            background-color: var(--bg-dark); 
+            background-image: radial-gradient(circle at 50% 10%, #1a103d 0%, #050505 100%);
+            color: white; 
+            font-family: 'Poppins', sans-serif; 
+            margin: 0; 
+            padding: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding-top: 90px;
+        }
+
+        /* Fixed Navigation Bar - আপনার পছন্দমতো */
         .navbar { 
             position: fixed; top: 0; left: 0; width: 100%; 
-            background: rgba(2, 6, 23, 0.85); 
-            backdrop-filter: blur(12px); 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05); 
+            background: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(15px); 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
             padding: 15px 0; z-index: 1001; text-align: center; 
         }
-        .navbar h1 { color: var(--neon); font-size: 1.2rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-        .navbar p { color: var(--text-gray); font-size: 0.7rem; margin: 3px 0 0 0; opacity: 0.8; }
+        .navbar h1 { color: #fff; font-size: 1.1rem; margin: 0; font-weight: 800; letter-spacing: 1px; }
+        .navbar p { color: #aaa; font-size: 0.65rem; margin: 2px 0 0 0; }
 
-        /* ছবির মতো ২-কলাম স্লিম গ্রিড */
+        /* ছবির মতো ২-কলাম গ্রিড */
         .plan-grid { 
             display: grid; 
-            grid-template-columns: repeat(2, 1fr); /* পাশাপাশি ২ট কার্ড */
-            gap: 10px; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px; 
             width: 100%; 
-            max-width: 400px; 
-            margin-top: 5px; 
+            max-width: 380px; 
         }
         
-        /* ছবির মতো স্লিম কার্ড ডিজাইন */
+        /* কার্ড ডিজাইন - হুবহু ছবির (25648.png) মতো */
         .plan-card { 
-            background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.9));
-            border: 1px solid rgba(255, 255, 255, 0.05); 
-            border-radius: 18px; 
-            padding: 12px; 
-            text-align: center; 
-            transition: 0.3s; 
+            background: var(--card-glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 24px; 
+            padding: 18px 12px; 
+            text-align: left; /* ছবির মতো টেক্সট বামে */
             position: relative;
-            overflow: hidden;
+            transition: 0.4s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .plan-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--neon); opacity: 0.3;
-        }
-        
-        .days-badge { 
-            font-size: 0.5rem; 
-            background: rgba(0, 255, 136, 0.1); 
-            color: var(--neon); 
-            padding: 2px 8px; 
-            border-radius: 10px; 
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        
-        .plan-name { font-size: 0.85rem; font-weight: 600; margin: 8px 0 2px 0; color: #fff; }
-        
-        /* ছবির মতো প্রাইস স্টাইল */
-        .price-box { margin-bottom: 8px; }
-        .price-box .amount { font-size: 1.4rem; font-weight: 800; color: white; }
-        .price-box .sub { font-size: 0.6rem; color: var(--text-gray); font-weight: normal; }
-        
-        /* ফিচার লিস্ট অনেক স্লিম করা হয়েছে */
-        .feature-list { text-align: left; margin: 8px 0; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; }
-        .feature-item { font-size: 0.65rem; color: #cbd5e1; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
-        .feature-item i { color: var(--neon); font-size: 0.7rem; }
 
-        /* ছবির মতো উজ্জ্বল বাটন */
+        .plan-card:hover {
+            border-color: var(--premium-purple);
+            box-shadow: 0 0 20px var(--glow);
+            transform: translateY(-5px);
+        }
+
+        /* Premium Icon/Star */
+        .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .card-header i { color: var(--premium-purple); font-size: 1rem; }
+        .card-header span { font-size: 0.65rem; font-weight: 600; color: #ccc; letter-spacing: 2px; text-transform: uppercase; }
+
+        .unlock-text { font-size: 0.7rem; color: #999; margin-bottom: 5px; }
+        
+        .price-box { margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .price-box .amount { font-size: 1.6rem; font-weight: 800; color: #fff; }
+        .price-box .sub { font-size: 0.7rem; color: #888; }
+        
+        /* ছবির মতো বাটন */
         .buy-btn { 
-            background: var(--neon); 
-            color: #000; 
+            background: var(--premium-purple); 
+            color: #fff; 
             border: none; 
             width: 100%; 
-            padding: 8px; 
-            border-radius: 10px; 
+            padding: 10px; 
+            border-radius: 12px; 
             font-weight: 700; 
             cursor: pointer; 
-            margin-top: 5px; 
-            font-size: 0.7rem; 
+            margin-bottom: 15px;
+            font-size: 0.65rem; 
             text-transform: uppercase; 
-            box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
+            box-shadow: 0 4px 15px var(--glow);
         }
+
+        /* ফিচার লিস্ট ছবির মতো আইকন দিয়ে */
+        .feature-list { display: flex; flex-direction: column; gap: 8px; }
+        .feature-item { font-size: 0.65rem; color: #ddd; display: flex; align-items: center; gap: 8px; }
+        .feature-item i { color: var(--premium-purple); font-size: 0.75rem; width: 14px; }
+        .feature-item i.fa-check-circle { opacity: 0.8; }
+        .feature-item.orange i { color: #ff8c42; } /* Match notification color */
 
         /* Modal Styles */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
-        .modal-content { background: #0f172a; width: 100%; max-width: 300px; padding: 20px; border-radius: 20px; border: 1px solid rgba(0, 255, 136, 0.2); position: relative; }
-        .admin-number-box { background: rgba(0, 255, 136, 0.05); border: 1px dashed rgba(0, 255, 136, 0.3); padding: 10px; border-radius: 10px; margin: 12px 0; font-size: 0.75rem; text-align: left; }
-        .admin-number-box b { color: var(--neon); display: block; }
-        .input-group { text-align: left; margin-bottom: 10px; }
-        .input-group label { font-size: 0.65rem; color: var(--text-gray); margin-bottom: 3px; display: block; }
-        .input-group input, .input-group select { width: 100%; padding: 8px; background: #020617; border: 1px solid #334155; border-radius: 8px; color: white; font-size: 0.8rem; outline: none; box-sizing: border-box; }
-        .close-btn { position: absolute; top: 12px; right: 15px; color: var(--text-gray); font-size: 1.1rem; cursor: pointer; }
+        .modal-content { background: #111; width: 100%; max-width: 320px; padding: 25px; border-radius: 25px; border: 1px solid var(--premium-purple); position: relative; }
+        .close-btn { position: absolute; top: 15px; right: 20px; color: #fff; font-size: 1.5rem; cursor: pointer; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px; }
+        .input-group input, .input-group select { width: 100%; padding: 12px; background: #000; border: 1px solid #334155; border-radius: 10px; color: white; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
     <div class="navbar">
-        <h1>👑 VIP Membership</h1>
+        <h1>👑 VIP MEMBERSHIP</h1>
         <p>Send payment and paste TrxID to activate access</p>
     </div>
 
@@ -107,21 +124,21 @@
     <div id="pModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h3 style="margin:0; font-size: 0.9rem;">Secure Checkout</h3>
-            <div id="adminInfo" class="admin-number-box"></div>
+            <h3 style="margin-top:0">Secure Activation</h3>
+            <div id="adminInfo" style="background: rgba(123, 97, 255, 0.1); padding: 10px; border-radius: 10px; font-size: 0.75rem; margin-bottom: 15px; border-left: 3px solid var(--premium-purple);"></div>
             <div class="input-group">
-                <label>Method</label>
+                <label>Payment Method</label>
                 <select id="mth" onchange="updateUI()"></select>
             </div>
             <div class="input-group">
-                <label id="phoneLabel">Your Number</label>
+                <label>Your Number</label>
                 <input type="text" id="mInfo" placeholder="017XXXXXXXX">
             </div>
             <div class="input-group">
-                <label>TrxID</label>
-                <input type="text" id="trxId" placeholder="Paste here">
+                <label>Transaction ID</label>
+                <input type="text" id="trxId" placeholder="Paste TrxID">
             </div>
-            <button class="buy-btn" onclick="submitOrder()">SUBMIT</button>
+            <button class="buy-btn" onclick="submitOrder()">ACTIVATE ACCESS</button>
         </div>
     </div>
 
@@ -133,8 +150,7 @@
         const MY_PAYMENT = {
             bKash: "017XXXXXXXX (Personal)",
             Nagad: "018XXXXXXXX (Personal)",
-            USDT: "T9zBxxxxxxxxxxxxxxxxx (TRC20)",
-            BTC: "bc1qxxxxxxxxxxxxxxxxx"
+            USDT: "T9zBxxxxxxxxxxxxxxxxx (TRC20)"
         };
 
         let selectedPlan = {};
@@ -156,10 +172,7 @@
                 .eq('is_active', true)
                 .order('duration_days', { ascending: true });
 
-            if (error) {
-                document.getElementById('plan-list').innerHTML = "Failed...";
-                return;
-            }
+            if (error) return;
 
             const list = document.getElementById('plan-list');
             list.innerHTML = plans.map(p => {
@@ -168,19 +181,24 @@
 
                 return `
                     <div class="plan-card">
-                        <span class="days-badge">${p.duration_days} DAYS</span>
-                        <div class="plan-name">${p.plan_name}</div>
+                        <div class="card-header">
+                            <i class="fas fa-star"></i>
+                            <span>PREMIUM</span>
+                        </div>
+                        <div class="unlock-text">Unlock Full Access</div>
                         <div class="price-box">
                             <span class="amount">${symbol}${price}</span>
-                            <span class="sub">/life</span>
+                            <span class="sub">/ ${p.duration_days} days</span>
                         </div>
                         
-                        <div class="feature-list">
-                            <div class="feature-item"><i class="fas fa-check-circle"></i> VIP Signals</div>
-                            <div class="feature-item"><i class="fas fa-check-circle"></i> 95% Accu.</div>
-                        </div>
-
                         <button class="buy-btn" onclick="openModal('${p.plan_name}', ${p.duration_days}, '${symbol}${price}')">GET ACCESS</button>
+
+                        <div class="feature-list">
+                            <div class="feature-item"><i class="far fa-check-circle"></i> All predictions</div>
+                            <div class="feature-item"><i class="far fa-check-circle"></i> Daily signals</div>
+                            <div class="feature-item"><i class="far fa-check-circle"></i> 95% Accuracy</div>
+                            <div class="feature-item orange"><i class="fas fa-check"></i> Match alerts</div>
+                        </div>
                     </div>`;
             }).join('');
         }
@@ -188,15 +206,14 @@
         function openModal(name, days, price) {
             selectedPlan = { name, days, price };
             const mthSelect = document.getElementById('mth');
-            mthSelect.innerHTML = isLocal ? `<option value="bKash">bKash</option><option value="Nagad">Nagad</option>` : `<option value="USDT">USDT (TRC20)</option><option value="BTC">Bitcoin</option>`;
+            mthSelect.innerHTML = isLocal ? `<option value="bKash">bKash</option><option value="Nagad">Nagad</option>` : `<option value="USDT">USDT (TRC20)</option>`;
             updateUI();
             document.getElementById('pModal').style.display = 'flex';
         }
 
         function updateUI() {
             const method = document.getElementById('mth').value;
-            const infoBox = document.getElementById('adminInfo');
-            infoBox.innerHTML = `Send <b>${selectedPlan.price}</b> to:<br><b>${MY_PAYMENT[method]}</b>`;
+            document.getElementById('adminInfo').innerHTML = `Send <b>${selectedPlan.price}</b> to:<br><b>${MY_PAYMENT[method]}</b>`;
         }
 
         function closeModal() { document.getElementById('pModal').style.display = 'none'; }
@@ -204,36 +221,25 @@
         async function submitOrder() {
             const userContact = document.getElementById('mInfo').value;
             const userTrx = document.getElementById('trxId').value;
-            const method = document.getElementById('mth').value;
             const btn = document.querySelector('#pModal .buy-btn');
 
-            if(!userContact || !userTrx) { alert("সব তথ্য দিন!"); return; }
-
-            btn.innerText = "Processing...";
-            btn.disabled = true;
+            if(!userContact || !userTrx) { alert("Please fill all info!"); return; }
+            btn.innerText = "SENDING..."; btn.disabled = true;
 
             try {
-                const { data: { session } } = await _supabase.auth.getSession();
-                const email = session?.user?.email || "guest@user.com";
-
                 const { error } = await _supabase.from('payment_requests').insert([{
-                    user_email: email, mobile: userContact, plan_name: selectedPlan.name,
+                    user_email: "guest@user.com", mobile: userContact, plan_name: selectedPlan.name,
                     duration: parseInt(selectedPlan.days), amount: selectedPlan.price,
-                    payment_method: method, currency: isLocal ? 'BDT' : 'USDT',
+                    payment_method: document.getElementById('mth').value, currency: isLocal ? 'BDT' : 'USDT',
                     transaction_id: String(userTrx), status: 'pending'
                 }]);
 
-                if(!error) {
-                    alert("✅ Request Submitted!");
-                    location.reload();
-                } else { throw error; }
-            } catch (err) {
-                alert("Error: " + err.message);
-            } finally {
-                btn.innerText = "SUBMIT";
-                btn.disabled = false;
-            }
+                if(!error) { alert("✅ Success! Wait for activation."); location.reload(); }
+                else throw error;
+            } catch (err) { alert("Error: " + err.message); }
+            finally { btn.innerText = "ACTIVATE ACCESS"; btn.disabled = false; }
         }
+
         detectUser();
     </script>
 </body>
