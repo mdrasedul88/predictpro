@@ -15,11 +15,11 @@
             --text-gray: #94a3b8;
         }
 
-        /* ১. জিরো জার্ক লজিক */
+        /* জিরো জার্ক লজিক */
         #main-wrapper { opacity: 0; visibility: hidden; transition: opacity 0.4s ease; }
         #main-wrapper.visible { opacity: 1; visibility: visible; }
 
-        /* ২. প্রিমিয়াম লোডার স্ক্রিন */
+        /* প্রিমিয়াম লোডার স্ক্রিন */
         #app-loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--dark-bg); z-index: 9999;
@@ -38,7 +38,6 @@
         .page-header { text-align: center; margin-bottom: 15px; } 
         .page-header h1 { color: var(--premium-purple); font-size: 1.3rem; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* ৩. কার্ড এনিমেশন */
         .prediction-card {
             background: #1e1e2e;
             border: 1px solid var(--glass-border);
@@ -89,7 +88,7 @@
             justify-content: center; align-items: center; flex-direction: column;
         }
 
-        /* এখন হেডার ফুটার সবসময় শো হবে */
+        /* হেডার ও ফুটার ডিফল্টভাবে দৃশ্যমান */
         #header-root, #footer-root { display: block; }
     </style>
 </head>
@@ -166,7 +165,7 @@
                                 <div style="font-size:1rem; font-weight:800; color:#fff;">${match.description}</div>
                             </div>
                         ` : `
-                            <button class="btn-unlock-vip" onclick="handleUnlockProcess('${matchId}', true)">
+                            <button class="btn-unlock-vip" onclick="handleUnlockProcess('${matchId}')">
                                 <i class="fas fa-play-circle"></i> UNLOCK NOW
                             </button>
                         `}
@@ -177,7 +176,7 @@
     }
 
     async function initApp() {
-        // ১. ক্যাশ ডাটা লোড
+        // ১. শুরুতে ক্যাশ ডাটা দেখানো
         const cachedMatches = localStorage.getItem('cached_free_matches');
         const cachedUnlocked = localStorage.getItem('cached_unlocked_ids');
         if (cachedMatches) {
@@ -185,10 +184,10 @@
         }
 
         try {
-            // ২. সেশন চেক (লগিন না থাকলেও ডাটা দেখাবে)
+            // ২. সেশন চেক
             const { data: { user } } = await _supabase.auth.getUser();
 
-            // ৩. সার্ভার থেকে ডাটা সিঙ্ক (লগিন ছাড়া বা থাকা উভয় ক্ষেত্রে)
+            // ৩. সার্ভার থেকে ডাটা সিঙ্ক (সবার জন্য)
             const { data: matches } = await _supabase.from('free_predictions').select('*').order('id', { ascending: false });
             
             let unlockedList = [];
@@ -215,10 +214,10 @@
         }, 150);
     }
 
-    async function handleUnlockProcess(mId, status) {
+    async function handleUnlockProcess(mId) {
         const { data: { user } } = await _supabase.auth.getUser();
         
-        // অ্যাড মোডাল ওপেন
+        // অ্যাড মোডাল চালু হবে (লগিন থাকুক বা না থাকুক)
         const modal = document.getElementById('ad-modal');
         modal.style.display = 'flex';
         let timeLeft = 15;
@@ -231,8 +230,8 @@
                 modal.style.display = 'none';
 
                 if (!user) {
-                    // লগিন না থাকলে অ্যালার্ট দিয়ে লগিন পেজে পাঠানো
-                    alert("To save your progress and see predictions, please login or create an account!");
+                    // লগিন না থাকলে অ্যালার্ট দিয়ে রিডাইরেক্ট
+                    alert("Ads viewed successfully! To unlock and save this prediction, please Login first.");
                     window.location.href = 'login.html'; 
                     return;
                 }
