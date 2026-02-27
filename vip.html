@@ -12,13 +12,13 @@
             --dark-bg: #050505; 
             --card-glass: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.1);
+            --win-green: #00ff88;
+            --loss-red: #ff4d4d;
         }
 
-        /* ১. মেইন ধাক্কা রোধক লজিক */
         #main-wrapper { opacity: 0; visibility: hidden; transition: opacity 0.4s ease; }
         #main-wrapper.visible { opacity: 1; visibility: visible; }
 
-        /* ২. লোডিং স্ক্রিন (যাতে ধাক্কা না দেখা যায়) */
         #app-loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--dark-bg); z-index: 9999;
@@ -33,20 +33,39 @@
             color: white; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
         }
 
-        /* ৩. প্রিমিয়াম কার্ড এনিমেশন */
+        /* কার্ড ৮% মোটা করা হয়েছে (Padding বাড়িয়ে) */
         .match-card {
             background: var(--card-glass); backdrop-filter: blur(12px);
-            border-radius: 18px; padding: 15px; margin-bottom: 15px; 
+            border-radius: 20px; padding: 22px; margin-bottom: 18px; 
             border: 1px solid var(--glass-border); 
+            position: relative; overflow: hidden;
             opacity: 0; transform: translateY(20px);
             animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
         @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
 
+        /* লীগ হাইলাইট বক্স স্টাইল */
+        .league-highlight {
+            display: inline-block;
+            background: rgba(123, 97, 255, 0.15);
+            color: var(--premium-purple);
+            font-size: 10px; font-weight: 700;
+            padding: 4px 10px; border-radius: 6px;
+            margin-bottom: 8px; text-transform: uppercase;
+            border: 1px solid rgba(123, 97, 255, 0.2);
+        }
+
+        /* উইন/লস স্ট্যাম্প স্টাইল */
+        .status-stamp {
+            position: absolute; top: 15px; right: 15px;
+            font-size: 1.8rem; font-weight: 900;
+            transform: rotate(15deg);
+        }
+
         .container { max-width: 450px; margin: auto; padding: 10px; padding-bottom: 80px; }
-        .vs-text { font-size: 1.1rem; font-weight: 700; text-align: center; margin: 12px 0; }
-        .predict-box { background: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 10px; text-align: center; border: 1px solid var(--glass-border); }
-        .unlock-btn { width: 100%; margin-top: 15px; padding: 12px; border-radius: 12px; background: var(--premium-purple); color: #fff; border: none; font-weight: 800; text-transform: uppercase; }
+        .vs-text { font-size: 1.15rem; font-weight: 700; text-align: center; margin: 15px 0; }
+        .predict-box { background: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 12px; text-align: center; border: 1px solid var(--glass-border); }
+        .unlock-btn { width: 100%; margin-top: 15px; padding: 14px; border-radius: 12px; background: var(--premium-purple); color: #fff; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         
         #header-root, #footer-root { display: none; }
     </style>
@@ -76,29 +95,42 @@
 
     function renderMatches(matches, isVip, isLoggedIn) {
         const list = document.getElementById('vip-list');
-        list.innerHTML = matches.map((m, i) => `
+        list.innerHTML = matches.map((m, i) => {
+            // উইন/লস লজিক
+            let statusHtml = '';
+            if(m.status === 'win') {
+                statusHtml = `<div class="status-stamp" style="color: var(--win-green);"><i class="fa-solid fa-circle-check"></i></div>`;
+            } else if(m.status === 'loss') {
+                statusHtml = `<div class="status-stamp" style="color: var(--loss-red);"><i class="fa-solid fa-circle-xmark"></i></div>`;
+            }
+
+            return `
             <div class="match-card" style="animation-delay: ${i * 0.1}s;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.6rem; color: #94a3b8;">
-                    <span style="background:var(--premium-purple); color:white; padding: 2px 8px; border-radius: 4px;">${m.category || 'VIP'}</span>
-                    <span>${m.match_time || 'Live'}</span>
+                ${statusHtml}
+                <div class="league-highlight">${m.league_name || 'International'}</div>
+                
+                <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: #94a3b8;">
+                    <span style="background:var(--premium-purple); color:white; padding: 3px 10px; border-radius: 6px; font-weight:600;">${m.category || 'VIP'}</span>
+                    <span><i class="far fa-clock"></i> ${m.match_time || 'Live'}</span>
                 </div>
+                
                 <div class="vs-text">${m.match_name}</div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div class="predict-box">
-                        <span style="font-size: 0.5rem; color: #facc15; display: block;">PICK</span>
+                        <span style="font-size: 0.6rem; color: #facc15; display: block; font-weight:700;">PICK</span>
                         <span style="${!isVip ? 'filter:blur(5px)' : ''}">${isVip ? m.description : 'WINNER'}</span>
                     </div>
                     <div class="predict-box">
-                        <span style="font-size: 0.5rem; color: #facc15; display: block;">ODDS</span>
+                        <span style="font-size: 0.6rem; color: #facc15; display: block; font-weight:700;">ODDS</span>
                         <span style="${!isVip ? 'filter:blur(5px)' : ''}">${isVip ? (m.odds || '1.90') : '0.00'}</span>
                     </div>
                 </div>
                 ${!isVip ? `<button class="unlock-btn" onclick="location.href='${isLoggedIn ? 'subscription.html' : 'login.html'}'">UNLOCK NOW</button>` : ''}
-            </div>`).join('');
+            </div>`}).join('');
     }
 
     async function init() {
-        // ১. সেশন চেক করে হেডার-ফুটার ঠিক করা
         const { data: { session } } = await _supabase.auth.getSession();
         const isLoggedIn = !!session;
 
@@ -107,7 +139,6 @@
             document.getElementById('footer-root').style.display = 'block';
         }
 
-        // ২. ডাটা চেক করা (ক্যাশ অথবা সার্ভার)
         const cached = localStorage.getItem('v_cache');
         const vStatus = localStorage.getItem('v_status') === 'true';
         
@@ -127,10 +158,8 @@
             }
         } catch (e) { console.log(e); }
 
-        // ৩. সব ডাটা রেডি হলে রেন্ডার করা
         renderMatches(matches, finalVip, isLoggedIn);
 
-        // ৪. শেষ ধাপ: পর্দা সরানো (একদম কোনো ধাক্কা ছাড়া)
         setTimeout(() => {
             document.getElementById('app-loader').style.display = 'none';
             document.getElementById('main-wrapper').classList.add('visible');
