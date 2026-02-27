@@ -33,10 +33,10 @@
             color: white; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
         }
 
-        /* কার্ড থিকনেস আরও ৫% কমানো হয়েছে (Padding 18px থেকে 17px করা হয়েছে) */
+        /* কার্ড থিকনেস ১৩% কমানো হয়েছে (Padding 18px থেকে 15px করা হয়েছে) */
         .match-card {
             background: var(--card-glass); backdrop-filter: blur(12px);
-            border-radius: 18px; padding: 17px; margin-bottom: 16px; 
+            border-radius: 18px; padding: 15px; margin-bottom: 14px; 
             border: 1px solid var(--glass-border); 
             position: relative; overflow: hidden;
             opacity: 0; transform: translateY(20px);
@@ -55,15 +55,16 @@
             white-space: nowrap;
         }
 
+        /* সিম্বল কন্টেইনার ফিক্স */
         .status-container {
             font-size: 1.1rem;
             margin-top: 2px;
         }
 
         .container { max-width: 450px; margin: auto; padding: 10px; padding-bottom: 80px; }
-        .vs-text { font-size: 1.15rem; font-weight: 700; text-align: center; margin: 15px 0; }
-        .predict-box { background: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 12px; text-align: center; border: 1px solid var(--glass-border); }
-        .unlock-btn { width: 100%; margin-top: 15px; padding: 14px; border-radius: 12px; background: var(--premium-purple); color: #fff; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+        .vs-text { font-size: 1.15rem; font-weight: 700; text-align: center; margin: 12px 0; }
+        .predict-box { background: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 12px; text-align: center; border: 1px solid var(--glass-border); }
+        .unlock-btn { width: 100%; margin-top: 15px; padding: 12px; border-radius: 12px; background: var(--premium-purple); color: #fff; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; }
         
         #header-root, #footer-root { display: none; }
     </style>
@@ -95,12 +96,14 @@
         const list = document.getElementById('vip-list');
         list.innerHTML = matches.map((m, i) => {
             
+            // স্পোর্টস আইকন লজিক
             let sportIcon = '<i class="fa-solid fa-trophy"></i>';
             const cat = m.category ? m.category.toUpperCase() : '';
             if(cat.includes('CRICKET')) sportIcon = '<i class="fa-solid fa-baseball-bat-ball"></i>';
             else if(cat.includes('FOOTBALL')) sportIcon = '<i class="fa-solid fa-football"></i>';
             else if(cat.includes('BASKETBALL')) sportIcon = '<i class="fa-solid fa-basketball"></i>';
 
+            // উইন/লস সিম্বল লজিক
             let resultIcon = '';
             const result = m.match_result ? m.match_result.toLowerCase() : '';
             if(result === 'win') {
@@ -125,7 +128,7 @@
                 
                 <div class="vs-text">${m.match_name}</div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="predict-box">
                         <span style="font-size: 0.6rem; color: #facc15; display: block; font-weight:700;">PICK</span>
                         <span style="${!isVip ? 'filter:blur(5px)' : ''}">${isVip ? m.description : 'WINNER'}</span>
