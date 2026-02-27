@@ -20,14 +20,16 @@
             background-image: radial-gradient(circle at 50% 10%, #1a103d 0%, #050505 100%);
             color: white; font-family: 'Poppins', sans-serif; 
             margin: 0; padding: 0; min-height: 100vh;
+            overflow-x: hidden; /* ধাক্কা কমানোর জন্য */
         }
         .container { max-width: 450px; margin: auto; padding: 10px; padding-bottom: 80px; }
 
-        /* Smooth Slide-up Animation only for new data */
+        /* Smooth Slide-up Animation - Improved for Refresh */
         .new-entry {
-            animation: slideUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
             opacity: 0;
-            transform: translateY(15px);
+            transform: translateY(20px);
+            will-change: transform, opacity;
         }
         @keyframes slideUp {
             to { opacity: 1; transform: translateY(0); }
@@ -56,7 +58,7 @@
         
         .unlock-btn { width: 100%; margin-top: 15px; padding: 12px; border-radius: 12px; background: var(--premium-purple); color: #fff; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 15px var(--glow); }
         
-        /* Header/Footer hide initial to avoid flicker */
+        /* Header/Footer Initially Hidden */
         header, footer { display: none; }
     </style>
 </head>
@@ -71,7 +73,6 @@
 
 <div class="container">
     <h2 style="text-align:center; color: var(--premium-purple); font-size: 1.3rem; margin: 20px 0; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">PREMIUM VIP</h2>
-    
     <div id="vip-list"></div>
 </div>
 
@@ -84,9 +85,8 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    let lastRenderedHash = ""; // ডাবল রেন্ডারিং রোখার জন্য
+    let lastRenderedHash = ""; 
 
-    // ১. জেনারেট কন্টেন্ট ফাংশন
     function generateHTML(matches, isVip, isLoggedIn, isNew = false) {
         return matches.map((m, i) => {
             const cat = (m.category || '').toLowerCase();
@@ -94,8 +94,9 @@
             const displayTime = m.match_time || 'Live';
             const displayDate = m.created_at ? new Date(m.created_at).toLocaleDateString('en-GB', {day:'2-digit', month:'short'}) : 'Today';
 
+            // এখানে সবসময় new-entry ক্লাস দেওয়া হয়েছে যাতে রিলোড দিলে এনিমেশন ফিল আসে
             return `
-            <div class="match-card ${isNew ? 'new-entry' : ''}" style="${isNew ? `animation-delay: ${i * 0.08}s;` : ''}">
+            <div class="match-card new-entry" style="animation-delay: ${i * 0.1}s;">
                 <div class="card-header">
                     <span class="category-badge ${bClass}">${m.category || 'VIP'}</span>
                     <span style="font-size:0.65rem; color:#94a3b8;"><i class="far fa-calendar-alt"></i> ${displayDate} | <i class="far fa-clock"></i> ${displayTime}</span>
@@ -116,28 +117,34 @@
         }).join('');
     }
 
-    // ২. ইনস্ট্যান্ট ক্যাশ লোডিং (Zero Wait)
+    // ১. ইন্সট্যান্ট ক্যাশ লোডিং (এনিমেশনসহ)
     function fastLoad() {
         const cached = localStorage.getItem('vip_cache');
         const vipStatus = localStorage.getItem('vip_status') === 'true';
         if (cached) {
             const matches = JSON.parse(cached);
             lastRenderedHash = JSON.stringify(matches) + vipStatus;
-            document.getElementById('vip-list').innerHTML = generateHTML(matches, vipStatus, true, false);
+            // এখানে true দিয়ে পাঠানো হয়েছে যাতে রিলোড দিলেও এনিমেশন হয়
+            document.getElementById('vip-list').innerHTML = generateHTML(matches, vipStatus, true, true);
         }
     }
 
-    // ৩. রিয়েল-টাইম সিঙ্ক
+    // ২. রিয়েল-টাইম সিঙ্ক এবং লগিন চেক
     async function syncData() {
         try {
             const { data: { session } } = await _supabase.auth.getSession();
             let isVip = false;
+            let isLoggedIn = !!session;
             
-            if (session) {
+            // শুধুমাত্র লগিন থাকলেই হেডার এবং ফুটার দেখাবে
+            if (isLoggedIn) {
                 document.getElementById('site-header').style.display = 'block';
                 document.getElementById('site-footer').style.display = 'block';
                 const { data: profile } = await _supabase.from('profiles').select('is_vip, expiry_date').eq('id', session.user.id).single();
                 if (profile && profile.is_vip && new Date(profile.expiry_date) > new Date()) isVip = true;
+            } else {
+                document.getElementById('site-header').style.display = 'none';
+                document.getElementById('site-footer').style.display = 'none';
             }
 
             const { data: matches } = await _supabase.from('vip_matches').select('*').order('id', {ascending: false});
@@ -145,13 +152,15 @@
 
             const currentHash = JSON.stringify(matches) + isVip;
 
-            // যদি ডাটা পরিবর্তন হয় তবেই রেন্ডার হবে (Double Rendering Fix)
+            // যদি ক্যাশ ডাটা না থাকে অথবা সার্ভারে ডাটা পরিবর্তন হয়
             if (currentHash !== lastRenderedHash) {
                 localStorage.setItem('vip_cache', JSON.stringify(matches));
                 localStorage.setItem('vip_status', isVip);
                 
-                // নতুন ডাটা আসলে এনিমেশন সহ দেখাবে
-                document.getElementById('vip-list').innerHTML = generateHTML(matches, isVip, !!session, true);
+                // যদি প্রথমবার লোড হয় (ক্যাশ খালি থাকে), তবেই রেন্ডার করবে
+                if (!lastRenderedHash) {
+                    document.getElementById('vip-list').innerHTML = generateHTML(matches, isVip, isLoggedIn, true);
+                }
                 lastRenderedHash = currentHash;
             }
         } catch (err) {
@@ -159,7 +168,6 @@
         }
     }
 
-    // Execute
     fastLoad();
     syncData();
 </script>
