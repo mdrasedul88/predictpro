@@ -49,15 +49,15 @@
             color: #ffffff; 
             font-size: 10px; font-weight: 700;
             padding: 4px 10px; border-radius: 6px;
-            margin-bottom: 8px; text-transform: uppercase;
+            text-transform: uppercase;
             border: 1px solid rgba(123, 97, 255, 0.3);
+            white-space: nowrap;
         }
 
-        /* স্ট্যাটাস সিম্বল এখন পজিশন অনুযায়ী টাইমের নিচে থাকবে */
+        /* সিম্বল কন্টেইনার ফিক্স */
         .status-container {
-            text-align: right;
-            font-size: 1.4rem;
-            margin-top: 5px;
+            font-size: 1.1rem;
+            margin-top: 2px;
         }
 
         .container { max-width: 450px; margin: auto; padding: 10px; padding-bottom: 80px; }
@@ -96,7 +96,7 @@
         list.innerHTML = matches.map((m, i) => {
             
             // স্পোর্টস আইকন লজিক
-            let sportIcon = '<i class="fa-solid fa-trophy"></i>'; // Default
+            let sportIcon = '<i class="fa-solid fa-trophy"></i>';
             const cat = m.category ? m.category.toUpperCase() : '';
             if(cat.includes('CRICKET')) sportIcon = '<i class="fa-solid fa-baseball-bat-ball"></i>';
             else if(cat.includes('FOOTBALL')) sportIcon = '<i class="fa-solid fa-football"></i>';
@@ -113,16 +113,16 @@
 
             return `
             <div class="match-card" style="animation-delay: ${i * 0.1}s;">
-                <div class="league-highlight">${sportIcon} ${m.league_name || 'International'}</div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div style="display: flex; flex-direction: column; gap: 5px;">
-                         <span style="background:var(--premium-purple); color:white; padding: 3px 10px; border-radius: 6px; font-weight:600; font-size: 0.65rem; width: fit-content;">${m.category || 'VIP'}</span>
-                    </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <div class="league-highlight">${sportIcon} ${m.league_name || 'International'}</div>
                     <div style="text-align: right;">
                         <span style="font-size: 0.65rem; color: #94a3b8;"><i class="far fa-clock"></i> ${m.match_time || 'Live'}</span>
                         ${resultIcon}
                     </div>
+                </div>
+                
+                <div style="margin-bottom: 10px;">
+                    <span style="background:var(--premium-purple); color:white; padding: 3px 10px; border-radius: 6px; font-weight:600; font-size: 0.65rem; width: fit-content;">${m.category || 'VIP'}</span>
                 </div>
                 
                 <div class="vs-text">${m.match_name}</div>
