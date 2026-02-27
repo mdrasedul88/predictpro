@@ -20,27 +20,23 @@
             background-image: radial-gradient(circle at 50% 10%, #1a103d 0%, #050505 100%);
             color: white; font-family: 'Poppins', sans-serif; 
             margin: 0; padding: 0; min-height: 100vh;
-            overflow-x: hidden; /* ধাক্কা কমানোর জন্য */
         }
         .container { max-width: 450px; margin: auto; padding: 10px; padding-bottom: 80px; }
 
-        /* Smooth Slide-up Animation - Improved for Refresh */
-        .new-entry {
-            animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        /* এনিমেশন লজিক: রিফ্রেশে ধাক্কা কমাতে opacity 0 থেকে শুরু */
+        .match-card {
             opacity: 0;
             transform: translateY(20px);
-            will-change: transform, opacity;
-        }
-        @keyframes slideUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .match-card {
+            animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
             background: var(--card-glass); backdrop-filter: blur(12px);
             border-radius: 18px; padding: 15px; margin-bottom: 15px; 
             border: 1px solid var(--glass-border); 
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            transition: 0.3s;
+            will-change: transform, opacity;
+        }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .badge-cricket { background: var(--premium-purple); box-shadow: 0 0 10px var(--premium-purple); }
@@ -58,8 +54,8 @@
         
         .unlock-btn { width: 100%; margin-top: 15px; padding: 12px; border-radius: 12px; background: var(--premium-purple); color: #fff; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 15px var(--glow); }
         
-        /* Header/Footer Initially Hidden */
-        header, footer { display: none; }
+        /* শুরুর দিকে হেডার ফুটার হাইড থাকবে */
+        #site-header, #site-footer { display: none; }
     </style>
 </head>
 <body>
@@ -87,16 +83,16 @@
 
     let lastRenderedHash = ""; 
 
-    function generateHTML(matches, isVip, isLoggedIn, isNew = false) {
-        return matches.map((m, i) => {
+    function renderContent(matches, isVip, isLoggedIn) {
+        const list = document.getElementById('vip-list');
+        list.innerHTML = matches.map((m, i) => {
             const cat = (m.category || '').toLowerCase();
             const bClass = cat.includes('cricket') ? 'badge-cricket' : cat.includes('football') ? 'badge-football' : 'badge-basketball';
             const displayTime = m.match_time || 'Live';
             const displayDate = m.created_at ? new Date(m.created_at).toLocaleDateString('en-GB', {day:'2-digit', month:'short'}) : 'Today';
 
-            // এখানে সবসময় new-entry ক্লাস দেওয়া হয়েছে যাতে রিলোড দিলে এনিমেশন ফিল আসে
             return `
-            <div class="match-card new-entry" style="animation-delay: ${i * 0.1}s;">
+            <article class="match-card" style="animation-delay: ${i * 0.1}s;">
                 <div class="card-header">
                     <span class="category-badge ${bClass}">${m.category || 'VIP'}</span>
                     <span style="font-size:0.65rem; color:#94a3b8;"><i class="far fa-calendar-alt"></i> ${displayDate} | <i class="far fa-clock"></i> ${displayTime}</span>
@@ -113,63 +109,60 @@
                     </div>
                 </div>
                 ${!isVip ? `<button class="unlock-btn" onclick="location.href='${isLoggedIn ? 'subscription.html' : 'login.html'}'">UNLOCK NOW</button>` : ''}
-            </div>`;
+            </article>`;
         }).join('');
     }
 
-    // ১. ইন্সট্যান্ট ক্যাশ লোডিং (এনিমেশনসহ)
-    function fastLoad() {
+    // ১. ইন্সট্যান্ট লোড ফাংশন (যাতে রিলোড দিলেই ডাটা পাওয়া যায়)
+    function fastBoot() {
         const cached = localStorage.getItem('vip_cache');
         const vipStatus = localStorage.getItem('vip_status') === 'true';
         if (cached) {
             const matches = JSON.parse(cached);
             lastRenderedHash = JSON.stringify(matches) + vipStatus;
-            // এখানে true দিয়ে পাঠানো হয়েছে যাতে রিলোড দিলেও এনিমেশন হয়
-            document.getElementById('vip-list').innerHTML = generateHTML(matches, vipStatus, true, true);
+            renderContent(matches, vipStatus, true);
         }
     }
 
-    // ২. রিয়েল-টাইম সিঙ্ক এবং লগিন চেক
-    async function syncData() {
+    // ২. সেশন এবং সার্ভার সিঙ্ক (লগিন থাকলে হেডার-ফুটার দেখাবে)
+    async function initApp() {
         try {
+            // সেশন চেক
             const { data: { session } } = await _supabase.auth.getSession();
-            let isVip = false;
-            let isLoggedIn = !!session;
-            
-            // শুধুমাত্র লগিন থাকলেই হেডার এবং ফুটার দেখাবে
+            const isLoggedIn = !!session;
+
             if (isLoggedIn) {
                 document.getElementById('site-header').style.display = 'block';
                 document.getElementById('site-footer').style.display = 'block';
-                const { data: profile } = await _supabase.from('profiles').select('is_vip, expiry_date').eq('id', session.user.id).single();
-                if (profile && profile.is_vip && new Date(profile.expiry_date) > new Date()) isVip = true;
-            } else {
-                document.getElementById('site-header').style.display = 'none';
-                document.getElementById('site-footer').style.display = 'none';
             }
 
+            let isVip = false;
+            if (session) {
+                const { data: profile } = await _supabase.from('profiles').select('is_vip, expiry_date').eq('id', session.user.id).single();
+                if (profile && profile.is_vip && new Date(profile.expiry_date) > new Date()) isVip = true;
+            }
+
+            // সার্ভার থেকে ডাটা আনা
             const { data: matches } = await _supabase.from('vip_matches').select('*').order('id', {ascending: false});
             if (!matches) return;
 
             const currentHash = JSON.stringify(matches) + isVip;
 
-            // যদি ক্যাশ ডাটা না থাকে অথবা সার্ভারে ডাটা পরিবর্তন হয়
+            // ডাটা পরিবর্তন হলে রেন্ডার হবে (ধাক্কা বন্ধ করতে কন্ডিশনাল রেন্ডার)
             if (currentHash !== lastRenderedHash) {
                 localStorage.setItem('vip_cache', JSON.stringify(matches));
                 localStorage.setItem('vip_status', isVip);
-                
-                // যদি প্রথমবার লোড হয় (ক্যাশ খালি থাকে), তবেই রেন্ডার করবে
-                if (!lastRenderedHash) {
-                    document.getElementById('vip-list').innerHTML = generateHTML(matches, isVip, isLoggedIn, true);
-                }
+                renderContent(matches, isVip, isLoggedIn);
                 lastRenderedHash = currentHash;
             }
         } catch (err) {
-            console.error("Sync error:", err);
+            console.error("Initialization failed:", err);
         }
     }
 
-    fastLoad();
-    syncData();
+    // রান করা
+    fastBoot();
+    initApp();
 </script>
 </body>
 </html>
