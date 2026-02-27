@@ -21,19 +21,29 @@
             color: white; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
         }
 
-        .container { max-width: 500px; margin: auto; padding: 15px; padding-bottom: 80px; } /* থিকনেস কমানো হয়েছে */
+        .container { max-width: 500px; margin: auto; padding: 15px; padding-bottom: 80px; }
         .page-header { text-align: center; margin-bottom: 15px; } 
         .page-header h1 { color: var(--premium-purple); font-size: 1.3rem; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* VIP কার্ডের ডিজাইন (থিকনেস আরও ১০% কমানো হয়েছে) */
+        /* Smooth Animation Class */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .prediction-card {
             background: #1e1e2e;
             border: 1px solid var(--glass-border);
             border-radius: 15px; 
-            padding: 12px; /* Padding আরও ১০% কমানো হয়েছে */
-            margin-bottom: 12px; /* Margin আরও ১০% কমানো হয়েছে */
+            padding: 12px;
+            margin-bottom: 12px;
             position: relative;
             box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            opacity: 0; /* Animation এর জন্য শুরুতে hidden থাকবে */
         }
 
         .card-header-vip { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -48,7 +58,6 @@
         .date-time { font-size: 0.6rem; color: var(--text-gray); }
         .match-title { font-size: 1rem; font-weight: 700; margin: 8px 0; text-align: center; color: #fff; }
 
-        /* স্ট্যাটাস গ্রিড */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
         .stat-box {
             background: rgba(255,255,255,0.03);
@@ -69,10 +78,9 @@
             box-shadow: 0 4px 12px rgba(123, 97, 255, 0.3);
         }
 
-        /* গ্রিন সার্কেল/বর্ডার সরিয়ে ক্লিন লুক দেওয়া হয়েছে */
         .unlocked-result-box {
-            background: transparent; /* ব্যাকগ্রাউন্ড সরানো হয়েছে */
-            border: none; /* গ্রিন ডটেড বর্ডার সরানো হয়েছে */
+            background: transparent;
+            border: none;
             padding: 5px; 
             text-align: center; margin-top: 5px;
         }
@@ -95,8 +103,7 @@
     </div>
 
     <div id="predictions-list">
-        <p style="text-align: center; color: var(--text-gray);">Connecting to server...</p>
-    </div>
+        </div>
 </div>
 
 <div id="ad-modal">
@@ -118,8 +125,68 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // ১. ডাটা রেন্ডার করার জন্য আলাদা ফাংশন (যাতে বার বার কল করা যায়)
+    function renderPredictions(matches, unlockedList) {
+        const listContainer = document.getElementById('predictions-list');
+        if (!matches || matches.length === 0) {
+            listContainer.innerHTML = "<p style='text-align:center;'>No active predictions available.</p>";
+            return;
+        }
+
+        listContainer.innerHTML = '';
+        matches.forEach((match, index) => {
+            const matchId = String(match.id);
+            const isUnlocked = unlockedList.includes(matchId);
+            const timeStr = match.match_time ? new Date(match.match_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'LIVE';
+
+            const card = `
+                <div class="prediction-card fade-in" style="animation-delay: ${index * 0.1}s">
+                    <div class="card-header-vip">
+                        <span class="badge blinking">${match.category || 'VIP'}</span>
+                        <span class="date-time"><i class="far fa-calendar-alt"></i> Today <i class="far fa-clock"></i> ${timeStr}</span>
+                    </div>
+                    <div class="match-title">${match.match_name}</div>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <span class="stat-label">PICK</span>
+                            <span class="stat-value ${isUnlocked ? '' : 'locked'}">${isUnlocked ? match.pick : 'LOCKED'}</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">ODDS</span>
+                            <span class="stat-value ${isUnlocked ? '' : 'locked'}">${isUnlocked ? match.odds : '0.00'}</span>
+                        </div>
+                    </div>
+                    <div class="lock-container">
+                        ${isUnlocked ? `
+                            <div class="unlocked-result-box">
+                                <div style="color:#22c55e; font-size:9px; font-weight:900; margin-bottom:2px;">SUCCESSFULLY UNLOCKED</div>
+                                <div style="font-size:1rem; font-weight:800; color:#fff;">${match.description}</div>
+                            </div>
+                        ` : `
+                            <button class="btn-unlock-vip" onclick="handleUnlockProcess('${matchId}', true)">
+                                <i class="fas fa-play-circle"></i> UNLOCK NOW
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+            listContainer.innerHTML += card;
+        });
+    }
+
     async function loadFreeData() {
         const listContainer = document.getElementById('predictions-list');
+        
+        // ২. LocalStorage থেকে জমানো ডাটা চেক করা (রিফ্রেশ করলে এটা আগে কাজ করবে)
+        const cachedMatches = localStorage.getItem('cached_free_matches');
+        const cachedUnlocked = localStorage.getItem('cached_unlocked_ids');
+
+        if (cachedMatches) {
+            renderPredictions(JSON.parse(cachedMatches), cachedUnlocked ? JSON.parse(cachedUnlocked) : []);
+        } else {
+            listContainer.innerHTML = "<p id='loader-text' style='text-align: center; color: var(--text-gray);'>Connecting to server...</p>";
+        }
+
         try {
             const { data: { user } } = await _supabase.auth.getUser();
 
@@ -136,54 +203,15 @@
                 if (uData) unlockedList = uData.map(item => String(item.prediction_id));
             }
 
-            if (!matches || matches.length === 0) {
-                listContainer.innerHTML = "<p style='text-align:center;'>No active predictions available.</p>";
-                return;
-            }
+            // ৩. নতুন ডাটা LocalStorage-এ সেভ করা
+            localStorage.setItem('cached_free_matches', JSON.stringify(matches));
+            localStorage.setItem('cached_unlocked_ids', JSON.stringify(unlockedList));
 
-            listContainer.innerHTML = '';
-            matches.forEach(match => {
-                const matchId = String(match.id);
-                const isUnlocked = unlockedList.includes(matchId);
-                const timeStr = match.match_time ? new Date(match.match_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'LIVE';
+            // ৪. নতুন ডাটা দিয়ে স্ক্রিন আপডেট করা (গ্যাপ ছাড়াই)
+            renderPredictions(matches, unlockedList);
 
-                listContainer.innerHTML += `
-                    <div class="prediction-card">
-                        <div class="card-header-vip">
-                            <span class="badge blinking">${match.category || 'VIP'}</span>
-                            <span class="date-time"><i class="far fa-calendar-alt"></i> Today <i class="far fa-clock"></i> ${timeStr}</span>
-                        </div>
-                        
-                        <div class="match-title">${match.match_name}</div>
-                        
-                        <div class="stats-grid">
-                            <div class="stat-box">
-                                <span class="stat-label">PICK</span>
-                                <span class="stat-value ${isUnlocked ? '' : 'locked'}">${isUnlocked ? match.pick : 'LOCKED'}</span>
-                            </div>
-                            <div class="stat-box">
-                                <span class="stat-label">ODDS</span>
-                                <span class="stat-value ${isUnlocked ? '' : 'locked'}">${isUnlocked ? match.odds : '0.00'}</span>
-                            </div>
-                        </div>
-
-                        <div class="lock-container">
-                            ${isUnlocked ? `
-                                <div class="unlocked-result-box">
-                                    <div style="color:#22c55e; font-size:9px; font-weight:900; margin-bottom:2px;">SUCCESSFULLY UNLOCKED</div>
-                                    <div style="font-size:1rem; font-weight:800; color:#fff;">${match.description}</div>
-                                </div>
-                            ` : `
-                                <button class="btn-unlock-vip" onclick="handleUnlockProcess('${matchId}', ${!!user})">
-                                    <i class="fas fa-play-circle"></i> UNLOCK NOW
-                                </button>
-                            `}
-                        </div>
-                    </div>
-                `;
-            });
         } catch (err) {
-            listContainer.innerHTML = "<p style='text-align:center; color:red;'>Syncing Error. Please refresh.</p>";
+            if(!cachedMatches) listContainer.innerHTML = "<p style='text-align:center; color:red;'>Syncing Error. Please refresh.</p>";
         }
     }
 
@@ -201,6 +229,10 @@
                     const { data: { user } } = await _supabase.auth.getUser();
                     const { error: insError } = await _supabase.from('unlocked_predictions').insert([{ user_id: user.id, prediction_id: parseInt(mId) }]);
                     if (insError) throw insError;
+                    
+                    // আনলক করার পর ক্যাশ ক্লিয়ার করা যাতে নতুন ডাটা লোড হয়
+                    localStorage.removeItem('cached_unlocked_ids');
+                    
                     modal.style.display = 'none';
                     alert("Success! Prediction Unlocked.");
                     window.location.reload(); 
@@ -208,6 +240,7 @@
             }
         }, 1000);
     }
+
     document.addEventListener('DOMContentLoaded', loadFreeData);
 </script>
 </body>
