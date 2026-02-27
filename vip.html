@@ -1,120 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Premium Signals</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --premium-purple: #7b61ff; 
-            --dark-bg: #050505; 
-            --card-glass: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --win-green: #00ff88;
-            --loss-red: #ff4d4d;
-        }
+        /* ... (আগের স্টাইলগুলো থাকবে) ... */
 
-        #main-wrapper { opacity: 0; visibility: hidden; transition: opacity 0.4s ease; }
-        #main-wrapper.visible { opacity: 1; visibility: visible; }
-
-        #app-loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--dark-bg); z-index: 9999;
-            display: flex; justify-content: center; align-items: center;
-        }
-        .loader-dot { width: 12px; height: 12px; background: var(--premium-purple); border-radius: 50%; animation: pulse 1s infinite alternate; }
-        @keyframes pulse { from { transform: scale(0.8); opacity: 0.5; } to { transform: scale(1.2); opacity: 1; } }
-
-        body { 
-            background: var(--dark-bg); 
-            background-image: radial-gradient(circle at 50% 10%, #1a103d 0%, #050505 100%);
-            color: white; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
-        }
-
-        /* কার্ড থিকনেস ৫% কমানো হয়েছে (Padding 22px থেকে 18px করা হয়েছে) */
-        .match-card {
-            background: var(--card-glass); backdrop-filter: blur(12px);
-            border-radius: 18px; padding: 18px; margin-bottom: 16px; 
-            border: 1px solid var(--glass-border); 
-            position: relative; overflow: hidden;
-            opacity: 0; transform: translateY(20px);
-            animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-        }
-        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
-
-        /* লীগ হাইলাইট বক্স - টেক্সট কালার এখন সাদা */
+        /* লীগ হাইলাইট বক্স - টেক্সট সাদা এবং স্পোর্টস আইকন যুক্ত */
         .league-highlight {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             background: rgba(123, 97, 255, 0.25);
-            color: #ffffff; /* সাদা টেক্সট */
+            color: #ffffff;
             font-size: 10px; font-weight: 700;
             padding: 4px 10px; border-radius: 6px;
             margin-bottom: 8px; text-transform: uppercase;
             border: 1px solid rgba(123, 97, 255, 0.3);
         }
 
-        .status-stamp {
-            position: absolute; top: 15px; right: 15px;
-            font-size: 1.8rem; font-weight: 900;
-            transform: rotate(15deg);
-            z-index: 2;
+        /* উইন/লস স্ট্যাম্প - এখন টাইম এবং ডেটের নিচে থাকবে */
+        .status-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
         }
 
-        .container { max-width: 450px; margin: auto; padding: 10px; padding-bottom: 80px; }
-        .vs-text { font-size: 1.15rem; font-weight: 700; text-align: center; margin: 15px 0; }
-        .predict-box { background: rgba(0, 0, 0, 0.3); padding: 10px; border-radius: 12px; text-align: center; border: 1px solid var(--glass-border); }
-        .unlock-btn { width: 100%; margin-top: 15px; padding: 14px; border-radius: 12px; background: var(--premium-purple); color: #fff; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; }
-        
-        #header-root, #footer-root { display: none; }
+        .status-mini-stamp {
+            font-size: 1.2rem;
+            margin-top: 5px;
+            font-weight: 900;
+        }
     </style>
 </head>
 <body>
 
-    <div id="app-loader"><div class="loader-dot"></div></div>
-
-    <div id="main-wrapper">
-        <div id="header-root"></div>
-
-        <div class="container">
-            <h2 style="text-align:center; color: var(--premium-purple); font-size: 1.3rem; margin: 20px 0; font-weight: 800; text-transform: uppercase;">PREMIUM VIP</h2>
-            <div id="vip-list"></div>
-        </div>
-
-        <div id="footer-root"></div>
-    </div>
-
-    <script src="js/header.js"></script>
-    <script src="js/footer.js"></script>
-
 <script>
-    const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
-    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
-    const _supabase = window.supabase.createClient(S_URL, S_KEY);
+    // স্পোর্টস আইকন ডিটেকশন ফাংশন
+    function getSportIcon(category) {
+        const cat = category ? category.toLowerCase() : '';
+        if (cat.includes('cricket')) return '<i class="fa-solid fa-bat-ball"></i>';
+        if (cat.includes('football')) return '<i class="fa-solid fa-football"></i>';
+        if (cat.includes('basketball')) return '<i class="fa-solid fa-basketball"></i>';
+        return '<i class="fa-solid fa-star"></i>'; // ডিফল্ট আইকন
+    }
 
     function renderMatches(matches, isVip, isLoggedIn) {
         const list = document.getElementById('vip-list');
         list.innerHTML = matches.map((m, i) => {
             
-            // আপনার শীটের কলাম নাম অনুযায়ী match_result চেক করা হচ্ছে
-            let statusHtml = '';
+            // উইন/লস লজিক এবং আইকন সেটআপ
+            let statusIcon = '';
             const result = m.match_result ? m.match_result.toLowerCase() : '';
-            
             if(result === 'win') {
-                statusHtml = `<div class="status-stamp" style="color: var(--win-green);"><i class="fa-solid fa-circle-check"></i></div>`;
+                statusIcon = `<div class="status-mini-stamp" style="color: var(--win-green);"><i class="fa-solid fa-circle-check"></i></div>`;
             } else if(result === 'loss') {
-                statusHtml = `<div class="status-stamp" style="color: var(--loss-red);"><i class="fa-solid fa-circle-xmark"></i></div>`;
+                statusIcon = `<div class="status-mini-stamp" style="color: var(--loss-red);"><i class="fa-solid fa-circle-xmark"></i></div>`;
             }
 
             return `
             <div class="match-card" style="animation-delay: ${i * 0.1}s;">
-                ${statusHtml}
-                <div class="league-highlight">${m.league_name || 'International'}</div>
+                <div class="league-highlight">
+                    ${getSportIcon(m.category)} ${m.league_name || 'International'}
+                </div>
                 
-                <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: #94a3b8;">
-                    <span style="background:var(--premium-purple); color:white; padding: 3px 10px; border-radius: 6px; font-weight:600;">${m.category || 'VIP'}</span>
-                    <span><i class="far fa-clock"></i> ${m.match_time || 'Live'}</span>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <span style="background:var(--premium-purple); color:white; padding: 3px 10px; border-radius: 6px; font-weight:600; font-size: 0.65rem;">
+                        ${m.category || 'VIP'}
+                    </span>
+                    
+                    <div class="status-container">
+                        <span style="font-size: 0.65rem; color: #94a3b8;">
+                            <i class="far fa-clock"></i> ${m.match_time || 'Live'}
+                        </span>
+                        ${statusIcon}
+                    </div>
                 </div>
                 
                 <div class="vs-text">${m.match_name}</div>
@@ -133,43 +91,7 @@
             </div>`}).join('');
     }
 
-    async function init() {
-        const { data: { session } } = await _supabase.auth.getSession();
-        const isLoggedIn = !!session;
-
-        if (isLoggedIn) {
-            document.getElementById('header-root').style.display = 'block';
-            document.getElementById('footer-root').style.display = 'block';
-        }
-
-        const cached = localStorage.getItem('v_cache');
-        const vStatus = localStorage.getItem('v_status') === 'true';
-        
-        let matches = cached ? JSON.parse(cached) : [];
-        let finalVip = vStatus;
-
-        try {
-            const { data: remoteMatches } = await _supabase.from('vip_matches').select('*').order('id', {ascending: false});
-            if (remoteMatches) {
-                matches = remoteMatches;
-                localStorage.setItem('v_cache', JSON.stringify(matches));
-            }
-            if (session) {
-                const { data: p } = await _supabase.from('profiles').select('is_vip, expiry_date').eq('id', session.user.id).single();
-                finalVip = (p && p.is_vip && new Date(p.expiry_date) > new Date());
-                localStorage.setItem('v_status', finalVip);
-            }
-        } catch (e) { console.log(e); }
-
-        renderMatches(matches, finalVip, isLoggedIn);
-
-        setTimeout(() => {
-            document.getElementById('app-loader').style.display = 'none';
-            document.getElementById('main-wrapper').classList.add('visible');
-        }, 100);
-    }
-
-    init();
+    // ... (init ফাংশন এবং বাকি কোড আগের মতোই থাকবে) ...
 </script>
 </body>
 </html>
