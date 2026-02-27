@@ -19,6 +19,19 @@
             --text-gray: #94a3b8;
         }
 
+        /* ১. জিরো জার্ক লজিক: শুরুতে সবকিছু ইনভিজিবল থাকবে */
+        #main-wrapper { opacity: 0; visibility: hidden; transition: opacity 0.4s ease; }
+        #main-wrapper.visible { opacity: 1; visibility: visible; }
+
+        /* ২. প্রিমিয়াম লোডার স্ক্রিন */
+        #app-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark-bg); z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .loader-dot { width: 12px; height: 12px; background: var(--premium-purple); border-radius: 50%; animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { transform: scale(0.8); opacity: 0.5; } to { transform: scale(1.2); opacity: 1; } }
+
         body { 
             background: var(--dark-bg); 
             background-image: radial-gradient(circle at 50% 10%, #1a103d 0%, #050505 100%);
@@ -41,7 +54,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* কার্ড ডিজাইন */
         .prediction-card {
             background: var(--card-glass); backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border); border-radius: 20px;
@@ -71,18 +83,24 @@
         }
 
         .container { max-width: 500px; margin: auto; padding: 15px; }
+
+        /* ডিফল্ট ভাবে হেডার ফুটার হাইড */
+        #header-root, #footer-root { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="header-root"></div>
+    <div id="app-loader"><div class="loader-dot"></div></div>
 
-    <main class="container">
-        <div id="blog-content">
-            </div>
-    </main>
+    <div id="main-wrapper">
+        <div id="header-root"></div>
 
-    <div id="footer-root"></div>
+        <main class="container">
+            <div id="blog-content"></div>
+        </main>
+
+        <div id="footer-root"></div>
+    </div>
 
     <script src="js/header.js"></script>
     <script src="js/footer.js"></script>
@@ -92,20 +110,21 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let isFirstLoad = true; 
+        let lastRenderHash = ""; 
 
-        // ১. রেন্ডারিং ফাংশন (সব সময় এনিমেশন করবে)
+        // ১. রেন্ডারিং ফাংশন (এনিমেশন সহ)
         function renderWithAnimation(data) {
             const container = document.getElementById('blog-content');
-            if (!data || data.length === 0) return;
+            if (!data || data.length === 0) {
+                container.innerHTML = "<p style='text-align:center;'>No posts found.</p>";
+                return;
+            }
 
-            let htmlContent = '';
-            data.forEach((match, index) => {
+            container.innerHTML = data.map((match, index) => {
                 const cat = (match.category || 'Sports').toLowerCase();
                 const catClass = cat.includes('cricket') ? 'tag-cricket' : 'tag-football';
 
-                // প্রতিবার রেন্ডার হওয়ার সময় fade-card ক্লাস এবং delay যোগ হবে
-                htmlContent += `
+                return `
                     <article class="prediction-card fade-card" style="animation-delay: ${index * 0.1}s">
                         <div class="status-wrapper">
                             <span class="live-tag ${catClass}">${match.category || 'Sports'}</span>
@@ -120,50 +139,52 @@
                         </button>
                     </article>
                 `;
-            });
-            container.innerHTML = htmlContent;
+            }).join('');
         }
 
-        // ২. মেইন লোডিং লজিক
-        async function init() {
-            const container = document.getElementById('blog-content');
-            
-            // LocalStorage থেকে ক্যাশ ডাটা নিয়ে সাথে সাথে এনিমেশন করা
+        // ২. মেইন লজিক
+        async function initApp() {
+            // ১. ক্যাশ ডাটা থাকলে সাথে সাথে রেন্ডার (ধাক্কা রোধের জন্য)
             const cached = localStorage.getItem('blog_cache');
             if (cached) {
                 renderWithAnimation(JSON.parse(cached));
-                isFirstLoad = false; // ক্যাশ থেকে একবার লোড হয়ে গেছে
+                lastRenderHash = cached;
             }
 
             try {
+                // ২. লগিন চেক (সেশন পাওয়া গেলে হেডার-ফুটার দেখাবে)
+                const { data: { session } } = await _supabase.auth.getSession();
+                if (session) {
+                    document.getElementById('header-root').style.display = 'block';
+                    document.getElementById('footer-root').style.display = 'block';
+                }
+
+                // ৩. সার্ভার থেকে লেটেস্ট ডাটা আনা
                 const { data, error } = await _supabase
                     .from('matches')
                     .select('*')
                     .order('match_time', { ascending: false });
 
-                if (error) throw error;
-
-                const newDataString = JSON.stringify(data);
-                const oldDataString = localStorage.getItem('blog_cache');
-
-                // যদি সার্ভারের ডাটা আর ক্যাশ ডাটা আলাদা হয়, তবেই আবার রেন্ডার হবে (Double Rendering Fix)
-                if (newDataString !== oldDataString) {
-                    localStorage.setItem('blog_cache', newDataString);
-                    
-                    // যদি আগে ক্যাশ থেকে কিছু না দেখানো হয়ে থাকে, তবেই এখানে রেন্ডার হবে
-                    if (!oldDataString) {
+                if (!error && data) {
+                    const newDataString = JSON.stringify(data);
+                    if (newDataString !== lastRenderHash) {
+                        localStorage.setItem('blog_cache', newDataString);
                         renderWithAnimation(data);
-                    } else {
-                        // যদি ডাটা আপডেট হয়, তবে ইউজারকে ডিস্টার্ব না করে ব্যাকগ্রাউন্ডে সেভ থাকবে। 
-                        // পরবর্তী রিলোডে ইউজার আপডেট ডাটা এনিমেশনসহ দেখবে।
+                        lastRenderHash = newDataString;
                     }
                 }
             } catch (err) {
                 console.error(err);
             }
+
+            // ৪. পর্দা সরানো (সব কিছু রেন্ডার হওয়ার পর)
+            setTimeout(() => {
+                document.getElementById('app-loader').style.display = 'none';
+                document.getElementById('main-wrapper').classList.add('visible');
+            }, 150);
         }
 
-        init();
+        initApp();
     </script>
 </body>
 </html>
