@@ -14,6 +14,7 @@
             --glass-border: rgba(255, 255, 255, 0.1);
             --win-green: #00ff88;
             --loss-red: #ff4d4d;
+            --live-red: #ff3e3e;
         }
 
         #main-wrapper { opacity: 0; visibility: hidden; transition: opacity 0.4s ease; }
@@ -33,7 +34,6 @@
             color: white; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
         }
 
-        /* কার্ড থিকনেস ১৩% কমানো হয়েছে (Padding 18px থেকে 15px করা হয়েছে) */
         .match-card {
             background: var(--card-glass); backdrop-filter: blur(12px);
             border-radius: 18px; padding: 15px; margin-bottom: 14px; 
@@ -43,6 +43,19 @@
             animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
         @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
+        /* Live Blinking Animation */
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .live-tag {
+            color: var(--live-red); font-weight: 800; font-size: 9px;
+            margin-right: 5px; animation: blink 1s infinite;
+            display: inline-flex; align-items: center;
+        }
+        .finish-tag {
+            color: #94a3b8; font-weight: 700; font-size: 9px;
+            margin-right: 5px; display: inline-flex; align-items: center;
+            text-transform: uppercase;
+        }
 
         .league-highlight {
             display: inline-block;
@@ -55,12 +68,7 @@
             white-space: nowrap;
         }
 
-        /* সিম্বল কন্টেইনার ফিক্স */
-        .status-container {
-            font-size: 1.1rem;
-            margin-top: 2px;
-        }
-
+        .status-container { font-size: 1.1rem; margin-top: 2px; }
         .container { max-width: 450px; margin: auto; padding: 10px; padding-bottom: 80px; }
         .vs-text { font-size: 1.15rem; font-weight: 700; text-align: center; margin: 12px 0; }
         .predict-box { background: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 12px; text-align: center; border: 1px solid var(--glass-border); }
@@ -75,12 +83,10 @@
 
     <div id="main-wrapper">
         <div id="header-root"></div>
-
         <div class="container">
             <h2 style="text-align:center; color: var(--premium-purple); font-size: 1.3rem; margin: 20px 0; font-weight: 800; text-transform: uppercase;">PREMIUM VIP</h2>
             <div id="vip-list"></div>
         </div>
-
         <div id="footer-root"></div>
     </div>
 
@@ -92,30 +98,58 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
+    // টাইম চেক করার ফাংশন
+    function getMatchStatus(matchTime, hasResult) {
+        if (hasResult) return '<span class="finish-tag">● Finished</span>';
+        
+        try {
+            const now = new Date();
+            // matchTime format expected: "12:44 PM" or similar
+            const [time, modifier] = matchTime.split(' ');
+            let [hours, minutes] = time.split(':');
+            if (hours === '12') hours = '00';
+            if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
+            
+            const matchDate = new Date();
+            matchDate.setHours(hours, minutes, 0, 0);
+
+            if (now >= matchDate) {
+                return '<span class="live-tag">● LIVE</span>';
+            }
+        } catch (e) { return ''; }
+        return '';
+    }
+
     function renderMatches(matches, isVip, isLoggedIn) {
         const list = document.getElementById('vip-list');
         list.innerHTML = matches.map((m, i) => {
             
-            // স্পোর্টস আইকন লজিক
             let sportIcon = '<i class="fa-solid fa-trophy"></i>';
             const cat = m.category ? m.category.toUpperCase() : '';
             if(cat.includes('CRICKET')) sportIcon = '<i class="fa-solid fa-baseball-bat-ball"></i>';
             else if(cat.includes('FOOTBALL')) sportIcon = '<i class="fa-solid fa-football"></i>';
             else if(cat.includes('BASKETBALL')) sportIcon = '<i class="fa-solid fa-basketball"></i>';
 
-            // উইন/লস সিম্বল লজিক
             let resultIcon = '';
             const result = m.match_result ? m.match_result.toLowerCase() : '';
+            const hasResult = (result === 'win' || result === 'loss');
+
             if(result === 'win') {
                 resultIcon = `<div class="status-container" style="color: var(--win-green);"><i class="fa-solid fa-circle-check"></i></div>`;
             } else if(result === 'loss') {
                 resultIcon = `<div class="status-container" style="color: var(--loss-red);"><i class="fa-solid fa-circle-xmark"></i></div>`;
             }
 
+            // লাইভ বা ফিনিশড স্ট্যাটাস জেনারেট
+            const liveStatusHtml = getMatchStatus(m.match_time || '', hasResult);
+
             return `
             <div class="match-card" style="animation-delay: ${i * 0.1}s;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                    <div class="league-highlight">${sportIcon} ${m.league_name || 'International'}</div>
+                    <div style="display: flex; align-items: center;">
+                        ${liveStatusHtml}
+                        <div class="league-highlight">${sportIcon} ${m.league_name || 'International'}</div>
+                    </div>
                     <div style="text-align: right;">
                         <span style="font-size: 0.65rem; color: #94a3b8;"><i class="far fa-clock"></i> ${m.match_time || 'Live'}</span>
                         ${resultIcon}
