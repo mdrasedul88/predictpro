@@ -15,6 +15,19 @@
             --text-gray: #94a3b8;
         }
 
+        /* ১. জিরো জার্ক লজিক: শুরুতে সবকিছু হাইড থাকবে */
+        #main-wrapper { opacity: 0; visibility: hidden; transition: opacity 0.4s ease; }
+        #main-wrapper.visible { opacity: 1; visibility: visible; }
+
+        /* ২. প্রিমিয়াম লোডার স্ক্রিন */
+        #app-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark-bg); z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .loader-dot { width: 12px; height: 12px; background: var(--premium-purple); border-radius: 50%; animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { transform: scale(0.8); opacity: 0.5; } to { transform: scale(1.2); opacity: 1; } }
+
         body { 
             background: var(--dark-bg); 
             background-image: radial-gradient(circle at 50% 10%, #1a103d 0%, #050505 100%);
@@ -25,16 +38,7 @@
         .page-header { text-align: center; margin-bottom: 15px; } 
         .page-header h1 { color: var(--premium-purple); font-size: 1.3rem; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* Smooth Animation Class */
-        .fade-in {
-            animation: fadeIn 0.5s ease-in forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        /* ৩. কার্ড এনিমেশন (একদম স্মুথ স্লাইড) */
         .prediction-card {
             background: #1e1e2e;
             border: 1px solid var(--glass-border);
@@ -43,11 +47,15 @@
             margin-bottom: 12px;
             position: relative;
             box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-            opacity: 0;
+            opacity: 0; transform: translateY(20px);
+            animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .card-header-vip { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-
         .badge.blinking {
             background: var(--premium-purple); color: white;
             animation: blinker 1.5s linear infinite;
@@ -66,55 +74,53 @@
         }
         .stat-label { font-size: 0.55rem; color: var(--text-gray); text-transform: uppercase; display: block; margin-bottom: 2px; }
         .stat-value { font-size: 0.95rem; font-weight: 800; color: var(--premium-purple); text-transform: uppercase; }
-        
         .stat-value.locked { filter: blur(4px); opacity: 0.5; }
 
-        .lock-container { position: relative; }
         .btn-unlock-vip {
             background: var(--premium-purple); color: white; border: none;
             padding: 10px; border-radius: 10px; font-weight: 800; width: 100%;
             cursor: pointer; text-transform: uppercase; margin-top: 5px;
-            font-size: 0.85rem;
-            box-shadow: 0 4px 12px rgba(123, 97, 255, 0.3);
+            font-size: 0.85rem; box-shadow: 0 4px 12px rgba(123, 97, 255, 0.3);
         }
 
-        .unlocked-result-box {
-            background: transparent;
-            border: none;
-            padding: 5px; 
-            text-align: center; margin-top: 5px;
-        }
+        .unlocked-result-box { text-align: center; margin-top: 5px; }
 
         #ad-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.98); z-index: 9999;
             justify-content: center; align-items: center; flex-direction: column;
         }
+
+        /* শুরুতে হেডার ফুটার হাইড */
+        #header-root, #footer-root { display: none; }
     </style>
 </head>
 <body>
 
-<div id="header-root"></div>
+<div id="app-loader"><div class="loader-dot"></div></div>
 
-<div class="container">
-    <div class="page-header">
-        <h1>🏆 FREE PREMIUM VIP</h1>
-        <p style="color: var(--text-gray); font-size: 0.7rem;">Watch Ad to Unlock Expert Predictions</p>
+<div id="main-wrapper">
+    <div id="header-root"></div>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>🏆 FREE PREMIUM VIP</h1>
+            <p style="color: var(--text-gray); font-size: 0.7rem;">Watch Ad to Unlock Expert Predictions</p>
+        </div>
+        <div id="predictions-list"></div>
     </div>
 
-    <div id="predictions-list"></div>
-</div>
-
-<div id="ad-modal">
-    <h2 style="color: var(--premium-purple);">UNLOCKING PREDICTION</h2>
-    <p id="timer" style="font-size: 3rem; font-weight: 900; margin: 20px 0;">15</p>
-    <div style="width: 300px; height: 250px; background: #111; border: 1px solid #333; display: flex; align-items: center; justify-content: center;">
-        <span style="color: #444;">ADSENSE AD UNIT</span>
+    <div id="ad-modal">
+        <h2 style="color: var(--premium-purple);">UNLOCKING PREDICTION</h2>
+        <p id="timer" style="font-size: 3rem; font-weight: 900; margin: 20px 0;">15</p>
+        <div style="width: 300px; height: 250px; background: #111; border: 1px solid #333; display: flex; align-items: center; justify-content: center;">
+            <span style="color: #444;">ADSENSE AD UNIT</span>
+        </div>
+        <p style="color: var(--text-gray); margin-top: 20px; font-size: 0.8rem;">Please wait...</p>
     </div>
-    <p style="color: var(--text-gray); margin-top: 20px; font-size: 0.8rem;">Please wait...</p>
-</div>
 
-<div id="footer-root"></div>
+    <div id="footer-root"></div>
+</div>
 
 <script src="js/header.js"></script>
 <script src="js/footer.js"></script>
@@ -124,6 +130,8 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    let lastDataHash = "";
+
     function renderPredictions(matches, unlockedList) {
         const listContainer = document.getElementById('predictions-list');
         if (!matches || matches.length === 0) {
@@ -131,14 +139,13 @@
             return;
         }
 
-        listContainer.innerHTML = '';
-        matches.forEach((match, index) => {
+        listContainer.innerHTML = matches.map((match, index) => {
             const matchId = String(match.id);
             const isUnlocked = unlockedList.includes(matchId);
             const timeStr = match.match_time ? new Date(match.match_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'LIVE';
 
-            const card = `
-                <div class="prediction-card fade-in" style="animation-delay: ${index * 0.05}s">
+            return `
+                <div class="prediction-card" style="animation-delay: ${index * 0.1}s">
                     <div class="card-header-vip">
                         <span class="badge blinking">${match.category || 'VIP'}</span>
                         <span class="date-time"><i class="far fa-calendar-alt"></i> Today <i class="far fa-clock"></i> ${timeStr}</span>
@@ -168,51 +175,58 @@
                     </div>
                 </div>
             `;
-            listContainer.innerHTML += card;
-        });
+        }).join('');
     }
 
-    async function loadFreeData() {
+    async function initApp() {
+        // ১. আগে ক্যাশ ডাটা লোড (যদি থাকে)
         const cachedMatches = localStorage.getItem('cached_free_matches');
         const cachedUnlocked = localStorage.getItem('cached_unlocked_ids');
-
-        // প্রথমে জমানো ডাটা দেখাবে
         if (cachedMatches) {
             renderPredictions(JSON.parse(cachedMatches), cachedUnlocked ? JSON.parse(cachedUnlocked) : []);
         }
 
         try {
+            // ২. সেশন এবং হেডার-ফুটার চেক
             const { data: { user } } = await _supabase.auth.getUser();
-            const { data: matches, error: mErr } = await _supabase
-                .from('free_predictions')
-                .select('*')
-                .order('id', { ascending: false });
+            const isLoggedIn = !!user;
 
-            if (mErr) throw mErr;
+            if (isLoggedIn) {
+                document.getElementById('header-root').style.display = 'block';
+                document.getElementById('footer-root').style.display = 'block';
+            }
 
+            // ৩. সার্ভার থেকে লেটেস্ট ডাটা সিঙ্ক
+            const { data: matches } = await _supabase.from('free_predictions').select('*').order('id', { ascending: false });
+            
             let unlockedList = [];
             if (user) {
                 const { data: uData } = await _supabase.from('unlocked_predictions').select('prediction_id').eq('user_id', user.id);
                 if (uData) unlockedList = uData.map(item => String(item.prediction_id));
             }
 
-            // চেক করা হচ্ছে ডাটা কি আসলেই বদলেছে কি না
-            const currentDataStr = JSON.stringify(matches) + JSON.stringify(unlockedList);
-            const cachedDataStr = cachedMatches + (cachedUnlocked || "[]");
-
-            if (currentDataStr !== cachedDataStr) {
+            const currentHash = JSON.stringify(matches) + JSON.stringify(unlockedList);
+            
+            if (currentHash !== lastDataHash) {
                 localStorage.setItem('cached_free_matches', JSON.stringify(matches));
                 localStorage.setItem('cached_unlocked_ids', JSON.stringify(unlockedList));
                 renderPredictions(matches, unlockedList);
+                lastDataHash = currentHash;
             }
 
-        } catch (err) {
-            console.error("Sync error:", err);
-        }
+        } catch (err) { console.error("Sync error:", err); }
+
+        // ৪. পর্দা সরানো (একদম শেষে)
+        setTimeout(() => {
+            document.getElementById('app-loader').style.display = 'none';
+            document.getElementById('main-wrapper').classList.add('visible');
+        }, 150);
     }
 
-    async function handleUnlockProcess(mId, isLoggedIn) {
-        if (!isLoggedIn) { alert("Please login first!"); window.location.href = 'login.html'; return; }
+    async function handleUnlockProcess(mId, status) {
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) { alert("Please login first!"); window.location.href = 'login.html'; return; }
+        
         const modal = document.getElementById('ad-modal');
         modal.style.display = 'flex';
         let timeLeft = 15;
@@ -222,7 +236,6 @@
             if (timeLeft <= 0) {
                 clearInterval(countdown);
                 try {
-                    const { data: { user } } = await _supabase.auth.getUser();
                     await _supabase.from('unlocked_predictions').insert([{ user_id: user.id, prediction_id: parseInt(mId) }]);
                     localStorage.removeItem('cached_unlocked_ids');
                     modal.style.display = 'none';
@@ -233,7 +246,7 @@
         }, 1000);
     }
 
-    document.addEventListener('DOMContentLoaded', loadFreeData);
+    initApp();
 </script>
 </body>
 </html>
