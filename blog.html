@@ -36,7 +36,18 @@
             padding-bottom: 90px; 
         }
 
-        /* কার্ড ডিজাইন - প্রিমিয়াম গ্লাস লুক */
+        /* এনিমেশন লজিক */
+        .fade-card {
+            opacity: 0;
+            transform: translateY(15px);
+            animation: cardAppear 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes cardAppear {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* কার্ড ডিজাইন */
         .prediction-card {
             background: var(--card-glass);
             backdrop-filter: blur(12px);
@@ -53,7 +64,6 @@
             transform: translateY(-3px);
         }
         
-        /* Category Specific Blinking Glow */
         @keyframes glow-purple { 0%, 100% { box-shadow: 0 0 5px var(--premium-purple); } 50% { box-shadow: 0 0 15px var(--premium-purple); } }
         @keyframes glow-blue { 0%, 100% { box-shadow: 0 0 5px #3b82f6; } 50% { box-shadow: 0 0 15px #3b82f6; } }
         
@@ -80,44 +90,23 @@
         
         .match-title { color: #ffffff; font-size: 1.15rem; margin-bottom: 10px; font-weight: 700; }
         .match-desc { 
-            color: var(--text-gray); 
-            font-size: 0.8rem; 
-            line-height: 1.6; 
-            margin-bottom: 18px; 
-            display: -webkit-box; 
-            -webkit-line-clamp: 2; 
-            -webkit-box-orient: vertical; 
-            overflow: hidden; 
+            color: var(--text-gray); font-size: 0.8rem; line-height: 1.6; margin-bottom: 18px; 
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; 
         }
         
-        /* বাটন ডিজাইন */
         .btn-predict {
-            background: var(--premium-purple); 
-            color: #ffffff; 
-            border: none; 
-            padding: 12px 20px; 
-            border-radius: 12px; 
-            font-weight: 700; 
-            font-size: 0.75rem; 
-            cursor: pointer;
-            transition: 0.3s; 
-            width: 100%; 
-            text-transform: uppercase;
-            box-shadow: 0 4px 15px var(--glow);
-            letter-spacing: 0.5px;
+            background: var(--premium-purple); color: #ffffff; border: none; padding: 12px 20px; 
+            border-radius: 12px; font-weight: 700; font-size: 0.75rem; cursor: pointer;
+            transition: 0.3s; width: 100%; text-transform: uppercase;
+            box-shadow: 0 4px 15px var(--glow); letter-spacing: 0.5px;
         }
         .btn-predict:hover { filter: brightness(1.2); }
         .btn-predict:active { transform: scale(0.96); }
 
         .in-feed-ad { 
-            background: rgba(123, 97, 255, 0.05); 
-            border: 1px dashed var(--glass-border); 
-            border-radius: 15px; 
-            padding: 15px; 
-            text-align: center; 
-            color: var(--text-gray); 
-            font-size: 0.7rem; 
-            font-weight: 600;
+            background: rgba(123, 97, 255, 0.05); border: 1px dashed var(--glass-border); 
+            border-radius: 15px; padding: 15px; text-align: center; color: var(--text-gray); 
+            font-size: 0.7rem; font-weight: 600;
         }
 
         .container { max-width: 500px; margin: auto; padding: 15px; }
@@ -133,8 +122,7 @@
         </div>
 
         <div id="blog-content">
-            <p style="text-align: center; color: var(--text-gray);">Fetching latest insights...</p>
-        </div>
+            </div>
     </main>
 
     <div id="footer-root"></div>
@@ -147,8 +135,60 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function loadBlogData() {
+        let currentDataHash = "";
+
+        // ১. রেন্ডারিং ফাংশন
+        function renderMatches(data, useAnimation = false) {
             const container = document.getElementById('blog-content');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #94a3b8;">No analysis posted yet.</p>';
+                return;
+            }
+
+            let htmlContent = '';
+            data.forEach((match, index) => {
+                const mTime = match.match_time ? new Date(match.match_time) : new Date();
+                const cat = (match.category || 'Sports').toLowerCase();
+                let catClass = 'tag-live';
+                if(cat.includes('cricket')) catClass = 'tag-cricket';
+                else if(cat.includes('football')) catClass = 'tag-football';
+
+                const animStyle = useAnimation ? `style="animation-delay: ${index * 0.08}s"` : '';
+                const animClass = useAnimation ? 'fade-card' : '';
+
+                htmlContent += `
+                    <article class="prediction-card ${animClass}" ${animStyle}>
+                        <div class="status-wrapper">
+                            <span class="live-tag ${catClass}">${match.category || 'Sports'}</span>
+                            <span style="color: #64748b; font-size: 0.65rem; font-weight: 600;">
+                                <i class="fa-regular fa-calendar"></i> ${mTime.toLocaleDateString('en-GB', {day:'2-digit', month:'short'})}
+                            </span>
+                        </div>
+                        <h2 class="match-title">${match.match_name}</h2>
+                        <p class="match-desc">${match.description}</p>
+                        <button class="btn-predict" onclick="window.location.href='blog-details.html?id=${match.id}'">
+                            View Full Analysis <i class="fa-solid fa-arrow-right" style="margin-left:5px;"></i>
+                        </button>
+                    </article>
+                `;
+
+                if ((index + 1) % 3 === 0) {
+                    htmlContent += `<div class="in-feed-ad"><p>SPONSORED ANALYSIS SLOT</p></div>`;
+                }
+            });
+            container.innerHTML = htmlContent;
+        }
+
+        // ২. মেইন লোডিং লজিক (Caching + Animation)
+        async function loadBlogData() {
+            // LocalStorage থেকে ক্যাশ লোড করা (Instant)
+            const cachedData = localStorage.getItem('blog_cache');
+            if (cachedData) {
+                const parsed = JSON.parse(cachedData);
+                currentDataHash = JSON.stringify(parsed);
+                renderMatches(parsed, false); // ক্যাশ থেকে ডাটা দেখালে এনিমেশন হবে না (ধাক্কা বন্ধ করতে)
+            }
+
             try {
                 const { data, error } = await _supabase
                     .from('matches')
@@ -156,54 +196,37 @@
                     .order('match_time', { ascending: false });
 
                 if (error) throw error;
-                if (!data || data.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; color: #94a3b8;">No analysis posted yet.</p>';
-                    return;
+
+                const newDataHash = JSON.stringify(data);
+
+                // যদি ডাটা নতুন হয় কেবল তখনই রেন্ডার হবে (Double Rendering Fix)
+                if (newDataHash !== currentDataHash) {
+                    localStorage.setItem('blog_cache', newDataHash);
+                    currentDataHash = newDataHash;
+                    renderMatches(data, true); // নতুন ডাটার জন্য স্মুথ এনিমেশন
                 }
-
-                container.innerHTML = '';
-                data.forEach((match, index) => {
-                    const mTime = match.match_time ? new Date(match.match_time) : new Date();
-                    const now = new Date();
-                    
-                    const cat = (match.category || 'Sports').toLowerCase();
-                    let catClass = 'tag-live';
-                    if(cat.includes('cricket')) catClass = 'tag-cricket';
-                    else if(cat.includes('football')) catClass = 'tag-football';
-
-                    container.innerHTML += `
-                        <article class="prediction-card">
-                            <div class="status-wrapper">
-                                <span class="live-tag ${catClass}">${match.category || 'Sports'}</span>
-                                <span style="color: #64748b; font-size: 0.65rem; font-weight: 600;">
-                                    <i class="fa-regular fa-calendar"></i> ${mTime.toLocaleDateString('en-GB', {day:'2-digit', month:'short'})}
-                                </span>
-                            </div>
-                            <h2 class="match-title">${match.match_name}</h2>
-                            <p class="match-desc">${match.description}</p>
-                            <button class="btn-predict" onclick="window.location.href='blog-details.html?id=${match.id}'">
-                                View Full Analysis <i class="fa-solid fa-arrow-right" style="margin-left:5px;"></i>
-                            </button>
-                        </article>
-                    `;
-
-                    if ((index + 1) % 3 === 0) {
-                        container.innerHTML += `<div class="in-feed-ad"><p>SPONSORED ANALYSIS SLOT</p></div>`;
-                    }
-                });
             } catch (err) {
-                container.innerHTML = `<p style="text-align: center; color: #ff4d4d;">Failed to sync matches.</p>`;
+                console.error("Sync error:", err);
             }
         }
 
+        // ৩. অ্যাডস লজিক
         const ads = ["🔥 Join VIP for 99% Accuracy", "⚡ Live Football Predictions Available", "🏏 Cricket Match Analysis Updated"];
         setInterval(() => {
             const adTextElement = document.getElementById('ad-text');
             if(adTextElement) adTextElement.innerText = ads[Math.floor(Math.random() * ads.length)];
         }, 10000);
 
+        // পেজ লোড হলে কল করা
         loadBlogData();
-        setInterval(loadBlogData, 60000);
+        
+        // ১ মিনিট পরপর অটো-সিঙ্ক (ইউজারকে না জানিয়ে ব্যাকগ্রাউন্ডে)
+        setInterval(async () => {
+            const { data } = await _supabase.from('matches').select('*').order('match_time', { ascending: false });
+            if(JSON.stringify(data) !== currentDataHash) {
+                loadBlogData();
+            }
+        }, 60000);
     </script>
 </body>
 </html>
