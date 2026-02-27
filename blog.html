@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Sports Analysis & Predictions | Sports Pro</title>
     
-    <meta name="title" content="Live Sports Analysis & Predictions | Sports Pro">
-    <meta name="description" content="Get real-time football, cricket, and basketball match analysis, live updates, and expert predictions.">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -24,37 +22,30 @@
         body { 
             background: var(--dark-bg); 
             background-image: radial-gradient(circle at 50% 10%, #1a103d 0%, #050505 100%);
-            color: white; 
-            font-family: 'Poppins', 'Segoe UI', sans-serif; 
+            color: white; font-family: 'Poppins', sans-serif; 
             margin: 0; padding: 0; 
         }
 
         #blog-content { 
-            display: grid; 
-            gap: 20px; 
-            margin-top: 20px; 
-            padding-bottom: 90px; 
+            display: grid; gap: 20px; margin-top: 20px; padding-bottom: 90px; 
         }
 
-        /* এনিমেশন লজিক */
+        /* --- Smooth Animation CSS --- */
         .fade-card {
             opacity: 0;
-            transform: translateY(15px);
-            animation: cardAppear 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            transform: translateY(20px);
+            animation: cardReveal 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
-        @keyframes cardAppear {
+        @keyframes cardReveal {
             to { opacity: 1; transform: translateY(0); }
         }
 
         /* কার্ড ডিজাইন */
         .prediction-card {
-            background: var(--card-glass);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 20px;
-            transition: all 0.3s ease;
+            background: var(--card-glass); backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 20px; transition: all 0.3s ease;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
         }
         
@@ -63,64 +54,30 @@
             box-shadow: 0 0 20px var(--glow);
             transform: translateY(-3px);
         }
-        
-        @keyframes glow-purple { 0%, 100% { box-shadow: 0 0 5px var(--premium-purple); } 50% { box-shadow: 0 0 15px var(--premium-purple); } }
-        @keyframes glow-blue { 0%, 100% { box-shadow: 0 0 5px #3b82f6; } 50% { box-shadow: 0 0 15px #3b82f6; } }
-        
-        .tag-cricket { 
-            background: rgba(123, 97, 255, 0.1); 
-            color: var(--premium-purple); 
-            border: 1px solid var(--premium-purple); 
-            animation: glow-purple 2s infinite; 
-        }
-        .tag-football { 
-            background: rgba(59, 130, 246, 0.1); 
-            color: #3b82f6; 
-            border: 1px solid #3b82f6; 
-            animation: glow-blue 2s infinite; 
-        }
-        .tag-live { 
-            background: rgba(255, 77, 77, 0.1); 
-            color: #ff4d4d; 
-            border: 1px solid #ff4d4d; 
-        }
 
         .status-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .live-tag { font-size: 0.6rem; font-weight: 800; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .live-tag { font-size: 0.6rem; font-weight: 800; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; }
         
+        .tag-cricket { background: rgba(123, 97, 255, 0.1); color: var(--premium-purple); border: 1px solid var(--premium-purple); }
+        .tag-football { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid #3b82f6; }
+
         .match-title { color: #ffffff; font-size: 1.15rem; margin-bottom: 10px; font-weight: 700; }
-        .match-desc { 
-            color: var(--text-gray); font-size: 0.8rem; line-height: 1.6; margin-bottom: 18px; 
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; 
-        }
+        .match-desc { color: var(--text-gray); font-size: 0.8rem; line-height: 1.6; margin-bottom: 18px; }
         
         .btn-predict {
             background: var(--premium-purple); color: #ffffff; border: none; padding: 12px 20px; 
-            border-radius: 12px; font-weight: 700; font-size: 0.75rem; cursor: pointer;
-            transition: 0.3s; width: 100%; text-transform: uppercase;
-            box-shadow: 0 4px 15px var(--glow); letter-spacing: 0.5px;
-        }
-        .btn-predict:hover { filter: brightness(1.2); }
-        .btn-predict:active { transform: scale(0.96); }
-
-        .in-feed-ad { 
-            background: rgba(123, 97, 255, 0.05); border: 1px dashed var(--glass-border); 
-            border-radius: 15px; padding: 15px; text-align: center; color: var(--text-gray); 
-            font-size: 0.7rem; font-weight: 600;
+            border-radius: 12px; font-weight: 700; font-size: 0.75rem; cursor: pointer; width: 100%; 
+            box-shadow: 0 4px 15px var(--glow); text-transform: uppercase;
         }
 
         .container { max-width: 500px; margin: auto; padding: 15px; }
     </style>
 </head>
-<body class="dark-mode">
+<body>
 
     <div id="header-root"></div>
 
     <main class="container">
-        <div id="banner-ad-container" class="ad-space" style="margin: 15px 0;">
-            <p id="ad-text" style="color: var(--premium-purple); font-size: 0.75rem; text-align: center; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Featured Analysis Loading...</p>
-        </div>
-
         <div id="blog-content">
             </div>
     </main>
@@ -135,58 +92,47 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let currentDataHash = "";
+        let isFirstLoad = true; 
 
-        // ১. রেন্ডারিং ফাংশন
-        function renderMatches(data, useAnimation = false) {
+        // ১. রেন্ডারিং ফাংশন (সব সময় এনিমেশন করবে)
+        function renderWithAnimation(data) {
             const container = document.getElementById('blog-content');
-            if (!data || data.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #94a3b8;">No analysis posted yet.</p>';
-                return;
-            }
+            if (!data || data.length === 0) return;
 
             let htmlContent = '';
             data.forEach((match, index) => {
-                const mTime = match.match_time ? new Date(match.match_time) : new Date();
                 const cat = (match.category || 'Sports').toLowerCase();
-                let catClass = 'tag-live';
-                if(cat.includes('cricket')) catClass = 'tag-cricket';
-                else if(cat.includes('football')) catClass = 'tag-football';
+                const catClass = cat.includes('cricket') ? 'tag-cricket' : 'tag-football';
 
-                const animStyle = useAnimation ? `style="animation-delay: ${index * 0.08}s"` : '';
-                const animClass = useAnimation ? 'fade-card' : '';
-
+                // প্রতিবার রেন্ডার হওয়ার সময় fade-card ক্লাস এবং delay যোগ হবে
                 htmlContent += `
-                    <article class="prediction-card ${animClass}" ${animStyle}>
+                    <article class="prediction-card fade-card" style="animation-delay: ${index * 0.1}s">
                         <div class="status-wrapper">
                             <span class="live-tag ${catClass}">${match.category || 'Sports'}</span>
-                            <span style="color: #64748b; font-size: 0.65rem; font-weight: 600;">
-                                <i class="fa-regular fa-calendar"></i> ${mTime.toLocaleDateString('en-GB', {day:'2-digit', month:'short'})}
+                            <span style="color: #64748b; font-size: 0.65rem;">
+                                <i class="fa-regular fa-calendar"></i> ${new Date(match.match_time).toLocaleDateString('en-GB')}
                             </span>
                         </div>
                         <h2 class="match-title">${match.match_name}</h2>
                         <p class="match-desc">${match.description}</p>
                         <button class="btn-predict" onclick="window.location.href='blog-details.html?id=${match.id}'">
-                            View Full Analysis <i class="fa-solid fa-arrow-right" style="margin-left:5px;"></i>
+                            View Full Analysis
                         </button>
                     </article>
                 `;
-
-                if ((index + 1) % 3 === 0) {
-                    htmlContent += `<div class="in-feed-ad"><p>SPONSORED ANALYSIS SLOT</p></div>`;
-                }
             });
             container.innerHTML = htmlContent;
         }
 
-        // ২. মেইন লোডিং লজিক (Caching + Animation)
-        async function loadBlogData() {
-            // LocalStorage থেকে ক্যাশ লোড করা (Instant)
-            const cachedData = localStorage.getItem('blog_cache');
-            if (cachedData) {
-                const parsed = JSON.parse(cachedData);
-                currentDataHash = JSON.stringify(parsed);
-                renderMatches(parsed, false); // ক্যাশ থেকে ডাটা দেখালে এনিমেশন হবে না (ধাক্কা বন্ধ করতে)
+        // ২. মেইন লোডিং লজিক
+        async function init() {
+            const container = document.getElementById('blog-content');
+            
+            // LocalStorage থেকে ক্যাশ ডাটা নিয়ে সাথে সাথে এনিমেশন করা
+            const cached = localStorage.getItem('blog_cache');
+            if (cached) {
+                renderWithAnimation(JSON.parse(cached));
+                isFirstLoad = false; // ক্যাশ থেকে একবার লোড হয়ে গেছে
             }
 
             try {
@@ -197,36 +143,27 @@
 
                 if (error) throw error;
 
-                const newDataHash = JSON.stringify(data);
+                const newDataString = JSON.stringify(data);
+                const oldDataString = localStorage.getItem('blog_cache');
 
-                // যদি ডাটা নতুন হয় কেবল তখনই রেন্ডার হবে (Double Rendering Fix)
-                if (newDataHash !== currentDataHash) {
-                    localStorage.setItem('blog_cache', newDataHash);
-                    currentDataHash = newDataHash;
-                    renderMatches(data, true); // নতুন ডাটার জন্য স্মুথ এনিমেশন
+                // যদি সার্ভারের ডাটা আর ক্যাশ ডাটা আলাদা হয়, তবেই আবার রেন্ডার হবে (Double Rendering Fix)
+                if (newDataString !== oldDataString) {
+                    localStorage.setItem('blog_cache', newDataString);
+                    
+                    // যদি আগে ক্যাশ থেকে কিছু না দেখানো হয়ে থাকে, তবেই এখানে রেন্ডার হবে
+                    if (!oldDataString) {
+                        renderWithAnimation(data);
+                    } else {
+                        // যদি ডাটা আপডেট হয়, তবে ইউজারকে ডিস্টার্ব না করে ব্যাকগ্রাউন্ডে সেভ থাকবে। 
+                        // পরবর্তী রিলোডে ইউজার আপডেট ডাটা এনিমেশনসহ দেখবে।
+                    }
                 }
             } catch (err) {
-                console.error("Sync error:", err);
+                console.error(err);
             }
         }
 
-        // ৩. অ্যাডস লজিক
-        const ads = ["🔥 Join VIP for 99% Accuracy", "⚡ Live Football Predictions Available", "🏏 Cricket Match Analysis Updated"];
-        setInterval(() => {
-            const adTextElement = document.getElementById('ad-text');
-            if(adTextElement) adTextElement.innerText = ads[Math.floor(Math.random() * ads.length)];
-        }, 10000);
-
-        // পেজ লোড হলে কল করা
-        loadBlogData();
-        
-        // ১ মিনিট পরপর অটো-সিঙ্ক (ইউজারকে না জানিয়ে ব্যাকগ্রাউন্ডে)
-        setInterval(async () => {
-            const { data } = await _supabase.from('matches').select('*').order('match_time', { ascending: false });
-            if(JSON.stringify(data) !== currentDataHash) {
-                loadBlogData();
-            }
-        }, 60000);
+        init();
     </script>
 </body>
 </html>
