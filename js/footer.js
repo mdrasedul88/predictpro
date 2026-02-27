@@ -33,7 +33,7 @@ const footerTemplate = `
 
     /* ইন্ডিভিজুয়াল প্রিমিয়াম কালার */
     .nav-item:nth-child(1) i { color: #3b82f6; } /* Home - Blue */
-    .nav-item:nth-child(2) i { color: #ef4444; } /* Live - Red */
+    .nav-item:nth-child(2) i { color: #00d2ff; } /* History - Cyan/Light Blue */
     .nav-item:nth-child(3) i { color: #facc15; } /* Free - Gold */
     .nav-item:nth-child(4) i { color: #00ff88; text-shadow: 0 0 10px rgba(0, 255, 136, 0.5); } /* VIP - Neon Green */
     .nav-item:nth-child(5) i { color: #a855f7; } /* Blog - Purple */
@@ -47,7 +47,7 @@ const footerTemplate = `
         filter: brightness(1.5);
     }
 
-    /* বর্তমান পেজে থাকলে একটি গ্লো ইফেক্ট (Optional) */
+    /* বর্তমান পেজে থাকলে একটি গ্লো ইফেক্ট */
     .nav-item.active-page i {
         transform: translateY(-3px);
     }
@@ -60,7 +60,7 @@ const footerTemplate = `
 <footer class="fix-nav">
     <nav class="nav-bar">
         <a href="index.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
-        <a href="live.html" class="nav-item"><i class="fa-solid fa-tower-broadcast"></i><span>Live</span></a>
+        <a href="history.html" class="nav-item"><i class="fa-solid fa-clock-rotate-left"></i><span>History</span></a>
         <a href="free.html" class="nav-item"><i class="fa-solid fa-gift"></i><span>Free</span></a>
         <a href="vip.html" class="nav-item"><i class="fa-solid fa-crown"></i><span>Vip</span></a>
         <a href="blog.html" class="nav-item"><i class="fa-solid fa-newspaper"></i><span>Blog</span></a>
