@@ -33,9 +33,10 @@
             color: white; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
         }
 
+        /* কার্ড থিকনেস আরও ৫% কমানো হয়েছে (Padding 18px থেকে 17px করা হয়েছে) */
         .match-card {
             background: var(--card-glass); backdrop-filter: blur(12px);
-            border-radius: 18px; padding: 18px; margin-bottom: 16px; 
+            border-radius: 18px; padding: 17px; margin-bottom: 16px; 
             border: 1px solid var(--glass-border); 
             position: relative; overflow: hidden;
             opacity: 0; transform: translateY(20px);
@@ -54,7 +55,6 @@
             white-space: nowrap;
         }
 
-        /* সিম্বল কন্টেইনার ফিক্স */
         .status-container {
             font-size: 1.1rem;
             margin-top: 2px;
@@ -95,14 +95,12 @@
         const list = document.getElementById('vip-list');
         list.innerHTML = matches.map((m, i) => {
             
-            // স্পোর্টস আইকন লজিক
             let sportIcon = '<i class="fa-solid fa-trophy"></i>';
             const cat = m.category ? m.category.toUpperCase() : '';
             if(cat.includes('CRICKET')) sportIcon = '<i class="fa-solid fa-baseball-bat-ball"></i>';
             else if(cat.includes('FOOTBALL')) sportIcon = '<i class="fa-solid fa-football"></i>';
             else if(cat.includes('BASKETBALL')) sportIcon = '<i class="fa-solid fa-basketball"></i>';
 
-            // উইন/লস সিম্বল লজিক
             let resultIcon = '';
             const result = m.match_result ? m.match_result.toLowerCase() : '';
             if(result === 'win') {
