@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            /* ছবির মতো প্রিমিয়াম বেগুনি থিম */
             --premium-purple: #7b61ff; 
             --dark-bg: #050505; 
             --card-glass: rgba(255, 255, 255, 0.05);
@@ -23,10 +22,19 @@
             font-family: 'Poppins', 'Segoe UI', sans-serif; 
             margin: 0; padding: 0; 
         }
-        .container { max-width: 450px; margin: auto; padding: 10px; }
+        .container { max-width: 450px; margin: auto; padding: 10px; padding-bottom: 80px; }
         header, footer { display: none; }
 
-        /* এনিমেশনগুলো কালার অনুযায়ী আপডেট করা হয়েছে */
+        /* Animation for smoothness */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         @keyframes glow-cricket { 0%, 100% { box-shadow: 0 0 5px var(--premium-purple); } 50% { box-shadow: 0 0 12px var(--premium-purple); } }
         @keyframes glow-football { 0%, 100% { box-shadow: 0 0 5px #3b82f6; } 50% { box-shadow: 0 0 12px #3b82f6; } }
         @keyframes glow-basketball { 0%, 100% { box-shadow: 0 0 5px #f97316; } 50% { box-shadow: 0 0 12px #f97316; } }
@@ -35,7 +43,6 @@
         .badge-football { background: #3b82f6; color: #fff; animation: glow-football 1.5s infinite; }
         .badge-basketball { background: #f97316; color: #fff; animation: glow-basketball 1.5s infinite; }
 
-        /* গ্লাস-মরফিজম কার্ড ডিজাইন */
         .match-card {
             background: var(--card-glass); 
             backdrop-filter: blur(10px);
@@ -46,16 +53,10 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             transition: 0.3s;
         }
-        .match-card:hover {
-            border-color: var(--premium-purple);
-            box-shadow: 0 0 15px var(--glow);
-        }
 
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .category-badge { padding: 2px 10px; border-radius: 6px; font-size: 0.55rem; font-weight: bold; text-transform: uppercase; }
-        
         .header-time { font-size: 0.65rem; color: #94a3b8; font-weight: bold; display: flex; gap: 8px; }
-
         .vs-text { font-size: 1.1rem; font-weight: 700; text-align: center; margin: 12px 0; color: #fff; letter-spacing: 0.5px; }
         
         .prediction-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -67,18 +68,12 @@
         .blur-val { filter: blur(6px); user-select: none; font-size: 0.8rem; opacity: 0.6; }
         .clear-val { color: var(--premium-purple); font-weight: 800; font-size: 0.95rem; text-shadow: 0 0 10px var(--glow); }
 
-        /* প্রিমিয়াম বেগুনি বাটন */
         .unlock-btn {
             width: 100%; margin-top: 15px; padding: 10px; border-radius: 12px;
             background: var(--premium-purple);
             color: #fff; border: none; font-weight: 800; font-size: 0.75rem; cursor: pointer;
             box-shadow: 0 4px 15px var(--glow);
             text-transform: uppercase;
-            transition: 0.3s;
-        }
-        .unlock-btn:hover {
-            filter: brightness(1.1);
-            transform: scale(1.02);
         }
     </style>
 </head>
@@ -91,9 +86,7 @@
 
 <div class="container">
     <h2 style="text-align:center; color: var(--premium-purple); font-size: 1.3rem; margin: 15px 0; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">PREMIUM VIP</h2>
-    <div id="vip-list">
-        <p style="text-align:center; color: #4b5563; font-size:0.8rem;">Syncing Signals...</p>
-    </div>
+    <div id="vip-list"></div>
 </div>
 
 <footer id="site-footer" style="padding: 15px; text-align: center; color: #64748b; font-size: 0.65rem; border-top: 1px solid var(--glass-border);">
@@ -105,39 +98,26 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    async function init() {
-        const { data: { session } } = await _supabase.auth.getSession();
-        let isVip = false;
-        if (session) {
-            document.getElementById('site-header').style.display = 'block';
-            document.getElementById('site-footer').style.display = 'block';
-            const { data: profile } = await _supabase.from('profiles').select('*').eq('id', session.user.id).single();
-            if (profile && profile.is_vip && new Date(profile.expiry_date) > new Date()) isVip = true;
-        }
-        loadMatches(isVip, !!session);
-    }
-
-    async function loadMatches(isVip, isLoggedIn) {
-        const { data: matches } = await _supabase.from('vip_matches').select('*');
+    // ১. রেন্ডারিং ফাংশন (এনিমেশনসহ)
+    function renderMatches(matches, isVip, isLoggedIn) {
         const list = document.getElementById('vip-list');
-        
         if (!matches || matches.length === 0) { 
             list.innerHTML = "<p style='text-align:center; color:#94a3b8; margin-top:20px;'>No signals found.</p>"; 
             return; 
         }
 
-        list.innerHTML = matches.map(m => {
+        list.innerHTML = matches.map((m, index) => {
             const cat = (m.category || '').toLowerCase();
             let bClass = 'badge-default';
             if (cat.includes('cricket')) bClass = 'badge-cricket';
             else if (cat.includes('football')) bClass = 'badge-football';
             else if (cat.includes('basketball')) bClass = 'badge-basketball';
 
-            const displayTime = m.match_time ? m.match_time : 'Schedule';
+            const displayTime = m.match_time || 'Schedule';
             const displayDate = m.created_at ? new Date(m.created_at).toLocaleDateString('en-GB', {day:'2-digit', month:'short'}) : 'Today';
 
             return `
-            <div class="match-card">
+            <div class="match-card fade-in" style="animation-delay: ${index * 0.1}s">
                 <div class="card-header">
                     <span class="category-badge ${bClass}">${m.category || 'VIP'}</span>
                     <div class="header-time">
@@ -146,7 +126,6 @@
                     </div>
                 </div>
                 <div class="vs-text">${m.match_name}</div>
-                
                 <div class="prediction-row">
                     <div class="predict-box">
                         <span class="label">PICK</span>
@@ -161,6 +140,43 @@
             </div>`;
         }).join('');
     }
+
+    // ২. মেইন ইনিশিয়ালাইজেশন ফাংশন (Caching Logic)
+    async function init() {
+        // LocalStorage থেকে ক্যাশ ডাটা দেখা
+        const cachedData = localStorage.getItem('cached_vip_matches');
+        const cachedVipStatus = localStorage.getItem('is_vip_user') === 'true';
+        
+        if (cachedData) {
+            renderMatches(JSON.parse(cachedData), cachedVipStatus, true);
+        }
+
+        try {
+            const { data: { session } } = await _supabase.auth.getSession();
+            let isVip = false;
+            let isLoggedIn = !!session;
+
+            if (session) {
+                document.getElementById('site-header').style.display = 'block';
+                document.getElementById('site-footer').style.display = 'block';
+                const { data: profile } = await _supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                if (profile && profile.is_vip && new Date(profile.expiry_date) > new Date()) isVip = true;
+            }
+
+            const { data: matches } = await _supabase.from('vip_matches').select('*').order('id', {ascending: false});
+
+            // ৩. ডাটা পরিবর্তন হলে কেবল তখনই রেন্ডার হবে (Double Rendering Fix)
+            const newDataStr = JSON.stringify(matches);
+            if (newDataStr !== cachedData || isVip !== cachedVipStatus) {
+                localStorage.setItem('cached_vip_matches', newDataStr);
+                localStorage.setItem('is_vip_user', isVip);
+                renderMatches(matches, isVip, isLoggedIn);
+            }
+        } catch (err) {
+            console.error("Sync error:", err);
+        }
+    }
+
     window.onload = init;
 </script>
 </body>
