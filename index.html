@@ -9,7 +9,7 @@
     <style>
         :root {
             --premium-purple: #7b61ff; 
-            --dark-bg: #0f121d; /* স্ক্রিনশট অনুযায়ী একটু ব্লুইশ ডার্ক */
+            --dark-bg: #0f121d; 
             --glass: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.1);
             --text-gray: #a0a0a0;
@@ -23,12 +23,12 @@
 
         .container { max-width: 500px; margin: auto; padding: 20px; padding-bottom: 100px; }
 
-        /* --- VIP Header Style --- */
+        /* --- VIP Header --- */
         .vip-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
         .vip-header h2 { font-size: 1.5rem; font-weight: 700; margin: 0; }
-        .vip-logo { background: var(--premium-purple); padding: 8px; border-radius: 12px; font-size: 1.2rem; }
+        .vip-logo { background: var(--premium-purple); padding: 8px; border-radius: 12px; font-size: 1.2rem; box-shadow: 0 0 15px rgba(123, 97, 255, 0.5); }
 
-        /* --- Main Content Card (Top Section) --- */
+        /* --- Main Content Card --- */
         .main-card {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(15px);
@@ -37,23 +37,36 @@
             padding: 25px;
             margin-bottom: 30px;
             position: relative;
+            text-align: center;
         }
         .live-status {
             background: rgba(239, 68, 68, 0.2); color: #ff4d4d;
             padding: 4px 12px; border-radius: 20px; font-size: 0.7rem;
-            font-weight: 800; float: right; display: flex; align-items: center; gap: 5px;
+            font-weight: 800; position: absolute; top: 20px; right: 20px;
+            display: flex; align-items: center; gap: 5px;
         }
-        .live-status::before { content: ''; width: 6px; height: 6px; background: #ff4d4d; border-radius: 50%; }
+        .live-status::before { content: ''; width: 6px; height: 6px; background: #ff4d4d; border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-        .main-card h3 { font-size: 1.2rem; margin: 15px 0 5px; color: #fff; }
-        .main-card p { font-size: 0.85rem; color: var(--text-gray); margin-bottom: 20px; }
+        .main-card h3 { font-size: 1.3rem; margin: 15px 0 10px; color: #fff; }
+        .main-card p { font-size: 0.85rem; color: var(--text-gray); margin-bottom: 25px; }
 
-        .feature-check { list-style: none; padding: 0; text-align: left; }
-        .feature-check li { font-size: 0.85rem; color: #d1d5db; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .feature-check { list-style: none; padding: 0; text-align: left; display: inline-block; }
+        .feature-check li { font-size: 0.85rem; color: #d1d5db; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
         .feature-check li i { color: #2dd4bf; font-size: 1rem; }
 
-        /* --- Feature Icons List (Bottom Section) --- */
-        .feature-list { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .btn-main-action {
+            background: var(--premium-purple); color: white; border: none;
+            padding: 15px; border-radius: 15px; width: 100%; font-weight: 800;
+            margin-top: 20px; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 10px 20px rgba(123, 97, 255, 0.3); transition: 0.3s;
+        }
+        .btn-main-action:active { transform: scale(0.98); }
+
+        /* --- Feature Icons List --- */
+        .section-title { font-size: 1rem; margin: 25px 0 15px; color: #ff9f43; display: flex; align-items: center; gap: 8px; }
+        .feature-list { display: flex; flex-direction: column; gap: 15px; }
+        
         .feature-card {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass-border);
@@ -65,27 +78,28 @@
             cursor: pointer;
             transition: 0.3s;
         }
-        .feature-card:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-2px); }
+        .feature-card:hover { background: rgba(255, 255, 255, 0.08); }
         
         .icon-box { 
             width: 50px; height: 50px; border-radius: 15px; 
-            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; 
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: white;
+            flex-shrink: 0;
         }
 
-        /* আইকন কালার থিম (স্ক্রিনশট অনুযায়ী ভিন্ন ভিন্ন কালার) */
+        /* আইকন কালার থিম */
         .bg-red { background: linear-gradient(135deg, #ff6b6b, #ee5253); }
         .bg-teal { background: linear-gradient(135deg, #1dd1a1, #10ac84); }
         .bg-orange { background: linear-gradient(135deg, #ff9f43, #f368e0); }
         .bg-blue { background: linear-gradient(135deg, #48dbfb, #2e86de); }
+        .bg-gold { background: linear-gradient(135deg, #FFD700, #FFA500); }
+        .bg-purple { background: linear-gradient(135deg, #a855f7, #7b61ff); }
 
         .feature-info h4 { margin: 0; font-size: 1rem; color: #fff; }
         .feature-info p { margin: 3px 0 0; font-size: 0.75rem; color: var(--text-gray); }
 
-        .btn-main-action {
-            background: var(--premium-purple); color: white; border: none;
-            padding: 15px; border-radius: 50px; width: 100%; font-weight: 800;
-            margin-top: 20px; cursor: pointer; text-transform: uppercase;
-            box-shadow: 0 10px 20px rgba(123, 97, 255, 0.3);
+        .ad-space {
+            margin-top: 30px; border: 1px dashed var(--glass-border);
+            padding: 20px; border-radius: 15px; text-align: center; color: #444; font-size: 0.8rem;
         }
     </style>
 </head>
@@ -101,7 +115,7 @@
 
     <div class="main-card">
         <div class="live-status">LIVE</div>
-        <div class="icon-box bg-teal" style="width: 45px; height: 45px;">
+        <div class="icon-box bg-teal" style="margin: 0 auto 15px;">
             <i class="fas fa-shield-alt"></i>
         </div>
         <h3>VIP Content Ready</h3>
@@ -113,10 +127,10 @@
             <li><i class="fas fa-check-circle"></i> Live match tracking active</li>
         </ul>
 
-        <button class="btn-main-action" id="view-analysis-btn">Explore Now</button>
+        <button class="btn-main-action" id="view-analysis-btn">EXPLORE NOW</button>
     </div>
 
-    <h3 style="font-size: 1rem; margin-bottom: 15px;"><i class="fas fa-star" style="color: #ff9f43;"></i> VIP Features</h3>
+    <div class="section-title"><i class="fas fa-star"></i> VIP FEATURES & TRUST</div>
     
     <div class="feature-list">
         <div class="feature-card" onclick="location.href='free-prediction.html'">
@@ -124,6 +138,14 @@
             <div class="feature-info">
                 <h4>Live Predictions</h4>
                 <p>Real-time in-match analysis and projections</p>
+            </div>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-box bg-gold"><i class="fas fa-chart-line"></i></div>
+            <div class="feature-info">
+                <h4>90% Success Rate</h4>
+                <p>Verified winning history and historical data</p>
             </div>
         </div>
 
@@ -136,13 +158,31 @@
         </div>
 
         <div class="feature-card">
+            <div class="icon-box bg-blue"><i class="fas fa-user-tie"></i></div>
+            <div class="feature-info">
+                <h4>Expert Analysts</h4>
+                <p>Predictions backed by professional sports team</p>
+            </div>
+        </div>
+
+        <div class="feature-card">
             <div class="icon-box bg-orange"><i class="fas fa-key"></i></div>
             <div class="feature-info">
                 <h4>VIP Privileges</h4>
                 <p>Featured slips and exclusive notifications</p>
             </div>
         </div>
+
+        <div class="feature-card">
+            <div class="icon-box bg-purple"><i class="fas fa-user-shield"></i></div>
+            <div class="feature-info">
+                <h4>Secure & Private</h4>
+                <p>Encrypted platform for safe user experience</p>
+            </div>
+        </div>
     </div>
+
+    <div class="ad-space">Google AdSense Placement</div>
 </div>
 
 <div id="footer-root"></div>
@@ -156,22 +196,27 @@
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function updateHeaderUI() {
-        const { data: { user } } = await _supabase.auth.getUser();
-        const authBtns = document.querySelectorAll('button, a'); 
-        if (user) {
-            authBtns.forEach(btn => {
-                if (btn.innerText.includes('Login')) {
-                    btn.innerHTML = `<i class="fas fa-user-circle"></i> Profile`;
-                    btn.onclick = () => window.location.href = 'profile.html';
-                }
-            });
-        }
+        try {
+            const { data: { user } } = await _supabase.auth.getUser();
+            const authBtns = document.querySelectorAll('button, a'); 
+            if (user) {
+                authBtns.forEach(btn => {
+                    if (btn.innerText.includes('Login') || btn.innerText.includes('Sign Up')) {
+                        btn.innerHTML = `<i class="fas fa-user-circle"></i> Profile`;
+                        btn.onclick = (e) => {
+                            e.preventDefault();
+                            window.location.href = 'profile.html';
+                        };
+                    }
+                });
+            }
+        } catch (e) { console.log("Header UI error"); }
     }
 
     document.getElementById('view-analysis-btn').onclick = async function() {
         const { data: { user } } = await _supabase.auth.getUser();
         if (!user) {
-            alert("Please login first!");
+            alert("Please login to access VIP content!");
             window.location.href = 'login.html';
         } else {
             window.location.href = 'free-prediction.html';
