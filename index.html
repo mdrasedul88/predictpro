@@ -3,218 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sports Prediction - Ultra Pro</title>
+    <title>Sports Prediction - VIP Zone</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --premium-purple: #7b61ff; 
-            --dark-bg: #050505; 
-            --glass: rgba(255, 255, 255, 0.03);
+            --dark-bg: #0f121d; /* স্ক্রিনশট অনুযায়ী একটু ব্লুইশ ডার্ক */
+            --glass: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.1);
-            --text-gray: #94a3b8;
+            --text-gray: #a0a0a0;
         }
 
         body { 
             background: var(--dark-bg); 
-            background-image: radial-gradient(circle at 50% -10%, #25165c 0%, #050505 100%);
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f121d 100%);
             color: white; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
-            overflow-x: hidden;
         }
 
         .container { max-width: 500px; margin: auto; padding: 20px; padding-bottom: 100px; }
 
-        /* --- Hero Section --- */
-        .hero-section {
-            text-align: center;
-            padding: 40px 10px 20px;
-        }
-        .hero-section h1 {
-            font-size: 2.2rem;
-            background: linear-gradient(to bottom, #fff, var(--premium-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-            font-weight: 800;
-        }
-        .hero-section p { color: var(--text-gray); font-size: 0.9rem; }
+        /* --- VIP Header Style --- */
+        .vip-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
+        .vip-header h2 { font-size: 1.5rem; font-weight: 700; margin: 0; }
+        .vip-logo { background: var(--premium-purple); padding: 8px; border-radius: 12px; font-size: 1.2rem; }
 
-        /* --- Status Grid (Glassmorphism) --- */
-        .status-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-        .status-item {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
+        /* --- Main Content Card (Top Section) --- */
+        .main-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
             border: 1px solid var(--glass-border);
-            padding: 15px 5px;
-            border-radius: 15px;
-            text-align: center;
-        }
-        .status-item i { color: var(--premium-purple); font-size: 1.2rem; margin-bottom: 8px; }
-        .status-item span { display: block; font-size: 0.7rem; color: var(--text-gray); text-transform: uppercase; }
-        .status-item b { font-size: 1rem; color: #fff; }
-
-        /* --- Main Prediction Card (Premium Look) --- */
-        .prediction-card {
-            background: linear-gradient(135deg, rgba(123, 97, 255, 0.1), rgba(0, 0, 0, 0.5));
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 25px;
+            border-radius: 30px;
             padding: 25px;
+            margin-bottom: 30px;
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            text-align: center;
         }
-
-        /* কার্ডের ভেতরে পার্পল গ্লো */
-        .prediction-card::before {
-            content: '';
-            position: absolute; top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: radial-gradient(circle, rgba(123, 97, 255, 0.15) 0%, transparent 70%);
-            z-index: -1;
+        .live-status {
+            background: rgba(239, 68, 68, 0.2); color: #ff4d4d;
+            padding: 4px 12px; border-radius: 20px; font-size: 0.7rem;
+            font-weight: 800; float: right; display: flex; align-items: center; gap: 5px;
         }
+        .live-status::before { content: ''; width: 6px; height: 6px; background: #ff4d4d; border-radius: 50%; }
 
-        .live-tag {
-            background: #ef4444;
-            color: white;
-            font-size: 0.65rem;
-            padding: 4px 12px;
+        .main-card h3 { font-size: 1.2rem; margin: 15px 0 5px; color: #fff; }
+        .main-card p { font-size: 0.85rem; color: var(--text-gray); margin-bottom: 20px; }
+
+        .feature-check { list-style: none; padding: 0; text-align: left; }
+        .feature-check li { font-size: 0.85rem; color: #d1d5db; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .feature-check li i { color: #2dd4bf; font-size: 1rem; }
+
+        /* --- Feature Icons List (Bottom Section) --- */
+        .feature-list { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .feature-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
             border-radius: 20px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        .prediction-card h3 { 
-            color: var(--text-gray); 
-            font-size: 0.8rem; 
-            text-transform: uppercase; 
-            margin-top: 20px;
-            letter-spacing: 2px;
-        }
-        .prediction-card p { 
-            font-size: 1.5rem; 
-            font-weight: 800; 
-            margin: 10px 0 25px;
-            color: #fff;
-        }
-
-        .btn-predict {
-            background: var(--premium-purple);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 50px;
-            font-weight: 800;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 8px 20px rgba(123, 97, 255, 0.4);
-            width: 100%;
-        }
-        .btn-predict:active { transform: scale(0.95); }
-
-        .ad-space {
-            margin-top: 30px;
-            background: var(--glass);
-            border: 1px dashed var(--glass-border);
-            border-radius: 15px;
-            height: 100px;
+            padding: 15px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: #444;
-            font-size: 0.8rem;
+            gap: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .feature-card:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-2px); }
+        
+        .icon-box { 
+            width: 50px; height: 50px; border-radius: 15px; 
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; 
+        }
+
+        /* আইকন কালার থিম (স্ক্রিনশট অনুযায়ী ভিন্ন ভিন্ন কালার) */
+        .bg-red { background: linear-gradient(135deg, #ff6b6b, #ee5253); }
+        .bg-teal { background: linear-gradient(135deg, #1dd1a1, #10ac84); }
+        .bg-orange { background: linear-gradient(135deg, #ff9f43, #f368e0); }
+        .bg-blue { background: linear-gradient(135deg, #48dbfb, #2e86de); }
+
+        .feature-info h4 { margin: 0; font-size: 1rem; color: #fff; }
+        .feature-info p { margin: 3px 0 0; font-size: 0.75rem; color: var(--text-gray); }
+
+        .btn-main-action {
+            background: var(--premium-purple); color: white; border: none;
+            padding: 15px; border-radius: 50px; width: 100%; font-weight: 800;
+            margin-top: 20px; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 10px 20px rgba(123, 97, 255, 0.3);
         }
     </style>
 </head>
 <body>
 
-    <div id="header-root"></div>
+<div id="header-root"></div>
 
-    <main class="container">
-        <section class="hero-section">
-            <h1>Ultra Pro Tips</h1>
-            <p>Experience the future of sports analysis</p>
-        </section>
+<div class="container">
+    <div class="vip-header">
+        <h2><i class="far fa-gem" style="color: var(--premium-purple);"></i> VIP Zone</h2>
+        <div class="vip-logo"><i class="fas fa-crown"></i></div>
+    </div>
 
-        <div class="status-grid">
-            <div class="status-item">
-                <i class="fas fa-bolt"></i>
-                <span>Accuracy</span>
-                <b>95%</b>
-            </div>
-            <div class="status-item">
-                <i class="fas fa-users"></i>
-                <span>Users</span>
-                <b>10K+</b>
-            </div>
-            <div class="status-item">
-                <i class="fas fa-trophy"></i>
-                <span>Wins</span>
-                <b>500+</b>
+    <div class="main-card">
+        <div class="live-status">LIVE</div>
+        <div class="icon-box bg-teal" style="width: 45px; height: 45px;">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+        <h3>VIP Content Ready</h3>
+        <p>Latest predictions and analysis loaded for you.</p>
+
+        <ul class="feature-check">
+            <li><i class="fas fa-check-circle"></i> Last 24 hours predictions updated</li>
+            <li><i class="fas fa-check-circle"></i> Expert analysis ready</li>
+            <li><i class="fas fa-check-circle"></i> Live match tracking active</li>
+        </ul>
+
+        <button class="btn-main-action" id="view-analysis-btn">Explore Now</button>
+    </div>
+
+    <h3 style="font-size: 1rem; margin-bottom: 15px;"><i class="fas fa-star" style="color: #ff9f43;"></i> VIP Features</h3>
+    
+    <div class="feature-list">
+        <div class="feature-card" onclick="location.href='free-prediction.html'">
+            <div class="icon-box bg-red"><i class="fas fa-bolt"></i></div>
+            <div class="feature-info">
+                <h4>Live Predictions</h4>
+                <p>Real-time in-match analysis and projections</p>
             </div>
         </div>
 
-        <section class="prediction-card">
-            <span class="live-tag"><i class="fas fa-circle" style="font-size: 8px; vertical-align: middle;"></i> LIVE MATCH</span>
-            <h3>Next Premium Match</h3>
-            <p>Real Madrid vs Barcelona</p>
-            <button class="btn-predict" id="view-analysis-btn">
-                <i class="fas fa-chart-line"></i> View Analysis
-            </button>
-        </section>
-        
-        <div class="ad-space">Google AdSense Ad Unit</div>
-    </main>
+        <div class="feature-card">
+            <div class="icon-box bg-teal"><i class="fas fa-check-double"></i></div>
+            <div class="feature-info">
+                <h4>Safe Picks</h4>
+                <p>High-confidence and verified predictions</p>
+            </div>
+        </div>
 
-    <div id="footer-root"></div>
+        <div class="feature-card">
+            <div class="icon-box bg-orange"><i class="fas fa-key"></i></div>
+            <div class="feature-info">
+                <h4>VIP Privileges</h4>
+                <p>Featured slips and exclusive notifications</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <script src="js/header.js"></script>
-    <script src="js/footer.js"></script>
+<div id="footer-root"></div>
 
-    <script>
-        const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
-        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<script src="js/header.js"></script>
+<script src="js/footer.js"></script>
 
-        // ১. আপনার বিদ্যমান ফাংশন লজিক অপরিবর্তিত
-        async function updateHeaderUI() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            const authBtns = document.querySelectorAll('button, a'); 
-            
-            if (user) {
-                authBtns.forEach(btn => {
-                    if (btn.innerText.includes('Login') || btn.innerText.includes('Sign Up')) {
-                        btn.innerHTML = `<i class="fas fa-user-circle"></i> Profile`;
-                        btn.onclick = (e) => {
-                            e.preventDefault();
-                            window.location.href = 'profile.html';
-                        };
-                    }
-                });
-            }
+<script>
+    const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function updateHeaderUI() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        const authBtns = document.querySelectorAll('button, a'); 
+        if (user) {
+            authBtns.forEach(btn => {
+                if (btn.innerText.includes('Login')) {
+                    btn.innerHTML = `<i class="fas fa-user-circle"></i> Profile`;
+                    btn.onclick = () => window.location.href = 'profile.html';
+                }
+            });
         }
+    }
 
-        // ২. আপনার বিদ্যমান বাটন লজিক অপরিবর্তিত
-        document.getElementById('view-analysis-btn').onclick = async function() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) {
-                alert("Please login to see analysis!");
-                window.location.href = 'login.html';
-            } else {
-                window.location.href = 'free-prediction.html'; // সরাসরি প্রেডিকশন পেজে নিয়ে যাবে
-            }
-        };
+    document.getElementById('view-analysis-btn').onclick = async function() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) {
+            alert("Please login first!");
+            window.location.href = 'login.html';
+        } else {
+            window.location.href = 'free-prediction.html';
+        }
+    };
 
-        window.onload = updateHeaderUI;
-    </script>
+    window.onload = updateHeaderUI;
+</script>
 </body>
 </html>
