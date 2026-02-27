@@ -43,7 +43,7 @@
             margin-bottom: 12px;
             position: relative;
             box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-            opacity: 0; /* Animation এর জন্য শুরুতে hidden থাকবে */
+            opacity: 0;
         }
 
         .card-header-vip { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -102,8 +102,7 @@
         <p style="color: var(--text-gray); font-size: 0.7rem;">Watch Ad to Unlock Expert Predictions</p>
     </div>
 
-    <div id="predictions-list">
-        </div>
+    <div id="predictions-list"></div>
 </div>
 
 <div id="ad-modal">
@@ -125,7 +124,6 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ১. ডাটা রেন্ডার করার জন্য আলাদা ফাংশন (যাতে বার বার কল করা যায়)
     function renderPredictions(matches, unlockedList) {
         const listContainer = document.getElementById('predictions-list');
         if (!matches || matches.length === 0) {
@@ -140,7 +138,7 @@
             const timeStr = match.match_time ? new Date(match.match_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'LIVE';
 
             const card = `
-                <div class="prediction-card fade-in" style="animation-delay: ${index * 0.1}s">
+                <div class="prediction-card fade-in" style="animation-delay: ${index * 0.05}s">
                     <div class="card-header-vip">
                         <span class="badge blinking">${match.category || 'VIP'}</span>
                         <span class="date-time"><i class="far fa-calendar-alt"></i> Today <i class="far fa-clock"></i> ${timeStr}</span>
@@ -175,21 +173,16 @@
     }
 
     async function loadFreeData() {
-        const listContainer = document.getElementById('predictions-list');
-        
-        // ২. LocalStorage থেকে জমানো ডাটা চেক করা (রিফ্রেশ করলে এটা আগে কাজ করবে)
         const cachedMatches = localStorage.getItem('cached_free_matches');
         const cachedUnlocked = localStorage.getItem('cached_unlocked_ids');
 
+        // প্রথমে জমানো ডাটা দেখাবে
         if (cachedMatches) {
             renderPredictions(JSON.parse(cachedMatches), cachedUnlocked ? JSON.parse(cachedUnlocked) : []);
-        } else {
-            listContainer.innerHTML = "<p id='loader-text' style='text-align: center; color: var(--text-gray);'>Connecting to server...</p>";
         }
 
         try {
             const { data: { user } } = await _supabase.auth.getUser();
-
             const { data: matches, error: mErr } = await _supabase
                 .from('free_predictions')
                 .select('*')
@@ -203,15 +196,18 @@
                 if (uData) unlockedList = uData.map(item => String(item.prediction_id));
             }
 
-            // ৩. নতুন ডাটা LocalStorage-এ সেভ করা
-            localStorage.setItem('cached_free_matches', JSON.stringify(matches));
-            localStorage.setItem('cached_unlocked_ids', JSON.stringify(unlockedList));
+            // চেক করা হচ্ছে ডাটা কি আসলেই বদলেছে কি না
+            const currentDataStr = JSON.stringify(matches) + JSON.stringify(unlockedList);
+            const cachedDataStr = cachedMatches + (cachedUnlocked || "[]");
 
-            // ৪. নতুন ডাটা দিয়ে স্ক্রিন আপডেট করা (গ্যাপ ছাড়াই)
-            renderPredictions(matches, unlockedList);
+            if (currentDataStr !== cachedDataStr) {
+                localStorage.setItem('cached_free_matches', JSON.stringify(matches));
+                localStorage.setItem('cached_unlocked_ids', JSON.stringify(unlockedList));
+                renderPredictions(matches, unlockedList);
+            }
 
         } catch (err) {
-            if(!cachedMatches) listContainer.innerHTML = "<p style='text-align:center; color:red;'>Syncing Error. Please refresh.</p>";
+            console.error("Sync error:", err);
         }
     }
 
@@ -227,12 +223,8 @@
                 clearInterval(countdown);
                 try {
                     const { data: { user } } = await _supabase.auth.getUser();
-                    const { error: insError } = await _supabase.from('unlocked_predictions').insert([{ user_id: user.id, prediction_id: parseInt(mId) }]);
-                    if (insError) throw insError;
-                    
-                    // আনলক করার পর ক্যাশ ক্লিয়ার করা যাতে নতুন ডাটা লোড হয়
+                    await _supabase.from('unlocked_predictions').insert([{ user_id: user.id, prediction_id: parseInt(mId) }]);
                     localStorage.removeItem('cached_unlocked_ids');
-                    
                     modal.style.display = 'none';
                     alert("Success! Prediction Unlocked.");
                     window.location.reload(); 
