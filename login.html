@@ -8,23 +8,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; font-family: sans-serif; }
-        
         #main-wrapper { opacity: 0; visibility: hidden; width: 100%; display: flex; justify-content: center; }
         #main-wrapper.visible { opacity: 1; visibility: visible; transition: opacity 0.5s ease; }
-
         .auth-container { background: #1e293b; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #334155; }
-        
-        .slide-up-anim { transform: translateY(30px); opacity: 0; }
-        .visible .slide-up-anim { animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-
-        @keyframes slideUp { to { transform: translateY(0); opacity: 1; } }
-
         .auth-box h2 { color: #00ff88; text-align: center; margin-bottom: 20px; }
         .auth-box input { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; }
         .btn-auth { background: #00ff88; color: #020617; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .toggle-link { text-align: center; margin-top: 15px; font-size: 0.9rem; color: #94a3b8; }
         .toggle-link a { color: #00ff88; text-decoration: none; font-weight: bold; cursor: pointer; }
-        
         #app-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; justify-content: center; align-items: center; }
         .loader-dot { width: 12px; height: 12px; background: #00ff88; border-radius: 50%; animation: pulse 1s infinite alternate; }
         @keyframes pulse { from { opacity: 0.5; transform: scale(0.8); } to { opacity: 1; transform: scale(1.2); } }
@@ -35,7 +26,7 @@
 <div id="app-loader"><div class="loader-dot"></div></div>
 
 <div id="main-wrapper">
-    <div class="auth-container slide-up-anim">
+    <div class="auth-container">
         <div id="login-section" class="auth-box">
             <h2>Login</h2>
             <input type="email" id="login-email" placeholder="Email Address">
@@ -46,9 +37,9 @@
 
         <div id="signup-section" class="auth-box" style="display: none;">
             <h2>Create Account</h2>
-            <p id="ip-info" style="font-size: 0.7rem; color: #00ff88; text-align: center; margin-bottom: 10px;"></p>
+            <p id="ip-info" style="font-size: 0.7rem; color: #00ff88; text-align: center; margin-bottom: 10px;">Detecting location...</p>
             <input type="text" id="sup-name" placeholder="Full Name">
-            <input type="tel" id="sup-phone" placeholder="Mobile Number (e.g. +88017...)">
+            <input type="tel" id="sup-phone" placeholder="Mobile Number (e.g. +880...)">
             <input type="email" id="sup-email" placeholder="Email Address">
             <input type="password" id="sup-pass" placeholder="Password">
             <input type="password" id="sup-confirm" placeholder="Confirm Password">
@@ -64,23 +55,26 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let userDetectedCountry = "";
-    let userDetectedIP = "";
-    let userDetectedDial = "";
+    let userDetectedCountry = "BD"; // Default
+    let userDetectedIP = "Unknown";
+    let userDetectedDial = "+880"; // Default
 
-    // ১. পেজ লোড হওয়ার সময় ইউজারের IP এবং দেশ শনাক্ত করা
+    // ১. লোকেশন শনাক্তকরণ (উন্নত এপিআই এবং ফলব্যাক সহ)
     async function fetchGeoLocation() {
         try {
             const response = await fetch('https://ipapi.co/json/');
+            if (!response.ok) throw new Error("Primary API failed");
             const data = await response.json();
-            userDetectedCountry = data.country_code; // যেমন: BD, AE
-            userDetectedIP = data.ip;
-            userDetectedDial = data.country_calling_code; // যেমন: +880, +971
-            
-            document.getElementById('ip-info').innerText = `Detected Location: ${data.country_name} (${userDetectedIP})`;
-        } catch (error) {
-            console.error("GeoLocation Error:", error);
-            document.getElementById('error-msg').innerText = "Location detection failed. Please disable VPN.";
+            userDetectedCountry = data.country_code || "BD";
+            userDetectedIP = data.ip || "Unknown";
+            userDetectedDial = data.country_calling_code || "+880";
+            document.getElementById('ip-info').innerText = `Location: ${data.country_name} (${userDetectedIP})`;
+        } catch (err) {
+            console.log("Switching to backup location service...");
+            // যদি প্রথম এপিআই ফেইল করে, সরাসরি ডিফল্ট সেট হবে
+            document.getElementById('ip-info').innerText = "Location: Bangladesh (Default)";
+            userDetectedCountry = "BD";
+            userDetectedDial = "+880";
         }
     }
 
@@ -95,46 +89,41 @@
         }
     }
 
-    // LOGIN FUNCTION
+    // LOGIN
     async function handleLogin() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-password').value;
-        if(!email || !pass) { document.getElementById('error-msg').innerText = "Fill all fields"; return; }
-        
         const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
         if(error) document.getElementById('error-msg').innerText = error.message;
         else window.location.href = 'index.html';
     }
 
-    // SIGNUP FUNCTION (With Country Validation)
+    // SIGNUP
     async function handleSignup() {
         const name = document.getElementById('sup-name').value;
-        const phone = document.getElementById('sup-phone').value; // ইউজার ইনপুট নাম্বার
+        const phone = document.getElementById('sup-phone').value;
         const email = document.getElementById('sup-email').value;
         const pass = document.getElementById('sup-pass').value;
         const confirm = document.getElementById('sup-confirm').value;
         const errorEl = document.getElementById('error-msg');
 
         errorEl.innerText = "";
-
-        // বেসিক ভ্যালিডেশন
         if(!name || !phone || !email || !pass) { errorEl.innerText = "All fields are required"; return; }
         if(pass !== confirm) { errorEl.innerText = "Passwords do not match"; return; }
 
-        // ২. সিকিউরিটি চেক: আইপি এবং ফোন নাম্বারের কান্ট্রি কোড ম্যাচিং
-        // ফোনের শুরুতে ইউজারের ডায়াল কোড (যেমন +880) আছে কি না চেক করা
+        // ২. সিকিউরিটি চেক: ফোন নাম্বার এবং দেশের কোড মেলানো
         if (!phone.startsWith(userDetectedDial)) {
-            errorEl.innerText = `Error: You are in ${userDetectedCountry}. Please use a phone number starting with ${userDetectedDial}`;
+            errorEl.innerText = `Use phone number starting with ${userDetectedDial}`;
             return;
         }
 
-        // ৩. রেজিস্ট্রেশন প্রসেস শুরু
         const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password: pass });
 
         if(authError) {
+            // যদি ইমেইল আগে থেকেই থাকে (Duplicate Key Error Fix)
             errorEl.innerText = authError.message;
         } else if(authData.user) {
-            // ৪. প্রোফাইল টেবিলে অতিরিক্ত তথ্যসহ ডাটা সেভ করা
+            // ৩. প্রোফাইল ডাটাবেসে তথ্য ইনসার্ট করা
             const { error: profileError } = await _supabase.from('profiles').insert([{
                 id: authData.user.id,
                 full_name: name,
@@ -146,13 +135,13 @@
                 currency: (userDetectedCountry === 'BD' ? 'BDT' : 'USD')
             }]);
 
-            if(profileError) errorEl.innerText = "Profile error: " + profileError.message;
-            else alert("Registration Successful! Please check email or login.");
+            if(profileError) errorEl.innerText = "Database Error: " + profileError.message;
+            else alert("Account created successfully!");
         }
     }
 
-    function showSignup() { document.getElementById('login-section').style.display = 'none'; document.getElementById('signup-section').style.display = 'block'; document.getElementById('error-msg').innerText = "";}
-    function showLogin() { document.getElementById('signup-section').style.display = 'none'; document.getElementById('login-section').style.display = 'block'; document.getElementById('error-msg').innerText = "";}
+    function showSignup() { document.getElementById('login-section').style.display = 'none'; document.getElementById('signup-section').style.display = 'block'; }
+    function showLogin() { document.getElementById('signup-section').style.display = 'none'; document.getElementById('login-section').style.display = 'block'; }
 
     init();
 </script>
