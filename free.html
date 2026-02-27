@@ -15,7 +15,7 @@
             --text-gray: #94a3b8;
         }
 
-        /* ১. জিরো জার্ক লজিক: শুরুতে সবকিছু হাইড থাকবে */
+        /* ১. জিরো জার্ক লজিক */
         #main-wrapper { opacity: 0; visibility: hidden; transition: opacity 0.4s ease; }
         #main-wrapper.visible { opacity: 1; visibility: visible; }
 
@@ -38,7 +38,7 @@
         .page-header { text-align: center; margin-bottom: 15px; } 
         .page-header h1 { color: var(--premium-purple); font-size: 1.3rem; text-transform: uppercase; letter-spacing: 2px; }
 
-        /* ৩. কার্ড এনিমেশন (একদম স্মুথ স্লাইড) */
+        /* ৩. কার্ড এনিমেশন */
         .prediction-card {
             background: #1e1e2e;
             border: 1px solid var(--glass-border);
@@ -51,9 +51,7 @@
             animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
-        @keyframes slideUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
 
         .card-header-vip { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .badge.blinking {
@@ -91,8 +89,8 @@
             justify-content: center; align-items: center; flex-direction: column;
         }
 
-        /* শুরুতে হেডার ফুটার হাইড */
-        #header-root, #footer-root { display: none; }
+        /* এখন হেডার ফুটার সবসময় শো হবে */
+        #header-root, #footer-root { display: block; }
     </style>
 </head>
 <body>
@@ -179,7 +177,7 @@
     }
 
     async function initApp() {
-        // ১. আগে ক্যাশ ডাটা লোড (যদি থাকে)
+        // ১. ক্যাশ ডাটা লোড
         const cachedMatches = localStorage.getItem('cached_free_matches');
         const cachedUnlocked = localStorage.getItem('cached_unlocked_ids');
         if (cachedMatches) {
@@ -187,16 +185,10 @@
         }
 
         try {
-            // ২. সেশন এবং হেডার-ফুটার চেক
+            // ২. সেশন চেক (লগিন না থাকলেও ডাটা দেখাবে)
             const { data: { user } } = await _supabase.auth.getUser();
-            const isLoggedIn = !!user;
 
-            if (isLoggedIn) {
-                document.getElementById('header-root').style.display = 'block';
-                document.getElementById('footer-root').style.display = 'block';
-            }
-
-            // ৩. সার্ভার থেকে লেটেস্ট ডাটা সিঙ্ক
+            // ৩. সার্ভার থেকে ডাটা সিঙ্ক (লগিন ছাড়া বা থাকা উভয় ক্ষেত্রে)
             const { data: matches } = await _supabase.from('free_predictions').select('*').order('id', { ascending: false });
             
             let unlockedList = [];
@@ -216,7 +208,7 @@
 
         } catch (err) { console.error("Sync error:", err); }
 
-        // ৪. পর্দা সরানো (একদম শেষে)
+        // ৪. পর্দা সরানো
         setTimeout(() => {
             document.getElementById('app-loader').style.display = 'none';
             document.getElementById('main-wrapper').classList.add('visible');
@@ -225,23 +217,32 @@
 
     async function handleUnlockProcess(mId, status) {
         const { data: { user } } = await _supabase.auth.getUser();
-        if (!user) { alert("Please login first!"); window.location.href = 'login.html'; return; }
         
+        // অ্যাড মোডাল ওপেন
         const modal = document.getElementById('ad-modal');
         modal.style.display = 'flex';
         let timeLeft = 15;
+        
         const countdown = setInterval(async () => {
             timeLeft--;
             document.getElementById('timer').innerText = timeLeft;
             if (timeLeft <= 0) {
                 clearInterval(countdown);
+                modal.style.display = 'none';
+
+                if (!user) {
+                    // লগিন না থাকলে অ্যালার্ট দিয়ে লগিন পেজে পাঠানো
+                    alert("To save your progress and see predictions, please login or create an account!");
+                    window.location.href = 'login.html'; 
+                    return;
+                }
+
                 try {
                     await _supabase.from('unlocked_predictions').insert([{ user_id: user.id, prediction_id: parseInt(mId) }]);
                     localStorage.removeItem('cached_unlocked_ids');
-                    modal.style.display = 'none';
                     alert("Success! Prediction Unlocked.");
                     window.location.reload(); 
-                } catch (e) { alert("Error: " + e.message); modal.style.display = 'none'; }
+                } catch (e) { alert("Error: " + e.message); }
             }
         }, 1000);
     }
