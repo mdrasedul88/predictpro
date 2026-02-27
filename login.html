@@ -9,13 +9,11 @@
     <style>
         body { background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; font-family: sans-serif; }
         
-        /* এনিমেশনের জন্য মেইন কন্টেনার */
         #main-wrapper { opacity: 0; visibility: hidden; width: 100%; display: flex; justify-content: center; }
         #main-wrapper.visible { opacity: 1; visibility: visible; transition: opacity 0.5s ease; }
 
         .auth-container { background: #1e293b; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #334155; }
         
-        /* এনিমেশন ক্লাস */
         .slide-up-anim { transform: translateY(30px); opacity: 0; }
         .visible .slide-up-anim { animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 
@@ -27,7 +25,6 @@
         .toggle-link { text-align: center; margin-top: 15px; font-size: 0.9rem; color: #94a3b8; }
         .toggle-link a { color: #00ff88; text-decoration: none; font-weight: bold; cursor: pointer; }
         
-        /* লোডার ডিজাইন */
         #app-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; justify-content: center; align-items: center; }
         .loader-dot { width: 12px; height: 12px; background: #00ff88; border-radius: 50%; animation: pulse 1s infinite alternate; }
         @keyframes pulse { from { opacity: 0.5; transform: scale(0.8); } to { opacity: 1; transform: scale(1.2); } }
@@ -46,17 +43,19 @@
             <button class="btn-auth" onclick="handleLogin()">Login</button>
             <p class="toggle-link">New here? <a onclick="showSignup()">Create Account</a></p>
         </div>
+
         <div id="signup-section" class="auth-box" style="display: none;">
             <h2>Create Account</h2>
+            <p id="ip-info" style="font-size: 0.7rem; color: #00ff88; text-align: center; margin-bottom: 10px;"></p>
             <input type="text" id="sup-name" placeholder="Full Name">
-            <input type="tel" id="sup-phone" placeholder="Mobile Number">
+            <input type="tel" id="sup-phone" placeholder="Mobile Number (e.g. +88017...)">
             <input type="email" id="sup-email" placeholder="Email Address">
             <input type="password" id="sup-pass" placeholder="Password">
             <input type="password" id="sup-confirm" placeholder="Confirm Password">
-            <button class="btn-auth" onclick="handleSignup()">Register</button>
+            <button class="btn-auth" id="reg-btn" onclick="handleSignup()">Register</button>
             <p class="toggle-link">Already have an account? <a onclick="showLogin()">Login</a></p>
         </div>
-        <p id="error-msg" style="color: #ff4d4d; text-align: center; margin-top: 10px;"></p>
+        <p id="error-msg" style="color: #ff4d4d; text-align: center; margin-top: 10px; font-size: 0.85rem;"></p>
     </div>
 </div>
 
@@ -65,28 +64,95 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    let userDetectedCountry = "";
+    let userDetectedIP = "";
+    let userDetectedDial = "";
+
+    // ১. পেজ লোড হওয়ার সময় ইউজারের IP এবং দেশ শনাক্ত করা
+    async function fetchGeoLocation() {
+        try {
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+            userDetectedCountry = data.country_code; // যেমন: BD, AE
+            userDetectedIP = data.ip;
+            userDetectedDial = data.country_calling_code; // যেমন: +880, +971
+            
+            document.getElementById('ip-info').innerText = `Detected Location: ${data.country_name} (${userDetectedIP})`;
+        } catch (error) {
+            console.error("GeoLocation Error:", error);
+            document.getElementById('error-msg').innerText = "Location detection failed. Please disable VPN.";
+        }
+    }
+
     async function init() {
+        await fetchGeoLocation();
         const { data: { session } } = await _supabase.auth.getSession();
         if (session) {
             window.location.href = 'index.html';
         } else {
-            // ফর্ম রেডি করে পর্দা সরানো
             document.getElementById('app-loader').style.display = 'none';
             document.getElementById('main-wrapper').classList.add('visible');
         }
     }
 
-    // আপনার অরিজিনাল handleLogin এবং handleSignup ফাংশনগুলো এখানে থাকবে...
+    // LOGIN FUNCTION
     async function handleLogin() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-password').value;
+        if(!email || !pass) { document.getElementById('error-msg').innerText = "Fill all fields"; return; }
+        
         const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
         if(error) document.getElementById('error-msg').innerText = error.message;
         else window.location.href = 'index.html';
     }
 
-    function showSignup() { document.getElementById('login-section').style.display = 'none'; document.getElementById('signup-section').style.display = 'block'; }
-    function showLogin() { document.getElementById('signup-section').style.display = 'none'; document.getElementById('login-section').style.display = 'block'; }
+    // SIGNUP FUNCTION (With Country Validation)
+    async function handleSignup() {
+        const name = document.getElementById('sup-name').value;
+        const phone = document.getElementById('sup-phone').value; // ইউজার ইনপুট নাম্বার
+        const email = document.getElementById('sup-email').value;
+        const pass = document.getElementById('sup-pass').value;
+        const confirm = document.getElementById('sup-confirm').value;
+        const errorEl = document.getElementById('error-msg');
+
+        errorEl.innerText = "";
+
+        // বেসিক ভ্যালিডেশন
+        if(!name || !phone || !email || !pass) { errorEl.innerText = "All fields are required"; return; }
+        if(pass !== confirm) { errorEl.innerText = "Passwords do not match"; return; }
+
+        // ২. সিকিউরিটি চেক: আইপি এবং ফোন নাম্বারের কান্ট্রি কোড ম্যাচিং
+        // ফোনের শুরুতে ইউজারের ডায়াল কোড (যেমন +880) আছে কি না চেক করা
+        if (!phone.startsWith(userDetectedDial)) {
+            errorEl.innerText = `Error: You are in ${userDetectedCountry}. Please use a phone number starting with ${userDetectedDial}`;
+            return;
+        }
+
+        // ৩. রেজিস্ট্রেশন প্রসেস শুরু
+        const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password: pass });
+
+        if(authError) {
+            errorEl.innerText = authError.message;
+        } else if(authData.user) {
+            // ৪. প্রোফাইল টেবিলে অতিরিক্ত তথ্যসহ ডাটা সেভ করা
+            const { error: profileError } = await _supabase.from('profiles').insert([{
+                id: authData.user.id,
+                full_name: name,
+                phone_number: phone,
+                email: email,
+                country_code: userDetectedCountry,
+                dial_code: userDetectedDial,
+                registration_ip: userDetectedIP,
+                currency: (userDetectedCountry === 'BD' ? 'BDT' : 'USD')
+            }]);
+
+            if(profileError) errorEl.innerText = "Profile error: " + profileError.message;
+            else alert("Registration Successful! Please check email or login.");
+        }
+    }
+
+    function showSignup() { document.getElementById('login-section').style.display = 'none'; document.getElementById('signup-section').style.display = 'block'; document.getElementById('error-msg').innerText = "";}
+    function showLogin() { document.getElementById('signup-section').style.display = 'none'; document.getElementById('login-section').style.display = 'block'; document.getElementById('error-msg').innerText = "";}
 
     init();
 </script>
