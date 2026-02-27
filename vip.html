@@ -22,18 +22,23 @@
             margin: 0; padding: 0; min-height: 100vh;
         }
         .container { max-width: 450px; margin: auto; padding: 10px; padding-bottom: 80px; }
-        
-        /* এনিমেশন শুধুমাত্র নতুন ডাটার জন্য */
-        .new-card { animation: slideUp 0.4s ease-out forwards; }
+
+        /* Smooth Slide-up Animation only for new data */
+        .new-entry {
+            animation: slideUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            opacity: 0;
+            transform: translateY(15px);
+        }
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .match-card {
-            background: var(--card-glass); backdrop-filter: blur(10px);
+            background: var(--card-glass); backdrop-filter: blur(12px);
             border-radius: 18px; padding: 15px; margin-bottom: 15px; 
-            border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border); 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: 0.3s;
         }
 
         .badge-cricket { background: var(--premium-purple); box-shadow: 0 0 10px var(--premium-purple); }
@@ -42,89 +47,121 @@
 
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .category-badge { padding: 3px 10px; border-radius: 6px; font-size: 0.55rem; font-weight: bold; text-transform: uppercase; }
-        .vs-text { font-size: 1.1rem; font-weight: 700; text-align: center; margin: 12px 0; }
+        .vs-text { font-size: 1.1rem; font-weight: 700; text-align: center; margin: 12px 0; letter-spacing: 0.5px;}
+        
         .prediction-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .predict-box { background: rgba(0, 0, 0, 0.3); padding: 8px; border-radius: 10px; text-align: center; border: 1px solid var(--glass-border); }
-        .label { display: block; font-size: 0.55rem; color: var(--gold); font-weight: bold; }
-        .clear-val { color: var(--premium-purple); font-weight: 800; font-size: 0.95rem; }
-        .unlock-btn { width: 100%; margin-top: 15px; padding: 12px; border-radius: 12px; background: var(--premium-purple); color: #fff; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+        .label { display: block; font-size: 0.55rem; color: var(--gold); font-weight: bold; margin-bottom: 2px;}
+        .clear-val { color: var(--premium-purple); font-weight: 800; font-size: 0.95rem; text-shadow: 0 0 10px var(--glow); }
+        
+        .unlock-btn { width: 100%; margin-top: 15px; padding: 12px; border-radius: 12px; background: var(--premium-purple); color: #fff; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; box-shadow: 0 4px 15px var(--glow); }
+        
+        /* Header/Footer hide initial to avoid flicker */
+        header, footer { display: none; }
     </style>
 </head>
 <body>
 
+<header id="site-header" style="background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); padding: 12px; text-align: center; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 999;">
+    <nav>
+        <a href="index.html" style="color:white; text-decoration:none; margin:0 15px; font-size:0.8rem; font-weight: 600;">HOME</a> | 
+        <a href="profile.html" style="color:white; text-decoration:none; margin:0 15px; font-size:0.8rem; font-weight: 600;">PROFILE</a>
+    </nav>
+</header>
+
 <div class="container">
-    <h2 style="text-align:center; color: var(--premium-purple); font-size: 1.3rem; margin: 20px 0; font-weight: 800;">PREMIUM VIP</h2>
+    <h2 style="text-align:center; color: var(--premium-purple); font-size: 1.3rem; margin: 20px 0; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">PREMIUM VIP</h2>
     
     <div id="vip-list"></div>
 </div>
+
+<footer id="site-footer" style="padding: 15px; text-align: center; color: #64748b; font-size: 0.65rem; border-top: 1px solid var(--glass-border);">
+    &copy; 2026 Sports Pro International
+</footer>
 
 <script>
     const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    // ১. ইন্সট্যান্ট রেন্ডার ফাংশন (যাতে কোনো Flicker না হয়)
-    function render(matches, isVip, isLoggedIn, isNew = false) {
-        const list = document.getElementById('vip-list');
-        const content = matches.map((m, i) => {
+    let lastRenderedHash = ""; // ডাবল রেন্ডারিং রোখার জন্য
+
+    // ১. জেনারেট কন্টেন্ট ফাংশন
+    function generateHTML(matches, isVip, isLoggedIn, isNew = false) {
+        return matches.map((m, i) => {
             const cat = (m.category || '').toLowerCase();
             const bClass = cat.includes('cricket') ? 'badge-cricket' : cat.includes('football') ? 'badge-football' : 'badge-basketball';
-            
+            const displayTime = m.match_time || 'Live';
+            const displayDate = m.created_at ? new Date(m.created_at).toLocaleDateString('en-GB', {day:'2-digit', month:'short'}) : 'Today';
+
             return `
-            <div class="match-card ${isNew ? 'new-card' : ''}" style="${isNew ? `animation-delay: ${i*0.05}s` : ''}">
+            <div class="match-card ${isNew ? 'new-entry' : ''}" style="${isNew ? `animation-delay: ${i * 0.08}s;` : ''}">
                 <div class="card-header">
                     <span class="category-badge ${bClass}">${m.category || 'VIP'}</span>
-                    <span style="font-size:0.6rem; color:#94a3b8;"><i class="far fa-clock"></i> ${m.match_time || 'Live'}</span>
+                    <span style="font-size:0.65rem; color:#94a3b8;"><i class="far fa-calendar-alt"></i> ${displayDate} | <i class="far fa-clock"></i> ${displayTime}</span>
                 </div>
                 <div class="vs-text">${m.match_name}</div>
                 <div class="prediction-row">
                     <div class="predict-box">
                         <span class="label">PICK</span>
-                        <span class="${isVip ? 'clear-val' : ''}" style="${!isVip ? 'filter:blur(5px)' : ''}">${isVip ? m.description : 'WINNER'}</span>
+                        <span class="${isVip ? 'clear-val' : ''}" style="${!isVip ? 'filter:blur(6px); opacity:0.6;' : ''}">${isVip ? m.description : 'WINNER'}</span>
                     </div>
                     <div class="predict-box">
                         <span class="label">ODDS</span>
-                        <span class="${isVip ? 'clear-val' : ''}" style="${!isVip ? 'filter:blur(5px)' : ''}">${isVip ? (m.odds || '1.90') : '0.00'}</span>
+                        <span class="${isVip ? 'clear-val' : ''}" style="${!isVip ? 'filter:blur(6px); opacity:0.6;' : ''}">${isVip ? (m.odds || '1.90') : '0.00'}</span>
                     </div>
                 </div>
                 ${!isVip ? `<button class="unlock-btn" onclick="location.href='${isLoggedIn ? 'subscription.html' : 'login.html'}'">UNLOCK NOW</button>` : ''}
             </div>`;
         }).join('');
-        
-        // এখানে সরাসরি ইনজেক্ট করা হচ্ছে যাতে ধাক্কা না লাগে
-        list.innerHTML = content;
     }
 
-    // ২. পেজ লোড হওয়ার সাথে সাথে (Sync হওয়ার আগে) ক্যাশ চেক
-    const cachedData = localStorage.getItem('v_m_cache');
-    const cachedVip = localStorage.getItem('v_u_vip') === 'true';
-    if (cachedData) {
-        render(JSON.parse(cachedData), cachedVip, true, false);
+    // ২. ইনস্ট্যান্ট ক্যাশ লোডিং (Zero Wait)
+    function fastLoad() {
+        const cached = localStorage.getItem('vip_cache');
+        const vipStatus = localStorage.getItem('vip_status') === 'true';
+        if (cached) {
+            const matches = JSON.parse(cached);
+            lastRenderedHash = JSON.stringify(matches) + vipStatus;
+            document.getElementById('vip-list').innerHTML = generateHTML(matches, vipStatus, true, false);
+        }
     }
 
-    // ৩. ব্যাকগ্রাউন্ডে সার্ভার থেকে ডাটা আনা
-    async function sync() {
+    // ৩. রিয়েল-টাইম সিঙ্ক
+    async function syncData() {
         try {
             const { data: { session } } = await _supabase.auth.getSession();
             let isVip = false;
+            
             if (session) {
+                document.getElementById('site-header').style.display = 'block';
+                document.getElementById('site-footer').style.display = 'block';
                 const { data: profile } = await _supabase.from('profiles').select('is_vip, expiry_date').eq('id', session.user.id).single();
                 if (profile && profile.is_vip && new Date(profile.expiry_date) > new Date()) isVip = true;
             }
 
             const { data: matches } = await _supabase.from('vip_matches').select('*').order('id', {ascending: false});
-            const newDataStr = JSON.stringify(matches);
+            if (!matches) return;
 
-            // যদি ক্যাশ ডাটা আর নতুন ডাটা আলাদা হয়, তবেই কেবল আপডেট হবে
-            if (newDataStr !== cachedData || isVip !== cachedVipStatus) {
-                localStorage.setItem('v_m_cache', newDataStr);
-                localStorage.setItem('v_u_vip', isVip);
-                render(matches, isVip, !!session, true);
+            const currentHash = JSON.stringify(matches) + isVip;
+
+            // যদি ডাটা পরিবর্তন হয় তবেই রেন্ডার হবে (Double Rendering Fix)
+            if (currentHash !== lastRenderedHash) {
+                localStorage.setItem('vip_cache', JSON.stringify(matches));
+                localStorage.setItem('vip_status', isVip);
+                
+                // নতুন ডাটা আসলে এনিমেশন সহ দেখাবে
+                document.getElementById('vip-list').innerHTML = generateHTML(matches, isVip, !!session, true);
+                lastRenderedHash = currentHash;
             }
-        } catch (e) { console.log(e); }
+        } catch (err) {
+            console.error("Sync error:", err);
+        }
     }
 
-    sync();
+    // Execute
+    fastLoad();
+    syncData();
 </script>
 </body>
 </html>
