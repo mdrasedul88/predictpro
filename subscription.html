@@ -51,7 +51,6 @@
         let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 }; let currentUser = null;
 
         async function init() {
-            // ১. লগইন চেক
             const { data: { session } } = await _supabase.auth.getSession();
             currentUser = session ? session.user : null;
 
@@ -74,11 +73,10 @@
                 </div>`).join('');
         }
 
-        // ২. লগইন গার্ড
         function handleAccessClick(usd, bdt, name, days) {
             if(!currentUser) {
                 Swal.fire({ title: 'Authentication Required', text: 'লগইন না করে আপনি প্ল্যান কিনতে পারবেন না।', icon: 'warning', confirmButtonText: 'Login Now', background: '#0f0f1a', color: '#fff' })
-                .then(() => { window.location.href = 'login.html'; });
+                .then((result) => { if(result.isConfirmed) window.location.href = 'login.html'; });
                 return;
             }
             openModal(usd, bdt, name, days);
@@ -104,7 +102,6 @@
             document.getElementById('display-address').innerText = WALLETS[method];
         }
 
-        // ৩. সাবমিট ফাংশন (এনিমেশন এখানে আসবে)
         async function submitOrder() {
             if(!currentUser) return; 
 
@@ -112,19 +109,23 @@
             const trx = document.getElementById('trxId').value;
             const btn = document.getElementById('sub-btn');
 
-            if(!mInfo || !trx) { Swal.fire('Error', 'সবগুলো তথ্য দিন', 'error'); return; }
+            if(!mInfo || !trx) { 
+                Swal.fire({ title: 'Error', text: 'সবগুলো তথ্য দিন', icon: 'error', background: '#0f0f1a', color: '#fff' }); 
+                return; 
+            }
 
-            btn.disabled = true; btn.innerText = "VERIFYING...";
+            btn.disabled = true; 
+            btn.innerText = "VERIFYING...";
 
             try {
-                // ডুপ্লিকেট চেক
                 const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
+                
                 if(exist) { 
-                    Swal.fire('Duplicate', 'এই ট্রানজেকশন আইডিটি ইতিমধ্যে ব্যবহৃত হয়েছে।', 'warning'); 
-                    btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
+                    Swal.fire({ title: 'Duplicate', text: 'এই ট্রানজেকশন আইডিটি ইতিমধ্যে ব্যবহৃত হয়েছে।', icon: 'warning', background: '#0f0f1a', color: '#fff' }); 
+                    btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; 
+                    return; 
                 }
 
-                // ইনসার্ট
                 const { error } = await _supabase.from('payment_requests').insert([{
                     user_email: currentUser.email, mobile: mInfo, plan_name: selected.name,
                     duration: selected.days, amount: document.getElementById('display-amount').innerText,
@@ -133,7 +134,7 @@
                 }]);
 
                 if(!error) {
-                    // ✅ সাকসেস এনিমেশন
+                    // ✅ এই পপ-আপটি সাবমিট সফল হলেই আসবে
                     Swal.fire({
                         title: 'Success!',
                         text: 'আপনার রিকোয়েস্টটি পাঠানো হয়েছে। দ্রুত একটিভ করা হবে।',
@@ -144,12 +145,12 @@
                 } else { throw error; }
 
             } catch(e) {
-                Swal.fire('Error', e.message, 'error');
+                Swal.fire({ title: 'Error', text: e.message, icon: 'error', background: '#0f0f1a', color: '#fff' });
                 btn.disabled = false; btn.innerText = "SUBMIT REQUEST";
             }
         }
 
-        // ৪. ক্যানসেল ফাংশন (কোনো পপ-আপ নেই)
+        // ক্যানসেল ফাংশন - এতে কোনো Swal.fire নেই
         function closeModal() {
             document.getElementById('pModal').style.display = 'none';
         }
