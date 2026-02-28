@@ -10,8 +10,139 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
-        :root { --p-purple: #7b61ff; --a-cyan: #00f2ff; --bg: #050508; }
-        body { background: var(--bg); background-image: radial-gradient(circle at 50% -20%, #1a103d 0%, #050508 100%); color: #fff; font-family: 'Poppins', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 100px 20px; }
+        
+        :root { 
+            --p-purple: #7b61ff; 
+            --a-cyan: #00f2ff; 
+            --bg: #050508; 
+            --card-glass: rgba(255, 255, 255, 0.03);
+            --vip-gold: #ffcc00;
+        }
+
+        body { 
+            background: var(--bg); 
+            background-image: radial-gradient(circle at 50% -20%, #1a103d 0%, #050508 100%); 
+            color: #fff; 
+            font-family: 'Poppins', sans-serif; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 100px 20px; 
+        }
+
+        /* --- Premium Card Styling Starts --- */
+        #plan-list { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 20px; 
+            width: 100%; 
+            max-width: 450px; 
+        }
+
+        .premium-card {
+            background: linear-gradient(145deg, rgba(20, 20, 30, 0.8), rgba(5, 5, 8, 0.9));
+            border-radius: 25px;
+            padding: 25px 15px;
+            position: relative;
+            border: 1px solid rgba(123, 97, 255, 0.2);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .premium-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--a-cyan);
+            box-shadow: 0 15px 30px rgba(0, 242, 255, 0.1);
+        }
+
+        /* VIP Badge like the images */
+        .vip-badge {
+            position: absolute;
+            top: 15px;
+            right: -25px;
+            background: var(--vip-gold);
+            color: #000;
+            font-size: 0.6rem;
+            font-weight: 800;
+            padding: 3px 30px;
+            transform: rotate(45deg);
+            font-family: 'Orbitron';
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
+        }
+
+        .plan-icon {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to bottom, #fff, var(--p-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .plan-name {
+            font-family: 'Orbitron';
+            font-size: 0.8rem;
+            color: #aaa;
+            letter-spacing: 1.5px;
+            margin: 5px 0;
+            text-transform: uppercase;
+        }
+
+        .plan-price {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 10px 0;
+            color: #fff;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+            text-align: left;
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        .plan-features li {
+            margin: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .plan-features li i {
+            color: var(--a-cyan);
+            font-size: 0.6rem;
+        }
+
+        .btn-premium {
+            background: linear-gradient(90deg, var(--p-purple), var(--a-cyan));
+            color: #000;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-family: 'Orbitron';
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 100%;
+            text-transform: uppercase;
+        }
+
+        .btn-premium:hover {
+            box-shadow: 0 0 20px rgba(123, 97, 255, 0.5);
+            letter-spacing: 1px;
+        }
+        /* --- Premium Card Styling Ends --- */
+
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 2000; }
         .modal-content { background: linear-gradient(145deg, #0f0f1a, #050508); width: 95%; max-width: 380px; padding: 35px 25px; border-radius: 30px; border: 1px solid rgba(123,97,255,0.2); text-align: center; }
         .info-box { background: rgba(123,97,255,0.05); padding: 20px; border-radius: 20px; border: 1px dashed var(--p-purple); margin-bottom: 25px; }
@@ -19,12 +150,12 @@
         .input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--p-purple); }
         .input-wrapper input, .input-wrapper select { width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: #fff; outline: none; box-sizing: border-box; }
         .btn-activate { background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: 800; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; }
-        .btn-activate:disabled { opacity: 0.5; cursor: not-allowed; }
-        #plan-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 400px; }
     </style>
 </head>
 <body>
 
+    <h2 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:40px; text-align:center; font-size:1.2rem;">SELECT YOUR ACCESS</h2>
+    
     <div id="plan-list"></div>
 
     <div id="pModal" class="modal">
@@ -65,11 +196,24 @@
 
         async function loadPlans() {
             const { data } = await _supabase.from('subscription_plans').select('*').eq('is_active', true);
+            
+            // ছবিতে থাকা কার্ডের মতো প্রিমিয়াম স্ট্রাকচার
             document.getElementById('plan-list').innerHTML = data.map(p => `
-                <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
-                    <h4 style="font-size:0.7rem; color:#888; margin:0;">${p.plan_name}</h4>
-                    <h2 style="margin:10px 0;">${isLocal ? '৳'+p.price_bdt : '$'+p.price_usd}</h2>
-                    <button class="btn-activate" style="padding:10px; font-size:0.6rem;" onclick="checkAccess(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">GET ACCESS</button>
+                <div class="premium-card animate__animated animate__fadeIn">
+                    <div class="vip-badge">VIP</div>
+                    <div class="plan-icon"><i class="fas fa-gem"></i></div>
+                    <div class="plan-name">${p.plan_name}</div>
+                    <div class="plan-price">${isLocal ? '৳'+p.price_bdt : '$'+p.price_usd}</div>
+                    
+                    <ul class="plan-features">
+                        <li><i class="fas fa-check-circle"></i> VIP Match Tips</li>
+                        <li><i class="fas fa-check-circle"></i> 24/7 Support</li>
+                        <li><i class="fas fa-check-circle"></i> Live Predictions</li>
+                    </ul>
+
+                    <button class="btn-premium" onclick="checkAccess(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">
+                        ACTIVATE VIP
+                    </button>
                 </div>`).join('');
         }
 
@@ -98,7 +242,6 @@
             document.getElementById('display-address').innerText = WALLETS[method];
         }
 
-        // মূল ফাংশন: সাবমিট হলে এনিমেশন দিয়ে ইনডেক্স পেইজে যাবে
         async function finalOrderSubmit() {
             const mInfo = document.getElementById('mInfo').value;
             const trx = document.getElementById('trxId').value;
@@ -110,14 +253,12 @@
             btn.innerText = "VERIFYING...";
 
             try {
-                // ১. ডুপ্লিকেট চেক
                 const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
                 if(exist) { 
                     Swal.fire('Used ID', 'এই আইডিটি আগে ব্যবহৃত হয়েছে!', 'warning'); 
                     btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
                 }
 
-                // ২. ডাটা সেভ
                 const { error } = await _supabase.from('payment_requests').insert([{
                     user_email: currentUser.email, mobile: mInfo, plan_name: selected.name,
                     duration: selected.days, amount: document.getElementById('display-amount').innerText,
@@ -127,20 +268,17 @@
 
                 if(error) throw error;
 
-                // ৩. ✅ সাকসেস এনিমেশন এবং ইনডেক্স পেইজে রিডাইরেক্ট
-                
                 Swal.fire({
                     title: 'Request Active!',
                     text: 'Redirecting to Home...',
                     icon: 'success',
-                    timer: 2500, // ২.৫ সেকেন্ড পর অটো বন্ধ হবে
+                    timer: 2500,
                     showConfirmButton: false,
                     background: '#0f0f1a',
                     color: '#fff',
                     showClass: { popup: 'animate__animated animate__zoomIn' }
                 });
 
-                // ২.৫ সেকেন্ড পর মেইন পেইজে চলে যাবে
                 setTimeout(() => {
                     window.location.href = 'index.html'; 
                 }, 2500);
