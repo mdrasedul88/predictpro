@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Sports | Premium Access</title>
+    <title>Pro Sports | Final Fix</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -37,8 +37,10 @@
             <div class="input-wrapper"><i class="fas fa-wallet"></i><select id="mth" onchange="updateUI()"></select></div>
             <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Sender Wallet/Phone"></div>
             <div class="input-wrapper"><i class="fas fa-receipt"></i><input type="text" id="trxId" placeholder="Transaction ID (TrxID)"></div>
-            <button class="btn-activate" id="sub-btn" onclick="submitOrder()">SUBMIT REQUEST</button>
-            <p onclick="closeModal()" style="font-size:0.75rem; color:#666; cursor:pointer; margin-top:18px;">CANCEL TRANSACTION</p>
+            
+            <button class="btn-activate" id="sub-btn" onclick="handleFinalSubmit()">SUBMIT REQUEST</button>
+            
+            <p onclick="closeOrderModal()" style="font-size:0.75rem; color:#666; cursor:pointer; margin-top:18px;">CANCEL TRANSACTION</p>
         </div>
     </div>
 
@@ -53,7 +55,6 @@
         async function init() {
             const { data: { session } } = await _supabase.auth.getSession();
             currentUser = session ? session.user : null;
-
             try {
                 const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
                 const d = await r.json(); rates.eth = d.ethereum.usd; rates.sol = d.solana.usd;
@@ -69,20 +70,16 @@
                 <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
                     <h4 style="font-size:0.7rem; color:#888; margin:0;">${p.plan_name}</h4>
                     <h2 style="margin:10px 0;">${isLocal ? '৳'+p.price_bdt : '$'+p.price_usd}</h2>
-                    <button class="btn-activate" style="padding:10px; font-size:0.6rem;" onclick="handleAccessClick(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">GET ACCESS</button>
+                    <button class="btn-activate" style="padding:10px; font-size:0.6rem;" onclick="checkUserAuth(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">GET ACCESS</button>
                 </div>`).join('');
         }
 
-        function handleAccessClick(usd, bdt, name, days) {
+        function checkUserAuth(usd, bdt, name, days) {
             if(!currentUser) {
-                Swal.fire({ title: 'Authentication Required', text: 'লগইন না করে আপনি প্ল্যান কিনতে পারবেন না।', icon: 'warning', confirmButtonText: 'Login Now', background: '#0f0f1a', color: '#fff' })
-                .then((result) => { if(result.isConfirmed) window.location.href = 'login.html'; });
+                Swal.fire({ title: 'Authentication Required', text: 'দয়া করে আগে লগইন করুন।', icon: 'warning', confirmButtonText: 'Login', background: '#0f0f1a', color: '#fff' })
+                .then((res) => { if(res.isConfirmed) window.location.href = 'login.html'; });
                 return;
             }
-            openModal(usd, bdt, name, days);
-        }
-
-        function openModal(usd, bdt, name, days) {
             selected = { usd, bdt, name, days };
             const m = document.getElementById('mth');
             m.innerHTML = isLocal ? `<option value="bKash">bKash</option><option value="Nagad">Nagad</option>` : `<option value="USDT">USDT (TRC20)</option><option value="ETH">ETH (ERC20)</option><option value="SOL">SOL (Solana)</option>`;
@@ -102,15 +99,14 @@
             document.getElementById('display-address').innerText = WALLETS[method];
         }
 
-        async function submitOrder() {
-            if(!currentUser) return; 
-
+        // নতুন সাবমিট ফাংশন
+        async function handleFinalSubmit() {
             const mInfo = document.getElementById('mInfo').value;
             const trx = document.getElementById('trxId').value;
             const btn = document.getElementById('sub-btn');
 
             if(!mInfo || !trx) { 
-                Swal.fire({ title: 'Error', text: 'সবগুলো তথ্য দিন', icon: 'error', background: '#0f0f1a', color: '#fff' }); 
+                Swal.fire({ title: 'Error', text: 'সবগুলো তথ্য পূরণ করুন', icon: 'error', background: '#0f0f1a', color: '#fff' }); 
                 return; 
             }
 
@@ -119,11 +115,9 @@
 
             try {
                 const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
-                
                 if(exist) { 
-                    Swal.fire({ title: 'Duplicate', text: 'এই ট্রানজেকশন আইডিটি ইতিমধ্যে ব্যবহৃত হয়েছে।', icon: 'warning', background: '#0f0f1a', color: '#fff' }); 
-                    btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; 
-                    return; 
+                    Swal.fire({ title: 'Duplicate', text: 'এই আইডিটি ইতিমধ্যে ব্যবহৃত হয়েছে।', icon: 'warning', background: '#0f0f1a', color: '#fff' }); 
+                    btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
                 }
 
                 const { error } = await _supabase.from('payment_requests').insert([{
@@ -134,10 +128,10 @@
                 }]);
 
                 if(!error) {
-                    // ✅ এই পপ-আপটি সাবমিট সফল হলেই আসবে
+                    // ✅ সাকসেস এনিমেশন পপ-আপ
                     Swal.fire({
                         title: 'Success!',
-                        text: 'আপনার রিকোয়েস্টটি পাঠানো হয়েছে। দ্রুত একটিভ করা হবে।',
+                        text: 'আপনার রিকোয়েস্টটি পাঠানো হয়েছে। দ্রুত একটিভ হবে।',
                         icon: 'success',
                         background: '#0f0f1a', color: '#fff',
                         showClass: { popup: 'animate__animated animate__backInDown' }
@@ -150,9 +144,10 @@
             }
         }
 
-        // ক্যানসেল ফাংশন - এতে কোনো Swal.fire নেই
-        function closeModal() {
-            document.getElementById('pModal').style.display = 'none';
+        // নতুন ক্যানসেল ফাংশন (কোনো পপ-আপ নেই)
+        function closeOrderModal() {
+            const modal = document.getElementById('pModal');
+            modal.style.display = 'none';
         }
         
         init();
