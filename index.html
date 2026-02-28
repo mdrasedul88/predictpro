@@ -18,7 +18,7 @@
         .input-wrapper { position: relative; margin-bottom: 20px; text-align: left; }
         .input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--p-purple); }
         .input-wrapper input, .input-wrapper select { width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: #fff; outline: none; box-sizing: border-box; }
-        .btn-activate { background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: 800; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .btn-activate { background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: 800; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; width: 100%; }
         .btn-activate:disabled { opacity: 0.5; cursor: not-allowed; }
         #plan-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 400px; }
     </style>
@@ -28,7 +28,7 @@
     <div id="plan-list"></div>
 
     <div id="pModal" class="modal">
-        <div class="modal-content animate__animated animate__zoomIn">
+        <div class="modal-content animate__animated animate__fadeInUp">
             <h3 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:20px;">SECURE ACTIVATION</h3>
             <div class="info-box">
                 <div id="display-amount" style="font-size:1.4rem; font-weight:700;">...</div>
@@ -37,8 +37,9 @@
             <div class="input-wrapper"><i class="fas fa-wallet"></i><select id="mth" onchange="updateUI()"></select></div>
             <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Sender Wallet/Phone"></div>
             <div class="input-wrapper"><i class="fas fa-receipt"></i><input type="text" id="trxId" placeholder="Transaction ID (TrxID)"></div>
+            
             <button class="btn-activate" id="sub-btn" onclick="submitFinalOrder()">SUBMIT REQUEST</button>
-            <p style="font-size:0.6rem; color:#444; margin-top:20px; letter-spacing:1px;">POWERED BY SECURE GATEWAY</p>
+            <p style="font-size:0.6rem; color:#555; margin-top:15px; text-transform:uppercase;">Encryption Active</p>
         </div>
     </div>
 
@@ -68,13 +69,13 @@
                 <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
                     <h4 style="font-size:0.7rem; color:#888; margin:0;">${p.plan_name}</h4>
                     <h2 style="margin:10px 0;">${isLocal ? '৳'+p.price_bdt : '$'+p.price_usd}</h2>
-                    <button class="btn-activate" style="padding:10px; font-size:0.6rem;" onclick="checkAuth(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">GET ACCESS</button>
+                    <button class="btn-activate" style="padding:10px; font-size:0.6rem;" onclick="openAccess(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">GET ACCESS</button>
                 </div>`).join('');
         }
 
-        function checkAuth(usd, bdt, name, days) {
+        function openAccess(usd, bdt, name, days) {
             if(!currentUser) {
-                Swal.fire({ title: 'Authentication', text: 'দয়া করে আগে লগইন করুন।', icon: 'warning', confirmButtonColor: '#7b61ff' })
+                Swal.fire({ title: 'Authentication', text: 'দয়া করে আগে লগইন করুন।', icon: 'info', confirmButtonColor: '#7b61ff' })
                 .then(() => window.location.href = 'login.html');
                 return;
             }
@@ -97,25 +98,19 @@
             document.getElementById('display-address').innerText = WALLETS[method];
         }
 
+        // মূল ফাংশন (ফিক্সড)
         async function submitFinalOrder() {
             const mInfo = document.getElementById('mInfo').value;
             const trx = document.getElementById('trxId').value;
             const btn = document.getElementById('sub-btn');
 
-            if(!mInfo || !trx) { Swal.fire('Error', 'সবগুলো ঘর পূরণ করুন', 'error'); return; }
+            if(!mInfo || !trx) { Swal.fire('Error', 'সবগুলো তথ্য পূরণ করুন', 'error'); return; }
 
             btn.disabled = true;
             btn.innerText = "VERIFYING...";
 
             try {
-                // ১. ডুপ্লিকেট চেক
-                const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
-                if(exist) { 
-                    Swal.fire('Used ID', 'এই আইডিটি আগে ব্যবহৃত হয়েছে!', 'warning'); 
-                    btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
-                }
-
-                // ২. ডাটা সেভ
+                // ১. ডাটা ইনসার্ট
                 const { error } = await _supabase.from('payment_requests').insert([{
                     user_email: currentUser.email, mobile: mInfo, plan_name: selected.name,
                     duration: selected.days, amount: document.getElementById('display-amount').innerText,
@@ -125,24 +120,22 @@
 
                 if(error) throw error;
 
-                // ৩. ✅ সাকসেস এনিমেশন এবং ৩ সেকেন্ড পর হোম পেইজে রিডাইরেক্ট
+                // ২. ✅ পপ-আপ অ্যানিমেশন এবং রিডাইরেক্ট
                 Swal.fire({
-                    title: 'Request Sent!',
-                    text: 'আপনার রিকোয়েস্টটি জমা হয়েছে। আপনাকে হোম পেইজে নিয়ে যাওয়া হচ্ছে...',
+                    title: 'Success!',
+                    text: 'রিকোয়েস্ট সফল হয়েছে। হোমে ফিরে যাচ্ছি...',
                     icon: 'success',
-                    timer: 3000, // ৩ সেকেন্ড সময় দেওয়া হয়েছে এনিমেশন দেখার জন্য
+                    timer: 3000,
                     timerProgressBar: true,
                     showConfirmButton: false,
+                    allowOutsideClick: false,
                     background: '#0f0f1a',
                     color: '#fff',
-                    allowOutsideClick: false,
                     showClass: { popup: 'animate__animated animate__zoomIn' }
+                }).then(() => {
+                    // এটি আপনাকে নিশ্চিতভাবে আপনার মেইন পেইজে নিয়ে যাবে
+                    window.location.assign('index.html');
                 });
-
-                // ৩ সেকেন্ড পর অটোমেটিক রিডাইরেক্ট
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 3000);
 
             } catch(e) {
                 Swal.fire('Error', e.message, 'error');
