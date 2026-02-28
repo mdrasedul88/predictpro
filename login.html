@@ -16,15 +16,14 @@
         @keyframes slideUp { to { transform: translateY(0); opacity: 1; } }
         .auth-box h2 { color: #00ff88; text-align: center; margin-bottom: 20px; font-weight: 600; }
         .auth-box input { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; outline: none; }
-        .auth-box input:focus { border-color: #00ff88; }
         
-        /* ফোন ইনপুট গ্রুপ */
         .phone-input-group { display: flex; align-items: center; background: #0f172a; border: 1px solid #334155; border-radius: 8px; margin: 10px 0; padding-left: 12px; }
         .dial-code-prefix { color: #00ff88; font-weight: bold; font-size: 0.95rem; }
         .phone-input-group input { border: none !important; margin: 0 !important; }
 
-        .btn-auth { background: #00ff88; color: #020617; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
-        .btn-auth:hover { background: #00e67a; transform: translateY(-2px); }
+        .btn-auth { background: #00ff88; color: #020617; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3; }
+        .btn-auth:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; }
+        
         .toggle-link { text-align: center; margin-top: 20px; font-size: 0.9rem; color: #94a3b8; }
         .toggle-link a { color: #00ff88; text-decoration: none; font-weight: bold; cursor: pointer; }
         
@@ -49,7 +48,7 @@
 
         <div id="signup-section" class="auth-box" style="display: none;">
             <h2>Create Account</h2>
-            <p id="ip-info" style="font-size: 0.7rem; color: #00ff88; text-align: center; margin-bottom: 8px;"></p>
+            <p id="ip-info" style="font-size: 0.7rem; color: #00ff88; text-align: center; margin-bottom: 8px;">Connecting to network...</p>
             <input type="text" id="sup-name" placeholder="Full Name">
             <div class="phone-input-group">
                 <span id="display-dial-code" class="dial-code-prefix">+880</span>
@@ -58,7 +57,7 @@
             <input type="email" id="sup-email" placeholder="Email Address">
             <input type="password" id="sup-pass" placeholder="Password">
             <input type="password" id="sup-confirm" placeholder="Confirm Password">
-            <button class="btn-auth" id="reg-btn" onclick="handleSignup()">Register</button>
+            <button class="btn-auth" id="reg-btn" disabled onclick="handleSignup()">Wait for Network...</button>
             <p class="toggle-link">Already have an account? <a onclick="showLogin()">Login</a></p>
         </div>
         <p id="error-msg" style="color: #ff4d4d; text-align: center; margin-top: 15px; font-size: 0.85rem; min-height: 20px;"></p>
@@ -72,25 +71,39 @@
 
     let globalGeo = { country: "BD", dial: "+880", ip: "" };
 
-    async function fetchGeoData() {
-        try {
-            // আইপি ডিটেকশন
-            const ipRes = await fetch('https://api.ipify.org?format=json');
-            const ipJson = await ipRes.json();
-            globalGeo.ip = ipJson.ip;
-
-            const locRes = await fetch(`https://ipapi.co/${ipJson.ip}/json/`);
-            const locData = await locRes.json();
-            
-            globalGeo.country = locData.country_code || "BD";
-            globalGeo.dial = locData.country_calling_code || "+880";
-            
-            document.getElementById('display-dial-code').innerText = globalGeo.dial;
-            document.getElementById('ip-info').innerText = `Network Verified: ${globalGeo.ip}`;
-        } catch(e) {
-            globalGeo.ip = "Unknown";
-            document.getElementById('ip-info').innerText = "Location: Default (BD)";
+    // ১. অত্যন্ত শক্তিশালী আইপি ডিটেকশন (Retry Logic সহ)
+    async function fetchGeoData(retries = 3) {
+        const infoEl = document.getElementById('ip-info');
+        const regBtn = document.getElementById('reg-btn');
+        
+        for(let i = 0; i < retries; i++) {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                if(data.ip) {
+                    globalGeo.ip = data.ip;
+                    
+                    // লোকেশন ডাটা আনা
+                    const locRes = await fetch(`https://ipapi.co/${data.ip}/json/`);
+                    const locData = await locRes.json();
+                    
+                    globalGeo.country = locData.country_code || "BD";
+                    globalGeo.dial = locData.country_calling_code || "+880";
+                    
+                    document.getElementById('display-dial-code').innerText = globalGeo.dial;
+                    infoEl.innerText = `Verified IP: ${globalGeo.ip}`;
+                    regBtn.disabled = false;
+                    regBtn.innerText = "Register";
+                    return;
+                }
+            } catch(e) { console.log(`Retry ${i+1} failed...`); }
         }
+        
+        // সব চেষ্টা ব্যর্থ হলে অন্তত একটি স্ট্যাটিক আইপি দেখাবে (যাতে Unknown না যায়)
+        globalGeo.ip = "Manual-Check-Required";
+        regBtn.disabled = false;
+        regBtn.innerText = "Register";
+        infoEl.innerText = "Network: Limited Access";
     }
 
     async function init() {
@@ -107,16 +120,18 @@
         const errorEl = document.getElementById('error-msg');
         const regBtn = document.getElementById('reg-btn');
         
+        // আইপি চেক পুনরায় নিশ্চিত করা
+        if(!globalGeo.ip || globalGeo.ip === "Unknown") {
+            errorEl.innerText = "Security Check: Please refresh the page.";
+            return;
+        }
+
         const name = document.getElementById('sup-name').value;
         const rawPhone = document.getElementById('sup-phone').value;
         const email = document.getElementById('sup-email').value;
         const pass = document.getElementById('sup-pass').value;
-        const confirm = document.getElementById('sup-confirm').value;
 
-        if(!name || !rawPhone || !email || !pass) { errorEl.innerText = "Please fill all fields"; return; }
-        if(pass !== confirm) { errorEl.innerText = "Passwords do not match"; return; }
-
-        regBtn.innerText = "Processing...";
+        regBtn.innerText = "Creating Account...";
         regBtn.disabled = true;
 
         const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password: pass });
@@ -126,7 +141,6 @@
             regBtn.innerText = "Register";
             regBtn.disabled = false;
         } else if(authData.user) {
-            // Upsert লজিক ডুপ্লিকেট এরর এড়াতে
             const { error: profileError } = await _supabase.from('profiles').upsert([{
                 id: authData.user.id,
                 full_name: name,
@@ -134,32 +148,27 @@
                 email: email,
                 country_code: globalGeo.country,
                 dial_code: globalGeo.dial, 
-                registration_ip: globalGeo.ip || "Unknown", 
+                registration_ip: globalGeo.ip, 
                 currency: (globalGeo.country === 'BD' ? 'BDT' : 'USD')
             }], { onConflict: 'id' });
 
             if(profileError) {
-                errorEl.innerText = "Profile Sync Failed: " + profileError.message;
+                errorEl.innerText = "Profile Error: " + profileError.message;
                 regBtn.disabled = false;
             } else {
-                // প্রিমিয়াম সাকসেস পপ-আপ
                 Swal.fire({
                     title: 'Registration Successful!',
-                    text: 'Your pro account is ready.',
+                    text: 'Your profile has been secured.',
                     icon: 'success',
                     background: '#1e293b',
                     color: '#fff',
-                    confirmButtonColor: '#00ff88',
-                    confirmButtonText: 'Go to Dashboard',
-                    showClass: { popup: 'animate__animated animate__fadeInDown' },
-                    hideClass: { popup: 'animate__animated animate__fadeOutUp' }
-                }).then(() => {
-                    window.location.href = 'index.html';
-                });
+                    confirmButtonColor: '#00ff88'
+                }).then(() => { window.location.href = 'index.html'; });
             }
         }
     }
 
+    // Login function remains same
     async function handleLogin() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-password').value;
