@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIP Access - Pro Sports</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap');
@@ -12,8 +13,8 @@
         :root { 
             --premium-purple: #7b61ff; 
             --bg-dark: #050505; 
-            --card-glass: rgba(255, 255, 255, 0.05);
-            --glow: rgba(123, 97, 255, 0.3);
+            --card-glass: rgba(255, 255, 255, 0.03);
+            --glow: rgba(123, 97, 255, 0.4);
         }
 
         body { 
@@ -22,123 +23,107 @@
             color: white; 
             font-family: 'Poppins', sans-serif; 
             margin: 0; 
-            padding: 10px; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             min-height: 100vh; 
-            padding-top: 90px;
+            padding: 90px 15px 30px;
         }
 
-        /* Fixed Navigation Bar - আপনার পছন্দমতো */
         .navbar { 
             position: fixed; top: 0; left: 0; width: 100%; 
-            background: rgba(0, 0, 0, 0.6); 
-            backdrop-filter: blur(15px); 
+            background: rgba(0, 0, 0, 0.7); 
+            backdrop-filter: blur(20px); 
             border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
             padding: 15px 0; z-index: 1001; text-align: center; 
         }
-        .navbar h1 { color: #fff; font-size: 1.1rem; margin: 0; font-weight: 800; letter-spacing: 1px; }
-        .navbar p { color: #aaa; font-size: 0.65rem; margin: 2px 0 0 0; }
+        .navbar h1 { font-size: 1.2rem; margin: 0; font-weight: 800; color: var(--premium-purple); text-shadow: 0 0 10px var(--glow); }
+        .navbar p { color: #888; font-size: 0.65rem; margin-top: 3px; }
 
-        /* ছবির মতো ২-কলাম গ্রিড */
         .plan-grid { 
             display: grid; 
             grid-template-columns: repeat(2, 1fr); 
             gap: 15px; 
             width: 100%; 
-            max-width: 380px; 
+            max-width: 400px; 
         }
         
-        /* কার্ড ডিজাইন - হুবহু ছবির (25648.png) মতো */
         .plan-card { 
             background: var(--card-glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.08); 
             border-radius: 24px; 
-            padding: 18px 12px; 
-            text-align: left; /* ছবির মতো টেক্সট বামে */
+            padding: 20px 15px; 
             position: relative;
-            transition: 0.4s;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .plan-card:hover {
             border-color: var(--premium-purple);
-            box-shadow: 0 0 20px var(--glow);
-            transform: translateY(-5px);
+            background: rgba(123, 97, 255, 0.05);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
         }
 
-        /* Premium Icon/Star */
-        .card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-        .card-header i { color: var(--premium-purple); font-size: 1rem; }
-        .card-header span { font-size: 0.65rem; font-weight: 600; color: #ccc; letter-spacing: 2px; text-transform: uppercase; }
+        .card-header { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+        .card-header i { color: var(--premium-purple); font-size: 0.8rem; }
+        .card-header span { font-size: 0.6rem; font-weight: 600; color: #888; letter-spacing: 1.5px; }
 
-        .unlock-text { font-size: 0.7rem; color: #999; margin-bottom: 5px; }
+        .price-box { margin-bottom: 15px; }
+        .price-box .amount { font-size: 1.8rem; font-weight: 800; color: #fff; display: block; }
+        .price-box .sub { font-size: 0.7rem; color: #666; }
         
-        .price-box { margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
-        .price-box .amount { font-size: 1.6rem; font-weight: 800; color: #fff; }
-        .price-box .sub { font-size: 0.7rem; color: #888; }
-        
-        /* ছবির মতো বাটন */
         .buy-btn { 
-            background: var(--premium-purple); 
-            color: #fff; 
-            border: none; 
-            width: 100%; 
-            padding: 10px; 
-            border-radius: 12px; 
-            font-weight: 700; 
-            cursor: pointer; 
-            margin-bottom: 15px;
-            font-size: 0.65rem; 
-            text-transform: uppercase; 
-            box-shadow: 0 4px 15px var(--glow);
+            background: linear-gradient(135deg, var(--premium-purple), #5a41e6);
+            color: #fff; border: none; width: 100%; padding: 12px; border-radius: 14px; 
+            font-weight: 700; cursor: pointer; margin-bottom: 15px; font-size: 0.7rem; 
+            text-transform: uppercase; transition: 0.3s;
         }
 
-        /* ফিচার লিস্ট ছবির মতো আইকন দিয়ে */
-        .feature-list { display: flex; flex-direction: column; gap: 8px; }
-        .feature-item { font-size: 0.65rem; color: #ddd; display: flex; align-items: center; gap: 8px; }
-        .feature-item i { color: var(--premium-purple); font-size: 0.75rem; width: 14px; }
-        .feature-item i.fa-check-circle { opacity: 0.8; }
-        .feature-item.orange i { color: #ff8c42; } /* Match notification color */
+        .buy-btn:active { transform: scale(0.95); }
 
-        /* Modal Styles */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
-        .modal-content { background: #111; width: 100%; max-width: 320px; padding: 25px; border-radius: 25px; border: 1px solid var(--premium-purple); position: relative; }
-        .close-btn { position: absolute; top: 15px; right: 20px; color: #fff; font-size: 1.5rem; cursor: pointer; }
-        .input-group { margin-bottom: 15px; }
-        .input-group label { font-size: 0.7rem; color: #888; display: block; margin-bottom: 5px; }
-        .input-group input, .input-group select { width: 100%; padding: 12px; background: #000; border: 1px solid #334155; border-radius: 10px; color: white; box-sizing: border-box; }
+        .feature-item { font-size: 0.65rem; color: #aaa; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .feature-item i { color: var(--premium-purple); font-size: 0.7rem; }
+
+        /* Modal Glassmorphism */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { 
+            background: #0f0f15; width: 85%; max-width: 340px; padding: 30px; border-radius: 28px; 
+            border: 1px solid rgba(123, 97, 255, 0.3); box-shadow: 0 0 40px rgba(0,0,0,0.8);
+        }
+        .input-group label { font-size: 0.75rem; color: #aaa; margin-bottom: 6px; display: block; }
+        .input-group input, .input-group select { 
+            width: 100%; padding: 14px; background: #050505; border: 1px solid #222; 
+            border-radius: 12px; color: white; margin-bottom: 15px; font-family: inherit;
+        }
     </style>
 </head>
 <body>
 
     <div class="navbar">
-        <h1>👑 VIP MEMBERSHIP</h1>
-        <p>Send payment and paste TrxID to activate access</p>
+        <h1>👑 VIP PREDICTIONS</h1>
+        <p id="geo-status">Detecting your region...</p>
     </div>
 
-    <div id="plan-list" class="plan-grid">Loading plans...</div>
+    <div id="plan-list" class="plan-grid"></div>
 
     <div id="pModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal()">&times;</span>
-            <h3 style="margin-top:0">Secure Activation</h3>
-            <div id="adminInfo" style="background: rgba(123, 97, 255, 0.1); padding: 10px; border-radius: 10px; font-size: 0.75rem; margin-bottom: 15px; border-left: 3px solid var(--premium-purple);"></div>
+            <h3 style="margin:0 0 15px; text-align:center">Final Step</h3>
+            <div id="adminInfo" style="background: rgba(123, 97, 255, 0.08); padding: 15px; border-radius: 15px; font-size: 0.8rem; margin-bottom: 20px; border: 1px dashed var(--premium-purple); text-align:center;"></div>
+            
             <div class="input-group">
-                <label>Payment Method</label>
+                <label>Choose Method</label>
                 <select id="mth" onchange="updateUI()"></select>
             </div>
             <div class="input-group">
-                <label>Your Number</label>
-                <input type="text" id="mInfo" placeholder="017XXXXXXXX">
+                <input type="text" id="mInfo" placeholder="Your Phone/Wallet Number">
             </div>
             <div class="input-group">
-                <label>Transaction ID</label>
-                <input type="text" id="trxId" placeholder="Paste TrxID">
+                <input type="text" id="trxId" placeholder="Transaction ID (TrxID)">
             </div>
-            <button class="buy-btn" onclick="submitOrder()">ACTIVATE ACCESS</button>
+            <button class="buy-btn" onclick="submitOrder()">ACTIVATE NOW</button>
+            <button style="background:none; border:none; color:#555; width:100%; font-size:0.7rem; cursor:pointer" onclick="closeModal()">Cancel</button>
         </div>
     </div>
 
@@ -147,7 +132,7 @@
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-        const MY_PAYMENT = {
+        const ADMIN_WALLETS = {
             bKash: "017XXXXXXXX (Personal)",
             Nagad: "018XXXXXXXX (Personal)",
             USDT: "T9zBxxxxxxxxxxxxxxxxx (TRC20)"
@@ -155,92 +140,85 @@
 
         let selectedPlan = {};
         let isLocal = true;
+        let userEmail = "guest@user.com";
 
-        async function detectUser() {
+        // ১. ইউজার প্রোফাইল ও দেশ শনাক্তকরণ লজিক
+        async function initPage() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            if (session) userEmail = session.user.email;
+
             try {
                 const res = await fetch('https://ipapi.co/json/');
                 const data = await res.json();
                 isLocal = (data.country_code === 'BD');
+                document.getElementById('geo-status').innerText = isLocal ? "Region: Bangladesh (৳)" : "Region: International ($)";
             } catch(e) { isLocal = true; }
+            
             loadPlans();
         }
 
         async function loadPlans() {
-            const { data: plans, error } = await _supabase
-                .from('subscription_plans')
-                .select('*')
-                .eq('is_active', true)
-                .order('duration_days', { ascending: true });
-
+            const { data: plans, error } = await _supabase.from('subscription_plans').select('*').eq('is_active', true);
             if (error) return;
 
-            const list = document.getElementById('plan-list');
-            list.innerHTML = plans.map(p => {
+            document.getElementById('plan-list').innerHTML = plans.map(p => {
                 const symbol = isLocal ? '৳' : '$';
                 const price = isLocal ? p.price_bdt : p.price_usd;
-
                 return `
                     <div class="plan-card">
-                        <div class="card-header">
-                            <i class="fas fa-star"></i>
-                            <span>PREMIUM</span>
-                        </div>
-                        <div class="unlock-text">Unlock Full Access</div>
+                        <div class="card-header"><i class="fas fa-crown"></i><span>VIP PLAN</span></div>
                         <div class="price-box">
                             <span class="amount">${symbol}${price}</span>
-                            <span class="sub">/ ${p.duration_days} days</span>
+                            <span class="sub">${p.duration_days} Days Access</span>
                         </div>
-                        
-                        <button class="buy-btn" onclick="openModal('${p.plan_name}', ${p.duration_days}, '${symbol}${price}')">GET ACCESS</button>
-
-                        <div class="feature-list">
-                            <div class="feature-item"><i class="far fa-check-circle"></i> All predictions</div>
-                            <div class="feature-item"><i class="far fa-check-circle"></i> Daily signals</div>
-                            <div class="feature-item"><i class="far fa-check-circle"></i> 95% Accuracy</div>
-                            <div class="feature-item orange"><i class="fas fa-check"></i> Match alerts</div>
-                        </div>
+                        <button class="buy-btn" onclick="openModal('${p.plan_name}', ${p.duration_days}, '${symbol}${price}')">GET VIP</button>
+                        <div class="feature-item"><i class="fas fa-bolt"></i> Instant Tips</div>
+                        <div class="feature-item"><i class="fas fa-shield-alt"></i> Safe Win</div>
                     </div>`;
             }).join('');
         }
 
         function openModal(name, days, price) {
             selectedPlan = { name, days, price };
-            const mthSelect = document.getElementById('mth');
-            mthSelect.innerHTML = isLocal ? `<option value="bKash">bKash</option><option value="Nagad">Nagad</option>` : `<option value="USDT">USDT (TRC20)</option>`;
+            const mth = document.getElementById('mth');
+            mth.innerHTML = isLocal ? `<option value="bKash">bKash</option><option value="Nagad">Nagad</option>` : `<option value="USDT">USDT (TRC20)</option>`;
             updateUI();
             document.getElementById('pModal').style.display = 'flex';
         }
 
         function updateUI() {
             const method = document.getElementById('mth').value;
-            document.getElementById('adminInfo').innerHTML = `Send <b>${selectedPlan.price}</b> to:<br><b>${MY_PAYMENT[method]}</b>`;
+            document.getElementById('adminInfo').innerHTML = `Send <b>${selectedPlan.price}</b> to:<br><span style="color:var(--premium-purple); font-size:0.9rem">${ADMIN_WALLETS[method]}</span>`;
         }
 
         function closeModal() { document.getElementById('pModal').style.display = 'none'; }
 
         async function submitOrder() {
-            const userContact = document.getElementById('mInfo').value;
-            const userTrx = document.getElementById('trxId').value;
-            const btn = document.querySelector('#pModal .buy-btn');
+            const contact = document.getElementById('mInfo').value;
+            const trx = document.getElementById('trxId').value;
+            if(!contact || !trx) { Swal.fire('Error', 'Please fill all details', 'error'); return; }
 
-            if(!userContact || !userTrx) { alert("Please fill all info!"); return; }
-            btn.innerText = "SENDING..."; btn.disabled = true;
+            const { error } = await _supabase.from('payment_requests').insert([{
+                user_email: userEmail,
+                mobile: contact,
+                plan_name: selectedPlan.name,
+                duration: selectedPlan.days,
+                amount: selectedPlan.price,
+                payment_method: document.getElementById('mth').value,
+                currency: isLocal ? 'BDT' : 'USDT',
+                transaction_id: trx,
+                status: 'pending'
+            }]);
 
-            try {
-                const { error } = await _supabase.from('payment_requests').insert([{
-                    user_email: "guest@user.com", mobile: userContact, plan_name: selectedPlan.name,
-                    duration: parseInt(selectedPlan.days), amount: selectedPlan.price,
-                    payment_method: document.getElementById('mth').value, currency: isLocal ? 'BDT' : 'USDT',
-                    transaction_id: String(userTrx), status: 'pending'
-                }]);
-
-                if(!error) { alert("✅ Success! Wait for activation."); location.reload(); }
-                else throw error;
-            } catch (err) { alert("Error: " + err.message); }
-            finally { btn.innerText = "ACTIVATE ACCESS"; btn.disabled = false; }
+            if(!error) {
+                Swal.fire('Success', 'Payment submitted! Access will be active shortly.', 'success')
+                .then(() => location.reload());
+            } else {
+                Swal.fire('Error', error.message, 'error');
+            }
         }
 
-        detectUser();
+        initPage();
     </script>
 </body>
 </html>
