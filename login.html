@@ -4,26 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login & Register | Sports Pro</title>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; font-family: sans-serif; }
+        body { background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif; }
         #main-wrapper { opacity: 0; visibility: hidden; width: 100%; display: flex; justify-content: center; }
         #main-wrapper.visible { opacity: 1; visibility: visible; transition: opacity 0.5s ease; }
-        .auth-container { background: #1e293b; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #334155; }
+        .auth-container { background: #1e293b; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .slide-up-anim { transform: translateY(30px); opacity: 0; }
         .visible .slide-up-anim { animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
         @keyframes slideUp { to { transform: translateY(0); opacity: 1; } }
-        .auth-box h2 { color: #00ff88; text-align: center; margin-bottom: 20px; }
-        .auth-box input { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; }
+        .auth-box h2 { color: #00ff88; text-align: center; margin-bottom: 20px; font-weight: 600; }
+        .auth-box input { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; outline: none; }
+        .auth-box input:focus { border-color: #00ff88; }
         
-        .phone-input-group { position: relative; display: flex; align-items: center; background: #0f172a; border: 1px solid #334155; border-radius: 8px; margin: 10px 0; }
-        .dial-code-prefix { padding-left: 12px; color: #00ff88; font-weight: bold; font-size: 0.9rem; pointer-events: none; }
-        .phone-input-group input { border: none !important; margin: 0 !important; flex-grow: 1; }
+        /* ফোন ইনপুট গ্রুপ */
+        .phone-input-group { display: flex; align-items: center; background: #0f172a; border: 1px solid #334155; border-radius: 8px; margin: 10px 0; padding-left: 12px; }
+        .dial-code-prefix { color: #00ff88; font-weight: bold; font-size: 0.95rem; }
+        .phone-input-group input { border: none !important; margin: 0 !important; }
 
-        .btn-auth { background: #00ff88; color: #020617; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .toggle-link { text-align: center; margin-top: 15px; font-size: 0.9rem; color: #94a3b8; }
+        .btn-auth { background: #00ff88; color: #020617; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
+        .btn-auth:hover { background: #00e67a; transform: translateY(-2px); }
+        .toggle-link { text-align: center; margin-top: 20px; font-size: 0.9rem; color: #94a3b8; }
         .toggle-link a { color: #00ff88; text-decoration: none; font-weight: bold; cursor: pointer; }
+        
         #app-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; justify-content: center; align-items: center; }
         .loader-dot { width: 12px; height: 12px; background: #00ff88; border-radius: 50%; animation: pulse 1s infinite alternate; }
         @keyframes pulse { from { opacity: 0.5; transform: scale(0.8); } to { opacity: 1; transform: scale(1.2); } }
@@ -45,21 +49,19 @@
 
         <div id="signup-section" class="auth-box" style="display: none;">
             <h2>Create Account</h2>
-            <p id="ip-info" style="font-size: 0.7rem; color: #00ff88; text-align: center; margin-bottom: 5px;"></p>
+            <p id="ip-info" style="font-size: 0.7rem; color: #00ff88; text-align: center; margin-bottom: 8px;"></p>
             <input type="text" id="sup-name" placeholder="Full Name">
-            
             <div class="phone-input-group">
                 <span id="display-dial-code" class="dial-code-prefix">+880</span>
                 <input type="tel" id="sup-phone" placeholder="Mobile Number">
             </div>
-
             <input type="email" id="sup-email" placeholder="Email Address">
             <input type="password" id="sup-pass" placeholder="Password">
             <input type="password" id="sup-confirm" placeholder="Confirm Password">
-            <button class="btn-auth" onclick="handleSignup()">Register</button>
+            <button class="btn-auth" id="reg-btn" onclick="handleSignup()">Register</button>
             <p class="toggle-link">Already have an account? <a onclick="showLogin()">Login</a></p>
         </div>
-        <p id="error-msg" style="color: #ff4d4d; text-align: center; margin-top: 10px; font-size: 0.85rem;"></p>
+        <p id="error-msg" style="color: #ff4d4d; text-align: center; margin-top: 15px; font-size: 0.85rem; min-height: 20px;"></p>
     </div>
 </div>
 
@@ -68,27 +70,26 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let globalGeo = { country: "BD", dial: "+880", ip: "Fetching..." };
+    let globalGeo = { country: "BD", dial: "+880", ip: "" };
 
-    // ১. উন্নত আইপি ডিটেকশন লজিক
     async function fetchGeoData() {
         try {
-            // আরও নির্ভুল আইপি সার্ভিসের ব্যবহার
-            const res = await fetch('https://api.ipify.org?format=json');
-            const ipData = await res.json();
-            globalGeo.ip = ipData.ip;
+            // আইপি ডিটেকশন
+            const ipRes = await fetch('https://api.ipify.org?format=json');
+            const ipJson = await ipRes.json();
+            globalGeo.ip = ipJson.ip;
 
-            const resLoc = await fetch(`https://ipapi.co/${ipData.ip}/json/`);
-            const locData = await resLoc.json();
+            const locRes = await fetch(`https://ipapi.co/${ipJson.ip}/json/`);
+            const locData = await locRes.json();
             
             globalGeo.country = locData.country_code || "BD";
             globalGeo.dial = locData.country_calling_code || "+880";
             
             document.getElementById('display-dial-code').innerText = globalGeo.dial;
-            document.getElementById('ip-info').innerText = `Location: ${locData.country_name} (${globalGeo.ip})`;
+            document.getElementById('ip-info').innerText = `Network Verified: ${globalGeo.ip}`;
         } catch(e) {
-            console.log("Geo error, using default");
-            document.getElementById('ip-info').innerText = "Location: Bangladesh (Default)";
+            globalGeo.ip = "Unknown";
+            document.getElementById('ip-info').innerText = "Location: Default (BD)";
         }
     }
 
@@ -103,50 +104,62 @@
     }
 
     async function handleSignup() {
+        const errorEl = document.getElementById('error-msg');
+        const regBtn = document.getElementById('reg-btn');
+        
         const name = document.getElementById('sup-name').value;
         const rawPhone = document.getElementById('sup-phone').value;
-        const fullPhone = globalGeo.dial + rawPhone;
         const email = document.getElementById('sup-email').value;
         const pass = document.getElementById('sup-pass').value;
         const confirm = document.getElementById('sup-confirm').value;
-        const errorEl = document.getElementById('error-msg');
 
+        if(!name || !rawPhone || !email || !pass) { errorEl.innerText = "Please fill all fields"; return; }
         if(pass !== confirm) { errorEl.innerText = "Passwords do not match"; return; }
-        if(!rawPhone) { errorEl.innerText = "Phone number is required"; return; }
+
+        regBtn.innerText = "Processing...";
+        regBtn.disabled = true;
 
         const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password: pass });
 
         if(authError) {
             errorEl.innerText = authError.message;
+            regBtn.innerText = "Register";
+            regBtn.disabled = false;
         } else if(authData.user) {
-            // ডুপ্লিকেট কনফ্লিক্ট এড়াতে upsert ব্যবহার
+            // Upsert লজিক ডুপ্লিকেট এরর এড়াতে
             const { error: profileError } = await _supabase.from('profiles').upsert([{
                 id: authData.user.id,
                 full_name: name,
-                phone_number: fullPhone,
+                phone_number: globalGeo.dial + rawPhone,
                 email: email,
                 country_code: globalGeo.country,
                 dial_code: globalGeo.dial, 
-                registration_ip: globalGeo.ip, // আসল আইপি এখন সেভ হবে
+                registration_ip: globalGeo.ip || "Unknown", 
                 currency: (globalGeo.country === 'BD' ? 'BDT' : 'USD')
             }], { onConflict: 'id' });
 
-            if(profileError) errorEl.innerText = "Database Error: " + profileError.message;
-            else {
-                alert("Account Created Successfully!");
-                window.location.href = 'index.html';
+            if(profileError) {
+                errorEl.innerText = "Profile Sync Failed: " + profileError.message;
+                regBtn.disabled = false;
+            } else {
+                // প্রিমিয়াম সাকসেস পপ-আপ
+                Swal.fire({
+                    title: 'Registration Successful!',
+                    text: 'Your pro account is ready.',
+                    icon: 'success',
+                    background: '#1e293b',
+                    color: '#fff',
+                    confirmButtonColor: '#00ff88',
+                    confirmButtonText: 'Go to Dashboard',
+                    showClass: { popup: 'animate__animated animate__fadeInDown' },
+                    hideClass: { popup: 'animate__animated animate__fadeOutUp' }
+                }).then(() => {
+                    window.location.href = 'index.html';
+                });
             }
         }
     }
 
-    function showSignup() { 
-        document.getElementById('login-section').style.display = 'none'; 
-        document.getElementById('signup-section').style.display = 'block'; 
-        document.getElementById('display-dial-code').innerText = globalGeo.dial;
-    }
-    
-    function showLogin() { document.getElementById('signup-section').style.display = 'none'; document.getElementById('login-section').style.display = 'block'; }
-    
     async function handleLogin() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-password').value;
@@ -154,6 +167,9 @@
         if(error) document.getElementById('error-msg').innerText = error.message;
         else window.location.href = 'index.html';
     }
+
+    function showSignup() { document.getElementById('login-section').style.display = 'none'; document.getElementById('signup-section').style.display = 'block'; }
+    function showLogin() { document.getElementById('signup-section').style.display = 'none'; document.getElementById('login-section').style.display = 'block'; }
 
     init();
 </script>
