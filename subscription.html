@@ -15,7 +15,6 @@
             --p-purple: #7b61ff; 
             --a-cyan: #00f2ff; 
             --bg: #050508; 
-            --card-glass: rgba(255, 255, 255, 0.03);
             --vip-gold: #ffcc00;
         }
 
@@ -23,82 +22,79 @@
             background: var(--bg); 
             background-image: radial-gradient(circle at 50% -20%, #1a103d 0%, #050508 100%); 
             color: #fff; 
-            font-family: 'Poppins', sans-serif; 
+            font-family: 'Poppins', sans-serif; /* আপনার সাইটের ডিফল্ট ফন্ট */
             margin: 0; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             min-height: 100vh; 
-            padding: 100px 20px; 
+            padding: 80px 0; /* ডানে-বামে প্যাডিং সরিয়ে দেওয়া হয়েছে */
         }
 
-        /* --- Premium Card Styling Starts --- */
+        /* --- Narrow Premium Cards --- */
         #plan-list { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
-            gap: 20px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px; 
             width: 100%; 
-            max-width: 450px; 
         }
 
         .premium-card {
             background: linear-gradient(145deg, rgba(20, 20, 30, 0.8), rgba(5, 5, 8, 0.9));
             border-radius: 25px;
-            padding: 25px 15px;
+            padding: 25px 20px;
             position: relative;
             border: 1px solid rgba(123, 97, 255, 0.2);
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: 0.4s;
             overflow: hidden;
             text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            /* ডানে-বামে মার্জিন বাড়িয়ে কার্ড ছোট করা হয়েছে */
+            width: 80%; 
+            max-width: 320px; 
+            box-sizing: border-box;
         }
 
         .premium-card:hover {
-            transform: translateY(-10px);
+            transform: scale(1.02);
             border-color: var(--a-cyan);
-            box-shadow: 0 15px 30px rgba(0, 242, 255, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 242, 255, 0.15);
         }
 
-        /* VIP Badge like the images */
         .vip-badge {
             position: absolute;
-            top: 15px;
-            right: -25px;
+            top: 12px;
+            right: -28px;
             background: var(--vip-gold);
             color: #000;
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             font-weight: 800;
-            padding: 3px 30px;
+            padding: 4px 30px;
             transform: rotate(45deg);
             font-family: 'Orbitron';
-            box-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
         }
 
         .plan-icon {
             font-size: 1.8rem;
-            margin-bottom: 10px;
-            background: linear-gradient(to bottom, #fff, var(--p-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            color: var(--p-purple);
         }
 
         .plan-name {
             font-family: 'Orbitron';
-            font-size: 0.8rem;
-            color: #aaa;
+            font-size: 0.75rem;
+            color: #ccc;
             letter-spacing: 1.5px;
-            margin: 5px 0;
             text-transform: uppercase;
         }
 
         .plan-price {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: 700;
             margin: 10px 0;
-            color: #fff;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            background: linear-gradient(to right, #fff, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .plan-features {
@@ -106,15 +102,16 @@
             padding: 0;
             margin: 15px 0;
             text-align: left;
-            font-size: 0.7rem;
-            color: #888;
+            display: inline-block; /* ফিচারের লেখাগুলো মাঝখানে রাখার জন্য */
         }
 
         .plan-features li {
-            margin: 6px 0;
+            font-size: 0.7rem;
+            color: #999;
+            margin: 5px 0;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .plan-features li i {
@@ -126,35 +123,30 @@
             background: linear-gradient(90deg, var(--p-purple), var(--a-cyan));
             color: #000;
             border: none;
-            padding: 12px;
-            border-radius: 12px;
+            padding: 14px;
+            border-radius: 15px;
             font-weight: 800;
             font-family: 'Orbitron';
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             cursor: pointer;
-            transition: 0.3s;
             width: 100%;
+            margin-top: 10px;
             text-transform: uppercase;
         }
 
-        .btn-premium:hover {
-            box-shadow: 0 0 20px rgba(123, 97, 255, 0.5);
-            letter-spacing: 1px;
-        }
-        /* --- Premium Card Styling Ends --- */
-
+        /* Modal & Inputs */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: linear-gradient(145deg, #0f0f1a, #050508); width: 95%; max-width: 380px; padding: 35px 25px; border-radius: 30px; border: 1px solid rgba(123,97,255,0.2); text-align: center; }
+        .modal-content { background: linear-gradient(145deg, #0f0f1a, #050508); width: 90%; max-width: 380px; padding: 35px 25px; border-radius: 30px; border: 1px solid rgba(123,97,255,0.2); text-align: center; }
         .info-box { background: rgba(123,97,255,0.05); padding: 20px; border-radius: 20px; border: 1px dashed var(--p-purple); margin-bottom: 25px; }
-        .input-wrapper { position: relative; margin-bottom: 20px; text-align: left; }
+        .input-wrapper { position: relative; margin-bottom: 15px; text-align: left; }
         .input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--p-purple); }
-        .input-wrapper input, .input-wrapper select { width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: #fff; outline: none; box-sizing: border-box; }
-        .btn-activate { background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: 800; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; }
+        .input-wrapper input, .input-wrapper select { width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: #fff; outline: none; box-sizing: border-box; font-family: 'Poppins'; }
+        .btn-activate { background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: 800; font-family: 'Orbitron'; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h2 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:40px; text-align:center; font-size:1.2rem;">SELECT YOUR ACCESS</h2>
+    <h2 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:30px; letter-spacing:2px; font-size:1rem;">SELECT YOUR ACCESS</h2>
     
     <div id="plan-list"></div>
 
@@ -168,7 +160,6 @@
             <div class="input-wrapper"><i class="fas fa-wallet"></i><select id="mth" onchange="updateUI()"></select></div>
             <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Sender Wallet/Phone"></div>
             <div class="input-wrapper"><i class="fas fa-receipt"></i><input type="text" id="trxId" placeholder="Transaction ID (TrxID)"></div>
-            
             <button class="btn-activate" id="sub-btn" onclick="finalOrderSubmit()">SUBMIT REQUEST</button>
             <p style="font-size:0.6rem; color:#444; margin-top:15px;">Secure Encryption Enabled</p>
         </div>
@@ -196,21 +187,17 @@
 
         async function loadPlans() {
             const { data } = await _supabase.from('subscription_plans').select('*').eq('is_active', true);
-            
-            // ছবিতে থাকা কার্ডের মতো প্রিমিয়াম স্ট্রাকচার
             document.getElementById('plan-list').innerHTML = data.map(p => `
-                <div class="premium-card animate__animated animate__fadeIn">
+                <div class="premium-card animate__animated animate__fadeInUp">
                     <div class="vip-badge">VIP</div>
-                    <div class="plan-icon"><i class="fas fa-gem"></i></div>
+                    <div class="plan-icon"><i class="fas fa-crown"></i></div>
                     <div class="plan-name">${p.plan_name}</div>
                     <div class="plan-price">${isLocal ? '৳'+p.price_bdt : '$'+p.price_usd}</div>
-                    
                     <ul class="plan-features">
-                        <li><i class="fas fa-check-circle"></i> VIP Match Tips</li>
-                        <li><i class="fas fa-check-circle"></i> 24/7 Support</li>
-                        <li><i class="fas fa-check-circle"></i> Live Predictions</li>
+                        <li><i class="fas fa-check"></i> VIP Match Tips</li>
+                        <li><i class="fas fa-check"></i> 24/7 Priority Support</li>
+                        <li><i class="fas fa-check"></i> High Accuracy Rates</li>
                     </ul>
-
                     <button class="btn-premium" onclick="checkAccess(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">
                         ACTIVATE VIP
                     </button>
@@ -219,7 +206,7 @@
 
         function checkAccess(usd, bdt, name, days) {
             if(!currentUser) {
-                Swal.fire({ title: 'Login First', text: 'দয়া করে আগে লগইন করুন।', icon: 'info', confirmButtonColor: '#7b61ff' })
+                Swal.fire({ title: 'Login Required', text: 'দয়া করে আগে লগইন করুন।', icon: 'info', confirmButtonColor: '#7b61ff' })
                 .then(() => window.location.href = 'login.html');
                 return;
             }
@@ -246,49 +233,23 @@
             const mInfo = document.getElementById('mInfo').value;
             const trx = document.getElementById('trxId').value;
             const btn = document.getElementById('sub-btn');
-
-            if(!mInfo || !trx) { Swal.fire('Error', 'তথ্য সঠিক নয়', 'error'); return; }
-
-            btn.disabled = true;
-            btn.innerText = "VERIFYING...";
-
+            if(!mInfo || !trx) { Swal.fire('Error', 'সব ঘর পূরণ করুন', 'error'); return; }
+            btn.disabled = true; btn.innerText = "VERIFYING...";
             try {
-                const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
-                if(exist) { 
-                    Swal.fire('Used ID', 'এই আইডিটি আগে ব্যবহৃত হয়েছে!', 'warning'); 
-                    btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
-                }
-
                 const { error } = await _supabase.from('payment_requests').insert([{
                     user_email: currentUser.email, mobile: mInfo, plan_name: selected.name,
                     duration: selected.days, amount: document.getElementById('display-amount').innerText,
                     payment_method: document.getElementById('mth').value,
                     currency: isLocal ? 'BDT' : 'CRYPTO', transaction_id: trx, status: 'pending'
                 }]);
-
                 if(error) throw error;
-
-                Swal.fire({
-                    title: 'Request Active!',
-                    text: 'Redirecting to Home...',
-                    icon: 'success',
-                    timer: 2500,
-                    showConfirmButton: false,
-                    background: '#0f0f1a',
-                    color: '#fff',
-                    showClass: { popup: 'animate__animated animate__zoomIn' }
-                });
-
-                setTimeout(() => {
-                    window.location.href = 'index.html'; 
-                }, 2500);
-
+                Swal.fire({ title: 'Success!', text: 'হোমে ফিরে যাচ্ছি...', icon: 'success', timer: 2000, showConfirmButton: false });
+                setTimeout(() => window.location.href = 'index.html', 2000);
             } catch(e) {
                 Swal.fire('Error', e.message, 'error');
                 btn.disabled = false; btn.innerText = "SUBMIT REQUEST";
             }
         }
-        
         init();
     </script>
 </body>
