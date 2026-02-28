@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Sports | VIP Activation</title>
+    <title>Pro Sports | Premium Access</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -27,14 +28,14 @@
     <div id="plan-list"></div>
 
     <div id="pModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content animate__animated animate__zoomIn">
             <h3 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:20px;">SECURE ACTIVATION</h3>
             <div class="info-box">
                 <div id="display-amount" style="font-size:1.4rem; font-weight:700;">...</div>
                 <div id="display-address" style="font-size:0.7rem; color:var(--p-purple); word-break:break-all; margin-top:5px;">Connecting...</div>
             </div>
             <div class="input-wrapper"><i class="fas fa-wallet"></i><select id="mth" onchange="updateUI()"></select></div>
-            <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Your Wallet/Phone Address"></div>
+            <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Sender Wallet/Phone"></div>
             <div class="input-wrapper"><i class="fas fa-receipt"></i><input type="text" id="trxId" placeholder="Transaction ID (TrxID)"></div>
             <button class="btn-activate" id="sub-btn" onclick="submitOrder()">SUBMIT REQUEST</button>
             <p onclick="closeModal()" style="font-size:0.75rem; color:#666; cursor:pointer; margin-top:18px;">CANCEL TRANSACTION</p>
@@ -50,7 +51,7 @@
         let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 }; let currentUser = null;
 
         async function init() {
-            // ১. চেক করুন ইউজার লগইন আছে কি না
+            // ১. লগইন চেক
             const { data: { session } } = await _supabase.auth.getSession();
             currentUser = session ? session.user : null;
 
@@ -73,11 +74,11 @@
                 </div>`).join('');
         }
 
-        // লগইন গার্ড ফাংশন
+        // ২. লগইন গার্ড
         function handleAccessClick(usd, bdt, name, days) {
             if(!currentUser) {
-                Swal.fire({ title: 'Login Required', text: 'Please login to your account to purchase a plan.', icon: 'warning', confirmButtonText: 'Go to Login', background: '#0f0f1a', color: '#fff' })
-                .then(() => { window.location.href = 'login.html'; }); // আপনার লগইন পেইজের লিঙ্ক দিন
+                Swal.fire({ title: 'Authentication Required', text: 'লগইন না করে আপনি প্ল্যান কিনতে পারবেন না।', icon: 'warning', confirmButtonText: 'Login Now', background: '#0f0f1a', color: '#fff' })
+                .then(() => { window.location.href = 'login.html'; });
                 return;
             }
             openModal(usd, bdt, name, days);
@@ -103,15 +104,15 @@
             document.getElementById('display-address').innerText = WALLETS[method];
         }
 
+        // ৩. সাবমিট ফাংশন (এনিমেশন এখানে আসবে)
         async function submitOrder() {
-            // পুনরায় চেক করুন সাবমিট করার সময়
             if(!currentUser) return; 
 
             const mInfo = document.getElementById('mInfo').value;
             const trx = document.getElementById('trxId').value;
             const btn = document.getElementById('sub-btn');
 
-            if(!mInfo || !trx) { Swal.fire('Error', 'Missing fields!', 'error'); return; }
+            if(!mInfo || !trx) { Swal.fire('Error', 'সবগুলো তথ্য দিন', 'error'); return; }
 
             btn.disabled = true; btn.innerText = "VERIFYING...";
 
@@ -119,26 +120,27 @@
                 // ডুপ্লিকেট চেক
                 const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
                 if(exist) { 
-                    Swal.fire('Duplicate', 'This ID is already used!', 'warning'); 
+                    Swal.fire('Duplicate', 'এই ট্রানজেকশন আইডিটি ইতিমধ্যে ব্যবহৃত হয়েছে।', 'warning'); 
                     btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
                 }
 
-                // ডাটাবেস ইনসার্ট
+                // ইনসার্ট
                 const { error } = await _supabase.from('payment_requests').insert([{
-                    user_email: currentUser.email,
-                    mobile: mInfo,
-                    plan_name: selected.name,
-                    duration: selected.days,
-                    amount: document.getElementById('display-amount').innerText,
+                    user_email: currentUser.email, mobile: mInfo, plan_name: selected.name,
+                    duration: selected.days, amount: document.getElementById('display-amount').innerText,
                     payment_method: document.getElementById('mth').value,
-                    currency: isLocal ? 'BDT' : 'CRYPTO',
-                    transaction_id: trx,
-                    status: 'pending'
+                    currency: isLocal ? 'BDT' : 'CRYPTO', transaction_id: trx, status: 'pending'
                 }]);
 
                 if(!error) {
-                    Swal.fire({ title: 'Success!', text: 'Request sent successfully.', icon: 'success', background: '#0f0f1a', color: '#fff' })
-                    .then(() => location.reload());
+                    // ✅ সাকসেস এনিমেশন
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'আপনার রিকোয়েস্টটি পাঠানো হয়েছে। দ্রুত একটিভ করা হবে।',
+                        icon: 'success',
+                        background: '#0f0f1a', color: '#fff',
+                        showClass: { popup: 'animate__animated animate__backInDown' }
+                    }).then(() => location.reload());
                 } else { throw error; }
 
             } catch(e) {
@@ -147,8 +149,10 @@
             }
         }
 
-        // ক্যানসেল ফাংশন - শুধু মোডাল বন্ধ করবে
-        function closeModal() { document.getElementById('pModal').style.display = 'none'; }
+        // ৪. ক্যানসেল ফাংশন (কোনো পপ-আপ নেই)
+        function closeModal() {
+            document.getElementById('pModal').style.display = 'none';
+        }
         
         init();
     </script>
