@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Sports | Final Fix</title>
+    <title>Pro Sports | VIP Activation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -28,7 +28,7 @@
     <div id="plan-list"></div>
 
     <div id="pModal" class="modal">
-        <div class="modal-content animate__animated animate__zoomIn">
+        <div class="modal-content animate__animated animate__fadeInUp">
             <h3 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:20px;">SECURE ACTIVATION</h3>
             <div class="info-box">
                 <div id="display-amount" style="font-size:1.4rem; font-weight:700;">...</div>
@@ -38,9 +38,8 @@
             <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Sender Wallet/Phone"></div>
             <div class="input-wrapper"><i class="fas fa-receipt"></i><input type="text" id="trxId" placeholder="Transaction ID (TrxID)"></div>
             
-            <button class="btn-activate" id="sub-btn" onclick="handleFinalSubmit()">SUBMIT REQUEST</button>
-            
-            <p onclick="closeOrderModal()" style="font-size:0.75rem; color:#666; cursor:pointer; margin-top:18px;">CANCEL TRANSACTION</p>
+            <button class="btn-activate" id="sub-btn" onclick="finalOrderSubmit()">SUBMIT REQUEST</button>
+            <p style="font-size:0.6rem; color:#444; margin-top:15px;">Secure Encryption Enabled</p>
         </div>
     </div>
 
@@ -70,14 +69,14 @@
                 <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
                     <h4 style="font-size:0.7rem; color:#888; margin:0;">${p.plan_name}</h4>
                     <h2 style="margin:10px 0;">${isLocal ? '৳'+p.price_bdt : '$'+p.price_usd}</h2>
-                    <button class="btn-activate" style="padding:10px; font-size:0.6rem;" onclick="checkUserAuth(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">GET ACCESS</button>
+                    <button class="btn-activate" style="padding:10px; font-size:0.6rem;" onclick="checkAccess(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">GET ACCESS</button>
                 </div>`).join('');
         }
 
-        function checkUserAuth(usd, bdt, name, days) {
+        function checkAccess(usd, bdt, name, days) {
             if(!currentUser) {
-                Swal.fire({ title: 'Authentication Required', text: 'দয়া করে আগে লগইন করুন।', icon: 'warning', confirmButtonText: 'Login', background: '#0f0f1a', color: '#fff' })
-                .then((res) => { if(res.isConfirmed) window.location.href = 'login.html'; });
+                Swal.fire({ title: 'Login First', text: 'দয়া করে আগে লগইন করুন।', icon: 'info', confirmButtonColor: '#7b61ff' })
+                .then(() => window.location.href = 'login.html');
                 return;
             }
             selected = { usd, bdt, name, days };
@@ -99,27 +98,26 @@
             document.getElementById('display-address').innerText = WALLETS[method];
         }
 
-        // নতুন সাবমিট ফাংশন
-        async function handleFinalSubmit() {
+        // মূল ফাংশন: সাবমিট হলে এনিমেশন দিয়ে ইনডেক্স পেইজে যাবে
+        async function finalOrderSubmit() {
             const mInfo = document.getElementById('mInfo').value;
             const trx = document.getElementById('trxId').value;
             const btn = document.getElementById('sub-btn');
 
-            if(!mInfo || !trx) { 
-                Swal.fire({ title: 'Error', text: 'সবগুলো তথ্য পূরণ করুন', icon: 'error', background: '#0f0f1a', color: '#fff' }); 
-                return; 
-            }
+            if(!mInfo || !trx) { Swal.fire('Error', 'তথ্য সঠিক নয়', 'error'); return; }
 
-            btn.disabled = true; 
+            btn.disabled = true;
             btn.innerText = "VERIFYING...";
 
             try {
+                // ১. ডুপ্লিকেট চেক
                 const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
                 if(exist) { 
-                    Swal.fire({ title: 'Duplicate', text: 'এই আইডিটি ইতিমধ্যে ব্যবহৃত হয়েছে।', icon: 'warning', background: '#0f0f1a', color: '#fff' }); 
+                    Swal.fire('Used ID', 'এই আইডিটি আগে ব্যবহৃত হয়েছে!', 'warning'); 
                     btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
                 }
 
+                // ২. ডাটা সেভ
                 const { error } = await _supabase.from('payment_requests').insert([{
                     user_email: currentUser.email, mobile: mInfo, plan_name: selected.name,
                     duration: selected.days, amount: document.getElementById('display-amount').innerText,
@@ -127,27 +125,30 @@
                     currency: isLocal ? 'BDT' : 'CRYPTO', transaction_id: trx, status: 'pending'
                 }]);
 
-                if(!error) {
-                    // ✅ সাকসেস এনিমেশন পপ-আপ
-                    Swal.fire({
-                        title: 'Success!',
-                        text: 'আপনার রিকোয়েস্টটি পাঠানো হয়েছে। দ্রুত একটিভ হবে।',
-                        icon: 'success',
-                        background: '#0f0f1a', color: '#fff',
-                        showClass: { popup: 'animate__animated animate__backInDown' }
-                    }).then(() => location.reload());
-                } else { throw error; }
+                if(error) throw error;
+
+                // ৩. ✅ সাকসেস এনিমেশন এবং ইনডেক্স পেইজে রিডাইরেক্ট
+                
+                Swal.fire({
+                    title: 'Request Active!',
+                    text: 'Redirecting to Home...',
+                    icon: 'success',
+                    timer: 2500, // ২.৫ সেকেন্ড পর অটো বন্ধ হবে
+                    showConfirmButton: false,
+                    background: '#0f0f1a',
+                    color: '#fff',
+                    showClass: { popup: 'animate__animated animate__zoomIn' }
+                });
+
+                // ২.৫ সেকেন্ড পর মেইন পেইজে চলে যাবে
+                setTimeout(() => {
+                    window.location.href = 'index.html'; 
+                }, 2500);
 
             } catch(e) {
-                Swal.fire({ title: 'Error', text: e.message, icon: 'error', background: '#0f0f1a', color: '#fff' });
+                Swal.fire('Error', e.message, 'error');
                 btn.disabled = false; btn.innerText = "SUBMIT REQUEST";
             }
-        }
-
-        // নতুন ক্যানসেল ফাংশন (কোনো পপ-আপ নেই)
-        function closeOrderModal() {
-            const modal = document.getElementById('pModal');
-            modal.style.display = 'none';
         }
         
         init();
