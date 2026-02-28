@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Sports | VIP Access</title>
+    <title>Pro Sports | VIP Activation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -18,7 +17,7 @@
         .input-wrapper { position: relative; margin-bottom: 20px; text-align: left; }
         .input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--p-purple); }
         .input-wrapper input, .input-wrapper select { width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: #fff; outline: none; box-sizing: border-box; }
-        .btn-activate { background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: 800; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; width: 100%; }
+        .btn-activate { background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: 800; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; }
         .btn-activate:disabled { opacity: 0.5; cursor: not-allowed; }
         #plan-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 400px; }
     </style>
@@ -28,18 +27,17 @@
     <div id="plan-list"></div>
 
     <div id="pModal" class="modal">
-        <div class="modal-content animate__animated animate__fadeInUp">
+        <div class="modal-content">
             <h3 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:20px;">SECURE ACTIVATION</h3>
             <div class="info-box">
                 <div id="display-amount" style="font-size:1.4rem; font-weight:700;">...</div>
                 <div id="display-address" style="font-size:0.7rem; color:var(--p-purple); word-break:break-all; margin-top:5px;">Connecting...</div>
             </div>
             <div class="input-wrapper"><i class="fas fa-wallet"></i><select id="mth" onchange="updateUI()"></select></div>
-            <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Sender Wallet/Phone"></div>
+            <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Your Wallet/Phone Address"></div>
             <div class="input-wrapper"><i class="fas fa-receipt"></i><input type="text" id="trxId" placeholder="Transaction ID (TrxID)"></div>
-            
-            <button class="btn-activate" id="sub-btn" onclick="submitFinalOrder()">SUBMIT REQUEST</button>
-            <p style="font-size:0.6rem; color:#555; margin-top:15px; text-transform:uppercase;">Encryption Active</p>
+            <button class="btn-activate" id="sub-btn" onclick="submitOrder()">SUBMIT REQUEST</button>
+            <p onclick="closeModal()" style="font-size:0.75rem; color:#666; cursor:pointer; margin-top:18px;">CANCEL TRANSACTION</p>
         </div>
     </div>
 
@@ -52,8 +50,10 @@
         let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 }; let currentUser = null;
 
         async function init() {
+            // ১. চেক করুন ইউজার লগইন আছে কি না
             const { data: { session } } = await _supabase.auth.getSession();
             currentUser = session ? session.user : null;
+
             try {
                 const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
                 const d = await r.json(); rates.eth = d.ethereum.usd; rates.sol = d.solana.usd;
@@ -69,16 +69,21 @@
                 <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
                     <h4 style="font-size:0.7rem; color:#888; margin:0;">${p.plan_name}</h4>
                     <h2 style="margin:10px 0;">${isLocal ? '৳'+p.price_bdt : '$'+p.price_usd}</h2>
-                    <button class="btn-activate" style="padding:10px; font-size:0.6rem;" onclick="openAccess(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">GET ACCESS</button>
+                    <button class="btn-activate" style="padding:10px; font-size:0.6rem;" onclick="handleAccessClick(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">GET ACCESS</button>
                 </div>`).join('');
         }
 
-        function openAccess(usd, bdt, name, days) {
+        // লগইন গার্ড ফাংশন
+        function handleAccessClick(usd, bdt, name, days) {
             if(!currentUser) {
-                Swal.fire({ title: 'Authentication', text: 'দয়া করে আগে লগইন করুন।', icon: 'info', confirmButtonColor: '#7b61ff' })
-                .then(() => window.location.href = 'login.html');
+                Swal.fire({ title: 'Login Required', text: 'Please login to your account to purchase a plan.', icon: 'warning', confirmButtonText: 'Go to Login', background: '#0f0f1a', color: '#fff' })
+                .then(() => { window.location.href = 'login.html'; }); // আপনার লগইন পেইজের লিঙ্ক দিন
                 return;
             }
+            openModal(usd, bdt, name, days);
+        }
+
+        function openModal(usd, bdt, name, days) {
             selected = { usd, bdt, name, days };
             const m = document.getElementById('mth');
             m.innerHTML = isLocal ? `<option value="bKash">bKash</option><option value="Nagad">Nagad</option>` : `<option value="USDT">USDT (TRC20)</option><option value="ETH">ETH (ERC20)</option><option value="SOL">SOL (Solana)</option>`;
@@ -98,50 +103,52 @@
             document.getElementById('display-address').innerText = WALLETS[method];
         }
 
-        // মূল ফাংশন (ফিক্সড)
-        async function submitFinalOrder() {
+        async function submitOrder() {
+            // পুনরায় চেক করুন সাবমিট করার সময়
+            if(!currentUser) return; 
+
             const mInfo = document.getElementById('mInfo').value;
             const trx = document.getElementById('trxId').value;
             const btn = document.getElementById('sub-btn');
 
-            if(!mInfo || !trx) { Swal.fire('Error', 'সবগুলো তথ্য পূরণ করুন', 'error'); return; }
+            if(!mInfo || !trx) { Swal.fire('Error', 'Missing fields!', 'error'); return; }
 
-            btn.disabled = true;
-            btn.innerText = "VERIFYING...";
+            btn.disabled = true; btn.innerText = "VERIFYING...";
 
             try {
-                // ১. ডাটা ইনসার্ট
+                // ডুপ্লিকেট চেক
+                const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
+                if(exist) { 
+                    Swal.fire('Duplicate', 'This ID is already used!', 'warning'); 
+                    btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
+                }
+
+                // ডাটাবেস ইনসার্ট
                 const { error } = await _supabase.from('payment_requests').insert([{
-                    user_email: currentUser.email, mobile: mInfo, plan_name: selected.name,
-                    duration: selected.days, amount: document.getElementById('display-amount').innerText,
+                    user_email: currentUser.email,
+                    mobile: mInfo,
+                    plan_name: selected.name,
+                    duration: selected.days,
+                    amount: document.getElementById('display-amount').innerText,
                     payment_method: document.getElementById('mth').value,
-                    currency: isLocal ? 'BDT' : 'CRYPTO', transaction_id: trx, status: 'pending'
+                    currency: isLocal ? 'BDT' : 'CRYPTO',
+                    transaction_id: trx,
+                    status: 'pending'
                 }]);
 
-                if(error) throw error;
-
-                // ২. ✅ পপ-আপ অ্যানিমেশন এবং রিডাইরেক্ট
-                Swal.fire({
-                    title: 'Success!',
-                    text: 'রিকোয়েস্ট সফল হয়েছে। হোমে ফিরে যাচ্ছি...',
-                    icon: 'success',
-                    timer: 3000,
-                    timerProgressBar: true,
-                    showConfirmButton: false,
-                    allowOutsideClick: false,
-                    background: '#0f0f1a',
-                    color: '#fff',
-                    showClass: { popup: 'animate__animated animate__zoomIn' }
-                }).then(() => {
-                    // এটি আপনাকে নিশ্চিতভাবে আপনার মেইন পেইজে নিয়ে যাবে
-                    window.location.assign('index.html');
-                });
+                if(!error) {
+                    Swal.fire({ title: 'Success!', text: 'Request sent successfully.', icon: 'success', background: '#0f0f1a', color: '#fff' })
+                    .then(() => location.reload());
+                } else { throw error; }
 
             } catch(e) {
                 Swal.fire('Error', e.message, 'error');
                 btn.disabled = false; btn.innerText = "SUBMIT REQUEST";
             }
         }
+
+        // ক্যানসেল ফাংশন - শুধু মোডাল বন্ধ করবে
+        function closeModal() { document.getElementById('pModal').style.display = 'none'; }
         
         init();
     </script>
