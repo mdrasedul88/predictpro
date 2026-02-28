@@ -3,113 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Access - Pro Sports</title>
+    <title>Pro Sports | VIP Access</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap');
-        :root { --premium-purple: #7b61ff; --bg-dark: #050505; --card-glass: rgba(255, 255, 255, 0.03); --glow: rgba(123, 97, 255, 0.4); }
-        body { background-color: var(--bg-dark); background-image: radial-gradient(circle at 50% 10%, #1a103d 0%, #050505 100%); color: white; font-family: 'Poppins', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 90px 15px 30px; }
-        .navbar { position: fixed; top: 0; left: 0; width: 100%; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 15px 0; z-index: 1001; text-align: center; }
-        .navbar h1 { font-size: 1.2rem; margin: 0; font-weight: 800; color: var(--premium-purple); text-shadow: 0 0 10px var(--glow); }
-        .plan-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 400px; }
-        .plan-card { background: var(--card-glass); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 20px 15px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .plan-card:hover { border-color: var(--premium-purple); transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
-        .price-box .amount { font-size: 1.8rem; font-weight: 800; color: #fff; display: block; }
-        .buy-btn { background: linear-gradient(135deg, var(--premium-purple), #5a41e6); color: #fff; border: none; width: 100%; padding: 12px; border-radius: 14px; font-weight: 700; cursor: pointer; margin-bottom: 15px; font-size: 0.7rem; text-transform: uppercase; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: #0f0f15; width: 85%; max-width: 340px; padding: 30px; border-radius: 28px; border: 1px solid rgba(123, 97, 255, 0.3); }
-        .input-group input, .input-group select { width: 100%; padding: 14px; background: #050505; border: 1px solid #222; border-radius: 12px; color: white; margin-bottom: 15px; }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
+        
+        :root { 
+            --premium-purple: #7b61ff; 
+            --accent-cyan: #00f2ff;
+            --bg-dark: #050508; 
+            --glass: rgba(255, 255, 255, 0.03);
+            --border-glow: rgba(123, 97, 255, 0.3);
+        }
+
+        body { 
+            background: var(--bg-dark);
+            background-image: radial-gradient(circle at 50% -20%, #1a103d 0%, #050508 100%);
+            color: #fff; font-family: 'Poppins', sans-serif; margin: 0;
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+            padding: 100px 20px 40px;
+        }
+
+        /* Modal Structure - Enhanced UI */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 2000; animation: fadeIn 0.3s ease; }
+        
+        .modal-content { 
+            background: linear-gradient(145deg, #0f0f1a, #050508);
+            width: 95%; max-width: 380px; padding: 35px 25px; border-radius: 30px;
+            border: 1px solid rgba(123, 97, 255, 0.2);
+            box-shadow: 0 0 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(123, 97, 255, 0.05);
+            position: relative;
+        }
+
+        .modal-title { font-family: 'Orbitron', sans-serif; text-align: center; font-size: 1.3rem; letter-spacing: 2px; color: var(--accent-cyan); margin-bottom: 25px; }
+
+        /* Payment Info Box */
+        #adminInfo { 
+            background: rgba(123, 97, 255, 0.05); padding: 20px; border-radius: 20px; 
+            border: 1px dashed var(--premium-purple); margin-bottom: 25px; text-align: center;
+        }
+
+        /* Styled Input Groups */
+        .input-wrapper { position: relative; margin-bottom: 20px; }
+        .input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--premium-purple); font-size: 1rem; }
+        
+        .input-wrapper input, .input-wrapper select { 
+            width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: #fff;
+            font-family: inherit; font-size: 0.9rem; transition: 0.3s; box-sizing: border-box; outline: none;
+        }
+
+        .input-wrapper input:focus, .input-wrapper select:focus { 
+            border-color: var(--premium-purple); background: rgba(123, 97, 255, 0.05);
+            box-shadow: 0 0 15px var(--border-glow);
+        }
+
+        /* Action Button */
+        .btn-activate { 
+            background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000;
+            border: none; width: 100%; padding: 16px; border-radius: 15px;
+            font-weight: 800; font-family: 'Orbitron', sans-serif; cursor: pointer;
+            letter-spacing: 1px; transition: 0.4s; margin-top: 10px;
+        }
+
+        .btn-activate:hover { transform: scale(1.02); box-shadow: 0 0 25px var(--premium-purple); }
+        .btn-activate:disabled { filter: grayscale(1); cursor: not-allowed; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div class="navbar">
-        <h1>👑 VIP PREDICTIONS</h1>
-        <p id="geo-status" style="font-size: 0.65rem; color: #888;">Detecting region...</p>
-    </div>
-
-    <div id="plan-list" class="plan-grid"></div>
-
     <div id="pModal" class="modal">
         <div class="modal-content">
-            <h3 style="margin:0 0 15px; text-align:center">Final Step</h3>
-            <div id="adminInfo" style="background: rgba(123, 97, 255, 0.08); padding: 15px; border-radius: 15px; font-size: 0.8rem; margin-bottom: 20px; border: 1px dashed var(--premium-purple); text-align:center;"></div>
+            <div class="modal-title">SECURE ACTIVATION</div>
             
-            <div class="input-group">
+            <div id="adminInfo">
+                <span style="font-size: 0.75rem; color: #888;">Live Rate Conversion</span>
+                <div id="display-amount" style="font-size: 1.4rem; font-weight: 700; margin: 5px 0; color: #fff;">...</div>
+                <div id="display-address" style="font-size: 0.7rem; color: var(--premium-purple); word-break: break-all;">Connecting...</div>
+            </div>
+            
+            <div class="input-wrapper">
+                <i class="fas fa-wallet"></i>
                 <select id="mth" onchange="updateUI()"></select>
             </div>
-            <div class="input-group">
-                <input type="text" id="mInfo" placeholder="Your Wallet/Phone Address">
+
+            <div class="input-wrapper">
+                <i class="fas fa-id-card"></i>
+                <input type="text" id="mInfo" placeholder="Sender Wallet / Phone Address">
             </div>
-            <div class="input-group">
-                <input type="text" id="trxId" placeholder="Transaction ID (TrxID)">
+
+            <div class="input-wrapper">
+                <i class="fas fa-receipt"></i>
+                <input type="text" id="trxId" placeholder="Transaction Hash (TrxID)">
             </div>
-            <button class="buy-btn" id="sub-btn" onclick="submitOrder()">ACTIVATE NOW</button>
-            <button style="background:none; border:none; color:#555; width:100%; font-size:0.7rem; cursor:pointer" onclick="closeModal()">Cancel</button>
+
+            <button class="btn-activate" id="sub-btn" onclick="submitOrder()">SUBMIT REQUEST</button>
+            <p onclick="closeModal()" style="text-align:center; font-size:0.7rem; color:#555; cursor:pointer; margin-top:15px;">CANCEL TRANSACTION</p>
         </div>
     </div>
+
+    <div id="plan-list" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:15px; width:100%; max-width:400px;"></div>
 
     <script>
         const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-        const ADMIN_WALLETS = {
-            bKash: "017XXXXXXXX (Personal)",
-            Nagad: "018XXXXXXXX (Personal)",
-            USDT: "T9zBxxxxxxxxxxxxxxxxx (TRC20)",
-            ETH: "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe (ERC20)",
+        const WALLETS = {
+            bKash: "017XXXXXXXX (Personal)", Nagad: "018XXXXXXXX (Personal)",
+            USDT: "T9zBxxxxxxxxxxxxxxxxx (TRC20)", ETH: "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe (ERC20)",
             SOL: "7xKXEcxxxxxxxxxxxxxxxxx (Solana)"
         };
 
-        let selectedPlan = {};
-        let isLocal = true;
-        let userEmail = "guest@user.com";
-        let liveRates = { ethereum: 0, solana: 0 };
+        let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 };
 
-        // ১. লাইভ ক্রিপ্টো প্রাইস নিয়ে আসা
-        async function fetchLivePrices() {
+        async function init() {
+            // ১. লাইভ ক্রিপ্টো রেট আনা (Crypto Logic)
             try {
-                const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
-                const data = await res.json();
-                liveRates.ethereum = data.ethereum.usd;
-                liveRates.solana = data.solana.usd;
-            } catch(e) { console.error("API Error: Using fallback rates"); }
-        }
+                const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
+                const d = await r.json();
+                rates.eth = d.ethereum.usd; rates.sol = d.solana.usd;
+            } catch(e) { console.error("Rate Error"); }
 
-        async function initPage() {
-            await fetchLivePrices();
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (session) userEmail = session.user.email;
-
+            // ২. ইউজার লোকেশন ডিটেকশন
             try {
-                const res = await fetch('https://ipapi.co/json/');
-                const data = await res.json();
-                isLocal = (data.country_code === 'BD');
-                document.getElementById('geo-status').innerText = isLocal ? "Region: Bangladesh (৳)" : "Region: International ($)";
+                const r = await fetch('https://ipapi.co/json/');
+                const d = await r.json(); isLocal = (d.country_code === 'BD');
             } catch(e) { isLocal = true; }
-            loadPlans();
+            
+            load();
         }
 
-        async function loadPlans() {
-            const { data: plans } = await _supabase.from('subscription_plans').select('*').eq('is_active', true);
-            document.getElementById('plan-list').innerHTML = plans.map(p => {
-                const symbol = isLocal ? '৳' : '$';
-                const price = isLocal ? p.price_bdt : p.price_usd;
-                return `
-                    <div class="plan-card">
-                        <div class="price-box"><span class="amount">${symbol}${price}</span><span class="sub">${p.duration_days} Days Access</span></div>
-                        <button class="buy-btn" onclick="openModal('${p.plan_name}', ${p.duration_days}, ${price})">GET VIP</button>
-                    </div>`;
-            }).join('');
+        async function load() {
+            const { data } = await _supabase.from('subscription_plans').select('*').eq('is_active', true);
+            document.getElementById('plan-list').innerHTML = data.map(p => `
+                <div style="background:var(--glass); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                    <h4 style="margin:0; font-size:0.7rem; color:#888;">${p.plan_name}</h4>
+                    <h2 style="margin:10px 0;">${isLocal ? '৳'+p.price_bdt : '$'+p.price_usd}</h2>
+                    <button class="btn-activate" style="padding:10px; font-size:0.6rem;" onclick="openModal(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">GET ACCESS</button>
+                </div>`).join('');
         }
 
-        function openModal(name, days, price) {
-            selectedPlan = { name, days, price };
-            const mth = document.getElementById('mth');
-            mth.innerHTML = isLocal ? `<option value="bKash">bKash</option><option value="Nagad">Nagad</option>` : 
+        function openModal(usd, bdt, name, days) {
+            selected = { usd, bdt, name, days };
+            const m = document.getElementById('mth');
+            m.innerHTML = isLocal ? `<option value="bKash">bKash</option><option value="Nagad">Nagad</option>` : 
                 `<option value="USDT">USDT (TRC20)</option><option value="ETH">Ethereum (ETH)</option><option value="SOL">Solana (SOL)</option>`;
             updateUI();
             document.getElementById('pModal').style.display = 'flex';
@@ -117,45 +159,43 @@
 
         function updateUI() {
             const method = document.getElementById('mth').value;
-            let finalDisplay = isLocal ? `৳${selectedPlan.price}` : `$${selectedPlan.price}`;
+            let amt = isLocal ? `৳${selected.bdt}` : `$${selected.usd}`;
             
-            // ক্রিপ্টো কনভার্সন লজিক
-            if (!isLocal) {
-                if (method === "ETH" && liveRates.ethereum > 0) {
-                    finalDisplay = (selectedPlan.price / liveRates.ethereum).toFixed(5) + " ETH";
-                } else if (method === "SOL" && liveRates.solana > 0) {
-                    finalDisplay = (selectedPlan.price / liveRates.solana).toFixed(4) + " SOL";
-                } else if (method === "USDT") {
-                    finalDisplay = selectedPlan.price + " USDT";
-                }
+            if(!isLocal) {
+                if(method === "ETH") amt = (selected.usd / rates.eth).toFixed(5) + " ETH";
+                else if(method === "SOL") amt = (selected.usd / rates.sol).toFixed(4) + " SOL";
+                else if(method === "USDT") amt = selected.usd + " USDT";
             }
-
-            document.getElementById('adminInfo').innerHTML = `Send <b>${finalDisplay}</b> to:<br><span style="color:var(--premium-purple); word-break:break-all;">${ADMIN_WALLETS[method]}</span>`;
+            
+            document.getElementById('display-amount').innerText = amt;
+            document.getElementById('display-address').innerText = WALLETS[method];
         }
 
         function closeModal() { document.getElementById('pModal').style.display = 'none'; }
 
         async function submitOrder() {
-            const contact = document.getElementById('mInfo').value;
+            const mInfo = document.getElementById('mInfo').value;
             const trx = document.getElementById('trxId').value;
-            const btn = document.getElementById('sub-btn');
-            if(!contact || !trx) { Swal.fire('Error', 'Missing details', 'error'); return; }
+            if(!mInfo || !trx) { Swal.fire('Error', 'Wallet address and TrxID are required!', 'error'); return; }
 
-            btn.disabled = true; btn.innerText = "Processing...";
+            const btn = document.getElementById('sub-btn');
+            btn.disabled = true; btn.innerText = "SENDING REQUEST...";
 
             const { error } = await _supabase.from('payment_requests').insert([{
-                user_email: userEmail, mobile: contact, plan_name: selectedPlan.name,
-                duration: selectedPlan.days, amount: document.getElementById('adminInfo').innerText.split('to:')[0].trim(),
-                payment_method: document.getElementById('mth').value, currency: isLocal ? 'BDT' : 'CRYPTO',
+                user_email: "logged_user@example.com", // এখানে আসল ইমেইল বসবে
+                mobile: mInfo, plan_name: selected.name,
+                duration: selected.days, amount: document.getElementById('display-amount').innerText,
+                payment_method: document.getElementById('mth').value,
                 transaction_id: trx, status: 'pending'
             }]);
 
             if(!error) {
-                Swal.fire('Success', 'Request sent! We will verify and activate.', 'success').then(() => location.reload());
+                Swal.fire({ title: 'Request Active!', text: 'Our admin is verifying your transaction.', icon: 'success', background: '#0f0f1a', color: '#fff' })
+                .then(() => location.reload());
             } else { Swal.fire('Error', error.message, 'error'); btn.disabled = false; }
         }
 
-        initPage();
+        init();
     </script>
 </body>
 </html>
