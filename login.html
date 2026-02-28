@@ -47,7 +47,7 @@
             <button class="btn-auth" onclick="handleSignup()">Register</button>
             <p class="toggle-link">Already have an account? <a onclick="showLogin()">Login</a></p>
         </div>
-        <p id="error-msg" style="color: #ff4d4d; text-align: center; margin-top: 10px;"></p>
+        <p id="error-msg" style="color: #ff4d4d; text-align: center; margin-top: 10px; font-size: 0.85rem;"></p>
     </div>
 </div>
 
@@ -58,9 +58,8 @@
 
     async function init() {
         const { data: { session } } = await _supabase.auth.getSession();
-        if (session) {
-            window.location.href = 'index.html';
-        } else {
+        if (session) { window.location.href = 'index.html'; } 
+        else {
             document.getElementById('app-loader').style.display = 'none';
             document.getElementById('main-wrapper').classList.add('visible');
         }
@@ -69,7 +68,7 @@
     async function handleLogin() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-password').value;
-        const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
+        const { error } = await _supabase.auth.signInWithPassword({ email, password: pass });
         if(error) document.getElementById('error-msg').innerText = error.message;
         else window.location.href = 'index.html';
     }
@@ -84,32 +83,33 @@
 
         if(pass !== confirm) { errorEl.innerText = "Passwords do not match"; return; }
 
-        // ১. সহজ পদ্ধতিতে দেশ শনাক্ত করা
         let country = "BD";
         try {
             const res = await fetch('https://ipapi.co/json/');
             const geo = await res.json();
             country = geo.country_code || "BD";
-        } catch(e) { console.log("Geo error, using default"); }
+        } catch(e) { console.log("Defaulting to BD"); }
 
-        // ২. রেজিস্ট্রেশন
         const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password: pass });
 
         if(authError) {
             errorEl.innerText = authError.message;
         } else if(authData.user) {
-            // ৩. প্রোফাইল টেবিলে তথ্য পাঠানো
-            const { error: profileError } = await _supabase.from('profiles').insert([{
+            // UPSERT লজিক যা ডুপ্লিকেট এরর হওয়া বন্ধ করবে
+            const { error: profileError } = await _supabase.from('profiles').upsert([{
                 id: authData.user.id,
                 full_name: name,
                 phone_number: phone,
                 email: email,
                 country_code: country,
                 currency: (country === 'BD' ? 'BDT' : 'USD')
-            }]);
+            }], { onConflict: 'id' });
 
             if(profileError) errorEl.innerText = "Profile Error: " + profileError.message;
-            else alert("Registration Successful!");
+            else {
+                alert("Registration Successful!");
+                window.location.href = 'index.html';
+            }
         }
     }
 
