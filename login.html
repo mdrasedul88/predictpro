@@ -8,26 +8,17 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; font-family: sans-serif; }
-        
-        /* এনিমেশনের জন্য মেইন কন্টেনার */
         #main-wrapper { opacity: 0; visibility: hidden; width: 100%; display: flex; justify-content: center; }
         #main-wrapper.visible { opacity: 1; visibility: visible; transition: opacity 0.5s ease; }
-
         .auth-container { background: #1e293b; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; border: 1px solid #334155; }
-        
-        /* এনিমেশন ক্লাস */
         .slide-up-anim { transform: translateY(30px); opacity: 0; }
         .visible .slide-up-anim { animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-
         @keyframes slideUp { to { transform: translateY(0); opacity: 1; } }
-
         .auth-box h2 { color: #00ff88; text-align: center; margin-bottom: 20px; }
         .auth-box input { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; }
         .btn-auth { background: #00ff88; color: #020617; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .toggle-link { text-align: center; margin-top: 15px; font-size: 0.9rem; color: #94a3b8; }
         .toggle-link a { color: #00ff88; text-decoration: none; font-weight: bold; cursor: pointer; }
-        
-        /* লোডার ডিজাইন */
         #app-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 9999; display: flex; justify-content: center; align-items: center; }
         .loader-dot { width: 12px; height: 12px; background: #00ff88; border-radius: 50%; animation: pulse 1s infinite alternate; }
         @keyframes pulse { from { opacity: 0.5; transform: scale(0.8); } to { opacity: 1; transform: scale(1.2); } }
@@ -70,19 +61,56 @@
         if (session) {
             window.location.href = 'index.html';
         } else {
-            // ফর্ম রেডি করে পর্দা সরানো
             document.getElementById('app-loader').style.display = 'none';
             document.getElementById('main-wrapper').classList.add('visible');
         }
     }
 
-    // আপনার অরিজিনাল handleLogin এবং handleSignup ফাংশনগুলো এখানে থাকবে...
     async function handleLogin() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-password').value;
         const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
         if(error) document.getElementById('error-msg').innerText = error.message;
         else window.location.href = 'index.html';
+    }
+
+    async function handleSignup() {
+        const name = document.getElementById('sup-name').value;
+        const phone = document.getElementById('sup-phone').value;
+        const email = document.getElementById('sup-email').value;
+        const pass = document.getElementById('sup-pass').value;
+        const confirm = document.getElementById('sup-confirm').value;
+        const errorEl = document.getElementById('error-msg');
+
+        if(pass !== confirm) { errorEl.innerText = "Passwords do not match"; return; }
+
+        // ১. সহজ পদ্ধতিতে দেশ শনাক্ত করা
+        let country = "BD";
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            const geo = await res.json();
+            country = geo.country_code || "BD";
+        } catch(e) { console.log("Geo error, using default"); }
+
+        // ২. রেজিস্ট্রেশন
+        const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password: pass });
+
+        if(authError) {
+            errorEl.innerText = authError.message;
+        } else if(authData.user) {
+            // ৩. প্রোফাইল টেবিলে তথ্য পাঠানো
+            const { error: profileError } = await _supabase.from('profiles').insert([{
+                id: authData.user.id,
+                full_name: name,
+                phone_number: phone,
+                email: email,
+                country_code: country,
+                currency: (country === 'BD' ? 'BDT' : 'USD')
+            }]);
+
+            if(profileError) errorEl.innerText = "Profile Error: " + profileError.message;
+            else alert("Registration Successful!");
+        }
     }
 
     function showSignup() { document.getElementById('login-section').style.display = 'none'; document.getElementById('signup-section').style.display = 'block'; }
