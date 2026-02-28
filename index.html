@@ -3,154 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Sports | VIP Activation</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <title>Sports Prediction - VIP Zone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
-        :root { --p-purple: #7b61ff; --a-cyan: #00f2ff; --bg: #050508; }
-        body { background: var(--bg); background-image: radial-gradient(circle at 50% -20%, #1a103d 0%, #050508 100%); color: #fff; font-family: 'Poppins', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 100px 20px; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: linear-gradient(145deg, #0f0f1a, #050508); width: 95%; max-width: 380px; padding: 35px 25px; border-radius: 30px; border: 1px solid rgba(123,97,255,0.2); text-align: center; }
-        .info-box { background: rgba(123,97,255,0.05); padding: 20px; border-radius: 20px; border: 1px dashed var(--p-purple); margin-bottom: 25px; }
-        .input-wrapper { position: relative; margin-bottom: 20px; text-align: left; }
-        .input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--p-purple); }
-        .input-wrapper input, .input-wrapper select { width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: #fff; outline: none; box-sizing: border-box; }
-        .btn-activate { background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: 800; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; }
-        .btn-activate:disabled { opacity: 0.5; cursor: not-allowed; }
-        #plan-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 400px; }
+        :root {
+            --premium-purple: #7b61ff; 
+            --dark-bg: #0f121d; /* স্ক্রিনশট অনুযায়ী একটু ব্লুইশ ডার্ক */
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-gray: #a0a0a0;
+        }
+
+        body { 
+            background: var(--dark-bg); 
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0f121d 100%);
+            color: white; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; 
+        }
+
+        .container { max-width: 500px; margin: auto; padding: 20px; padding-bottom: 100px; }
+
+        /* --- VIP Header Style --- */
+        .vip-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
+        .vip-header h2 { font-size: 1.5rem; font-weight: 700; margin: 0; }
+        .vip-logo { background: var(--premium-purple); padding: 8px; border-radius: 12px; font-size: 1.2rem; }
+
+        /* --- Main Content Card (Top Section) --- */
+        .main-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 25px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .live-status {
+            background: rgba(239, 68, 68, 0.2); color: #ff4d4d;
+            padding: 4px 12px; border-radius: 20px; font-size: 0.7rem;
+            font-weight: 800; float: right; display: flex; align-items: center; gap: 5px;
+        }
+        .live-status::before { content: ''; width: 6px; height: 6px; background: #ff4d4d; border-radius: 50%; }
+
+        .main-card h3 { font-size: 1.2rem; margin: 15px 0 5px; color: #fff; }
+        .main-card p { font-size: 0.85rem; color: var(--text-gray); margin-bottom: 20px; }
+
+        .feature-check { list-style: none; padding: 0; text-align: left; }
+        .feature-check li { font-size: 0.85rem; color: #d1d5db; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .feature-check li i { color: #2dd4bf; font-size: 1rem; }
+
+        /* --- Feature Icons List (Bottom Section) --- */
+        .feature-list { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        .feature-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .feature-card:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-2px); }
+        
+        .icon-box { 
+            width: 50px; height: 50px; border-radius: 15px; 
+            display: flex; align-items: center; justify-content: center; font-size: 1.4rem; 
+        }
+
+        /* আইকন কালার থিম (স্ক্রিনশট অনুযায়ী ভিন্ন ভিন্ন কালার) */
+        .bg-red { background: linear-gradient(135deg, #ff6b6b, #ee5253); }
+        .bg-teal { background: linear-gradient(135deg, #1dd1a1, #10ac84); }
+        .bg-orange { background: linear-gradient(135deg, #ff9f43, #f368e0); }
+        .bg-blue { background: linear-gradient(135deg, #48dbfb, #2e86de); }
+
+        .feature-info h4 { margin: 0; font-size: 1rem; color: #fff; }
+        .feature-info p { margin: 3px 0 0; font-size: 0.75rem; color: var(--text-gray); }
+
+        .btn-main-action {
+            background: var(--premium-purple); color: white; border: none;
+            padding: 15px; border-radius: 50px; width: 100%; font-weight: 800;
+            margin-top: 20px; cursor: pointer; text-transform: uppercase;
+            box-shadow: 0 10px 20px rgba(123, 97, 255, 0.3);
+        }
     </style>
 </head>
 <body>
 
-    <div id="plan-list"></div>
+<div id="header-root"></div>
 
-    <div id="pModal" class="modal">
-        <div class="modal-content">
-            <h3 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:20px;">SECURE ACTIVATION</h3>
-            <div class="info-box">
-                <div id="display-amount" style="font-size:1.4rem; font-weight:700;">...</div>
-                <div id="display-address" style="font-size:0.7rem; color:var(--p-purple); word-break:break-all; margin-top:5px;">Connecting...</div>
-            </div>
-            <div class="input-wrapper"><i class="fas fa-wallet"></i><select id="mth" onchange="updateUI()"></select></div>
-            <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Your Wallet/Phone Address"></div>
-            <div class="input-wrapper"><i class="fas fa-receipt"></i><input type="text" id="trxId" placeholder="Transaction ID (TrxID)"></div>
-            <button class="btn-activate" id="sub-btn" onclick="submitOrder()">SUBMIT REQUEST</button>
-            <p onclick="closeModal()" style="font-size:0.75rem; color:#666; cursor:pointer; margin-top:18px;">CANCEL TRANSACTION</p>
-        </div>
+<div class="container">
+    <div class="vip-header">
+        <h2><i class="far fa-gem" style="color: var(--premium-purple);"></i> VIP EXPERT ANALYZER</h2>
+        <div class="vip-logo"><i class="fas fa-crown"></i></div>
     </div>
 
-    <script>
-        const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
-        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
-        const _supabase = window.supabase.createClient(S_URL, S_KEY);
+    <div class="main-card">
+        <div class="live-status">LIVE</div>
+        <div class="icon-box bg-teal" style="width: 45px; height: 45px;">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+        <h3>VIP Content Ready</h3>
+        <p>Latest predictions and analysis loaded for you.</p>
 
-        const WALLETS = { bKash: "017XXXXXXXX (Personal)", Nagad: "018XXXXXXXX (Personal)", USDT: "T9zBxxxxxxxxxxxxxxxxx (TRC20)", ETH: "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe (ERC20)", SOL: "7xKXEcxxxxxxxxxxxxxxxxx (Solana)" };
-        let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 }; let currentUser = null;
+        <ul class="feature-check">
+            <li><i class="fas fa-check-circle"></i> Last 24 hours predictions updated</li>
+            <li><i class="fas fa-check-circle"></i> Expert analysis ready</li>
+            <li><i class="fas fa-check-circle"></i> Live match tracking active</li>
+        </ul>
 
-        async function init() {
-            // ১. চেক করুন ইউজার লগইন আছে কি না
-            const { data: { session } } = await _supabase.auth.getSession();
-            currentUser = session ? session.user : null;
+        <button class="btn-main-action" id="view-analysis-btn">Explore Now</button>
+    </div>
 
-            try {
-                const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
-                const d = await r.json(); rates.eth = d.ethereum.usd; rates.sol = d.solana.usd;
-                const loc = await fetch('https://ipapi.co/json/');
-                const lData = await loc.json(); isLocal = (lData.country_code === 'BD');
-            } catch(e) { isLocal = true; }
-            loadPlans();
-        }
+    <h3 style="font-size: 1rem; margin-bottom: 15px;"><i class="fas fa-star" style="color: #ff9f43;"></i> VIP Features</h3>
+    
+    <div class="feature-list">
+        <div class="feature-card" onclick="location.href='free-prediction.html'">
+            <div class="icon-box bg-red"><i class="fas fa-bolt"></i></div>
+            <div class="feature-info">
+                <h4>Live Predictions</h4>
+                <p>Real-time in-match analysis and projections</p>
+            </div>
+        </div>
 
-        async function loadPlans() {
-            const { data } = await _supabase.from('subscription_plans').select('*').eq('is_active', true);
-            document.getElementById('plan-list').innerHTML = data.map(p => `
-                <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
-                    <h4 style="font-size:0.7rem; color:#888; margin:0;">${p.plan_name}</h4>
-                    <h2 style="margin:10px 0;">${isLocal ? '৳'+p.price_bdt : '$'+p.price_usd}</h2>
-                    <button class="btn-activate" style="padding:10px; font-size:0.6rem;" onclick="handleAccessClick(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">GET ACCESS</button>
-                </div>`).join('');
-        }
+        <div class="feature-card">
+            <div class="icon-box bg-teal"><i class="fas fa-check-double"></i></div>
+            <div class="feature-info">
+                <h4>Safe Picks</h4>
+                <p>High-confidence and verified predictions</p>
+            </div>
+        </div>
 
-        // লগইন গার্ড ফাংশন
-        function handleAccessClick(usd, bdt, name, days) {
-            if(!currentUser) {
-                Swal.fire({ title: 'Login Required', text: 'Please login to your account to purchase a plan.', icon: 'warning', confirmButtonText: 'Go to Login', background: '#0f0f1a', color: '#fff' })
-                .then(() => { window.location.href = 'login.html'; }); // আপনার লগইন পেইজের লিঙ্ক দিন
-                return;
-            }
-            openModal(usd, bdt, name, days);
-        }
+        <div class="feature-card">
+            <div class="icon-box bg-orange"><i class="fas fa-key"></i></div>
+            <div class="feature-info">
+                <h4>VIP Privileges</h4>
+                <p>Featured slips and exclusive notifications</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-        function openModal(usd, bdt, name, days) {
-            selected = { usd, bdt, name, days };
-            const m = document.getElementById('mth');
-            m.innerHTML = isLocal ? `<option value="bKash">bKash</option><option value="Nagad">Nagad</option>` : `<option value="USDT">USDT (TRC20)</option><option value="ETH">ETH (ERC20)</option><option value="SOL">SOL (Solana)</option>`;
-            updateUI();
-            document.getElementById('pModal').style.display = 'flex';
-        }
+<div id="footer-root"></div>
 
-        function updateUI() {
-            const method = document.getElementById('mth').value;
-            let amt = isLocal ? `৳${selected.bdt}` : `$${selected.usd}`;
-            if(!isLocal) {
-                if(method === "ETH") amt = (selected.usd / rates.eth).toFixed(5) + " ETH";
-                else if(method === "SOL") amt = (selected.usd / rates.sol).toFixed(4) + " SOL";
-                else if(method === "USDT") amt = selected.usd + " USDT";
-            }
-            document.getElementById('display-amount').innerText = amt;
-            document.getElementById('display-address').innerText = WALLETS[method];
-        }
+<script src="js/header.js"></script>
+<script src="js/footer.js"></script>
 
-        async function submitOrder() {
-            // পুনরায় চেক করুন সাবমিট করার সময়
-            if(!currentUser) return; 
+<script>
+    const SUPABASE_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-            const mInfo = document.getElementById('mInfo').value;
-            const trx = document.getElementById('trxId').value;
-            const btn = document.getElementById('sub-btn');
-
-            if(!mInfo || !trx) { Swal.fire('Error', 'Missing fields!', 'error'); return; }
-
-            btn.disabled = true; btn.innerText = "VERIFYING...";
-
-            try {
-                // ডুপ্লিকেট চেক
-                const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
-                if(exist) { 
-                    Swal.fire('Duplicate', 'This ID is already used!', 'warning'); 
-                    btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
+    async function updateHeaderUI() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        const authBtns = document.querySelectorAll('button, a'); 
+        if (user) {
+            authBtns.forEach(btn => {
+                if (btn.innerText.includes('Login')) {
+                    btn.innerHTML = `<i class="fas fa-user-circle"></i> Profile`;
+                    btn.onclick = () => window.location.href = 'profile.html';
                 }
-
-                // ডাটাবেস ইনসার্ট
-                const { error } = await _supabase.from('payment_requests').insert([{
-                    user_email: currentUser.email,
-                    mobile: mInfo,
-                    plan_name: selected.name,
-                    duration: selected.days,
-                    amount: document.getElementById('display-amount').innerText,
-                    payment_method: document.getElementById('mth').value,
-                    currency: isLocal ? 'BDT' : 'CRYPTO',
-                    transaction_id: trx,
-                    status: 'pending'
-                }]);
-
-                if(!error) {
-                    Swal.fire({ title: 'Success!', text: 'Request sent successfully.', icon: 'success', background: '#0f0f1a', color: '#fff' })
-                    .then(() => location.reload());
-                } else { throw error; }
-
-            } catch(e) {
-                Swal.fire('Error', e.message, 'error');
-                btn.disabled = false; btn.innerText = "SUBMIT REQUEST";
-            }
+            });
         }
+    }
 
-        // ক্যানসেল ফাংশন - শুধু মোডাল বন্ধ করবে
-        function closeModal() { document.getElementById('pModal').style.display = 'none'; }
-        
-        init();
-    </script>
+    document.getElementById('view-analysis-btn').onclick = async function() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) {
+            alert("Please login first!");
+            window.location.href = 'login.html';
+        } else {
+            window.location.href = 'free-prediction.html';
+        }
+    };
+
+    window.onload = updateHeaderUI;
+</script>
 </body>
 </html>
