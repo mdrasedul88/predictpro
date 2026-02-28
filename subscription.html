@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Sports | Premium Access</title>
+    <title>Pro Sports | VIP Access</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -27,7 +28,7 @@
     <div id="plan-list" class="plan-grid"></div>
 
     <div id="pModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content animate__animated animate__zoomIn">
             <h3 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:20px;">SECURE ACTIVATION</h3>
             <div class="info-box">
                 <div id="display-amount" style="font-size:1.4rem; font-weight:700;">Loading...</div>
@@ -46,11 +47,19 @@
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-        const WALLETS = { bKash: "017XXXXXXXX (Personal)", Nagad: "018XXXXXXXX (Personal)", USDT: "T9zBxxxxxxxxxxxxxxxxx (TRC20)", ETH: "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe (ERC20)", SOL: "7xKXEcxxxxxxxxxxxxxxxxx (Solana)" };
+        const WALLETS = { 
+            bKash: "017XXXXXXXX (Personal)", 
+            Nagad: "018XXXXXXXX (Personal)", 
+            USDT: "T9zBxxxxxxxxxxxxxxxxx (TRC20)", 
+            ETH: "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe (ERC20)", 
+            SOL: "7xKXEcxxxxxxxxxxxxxxxxx (Solana)" 
+        };
+
         let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 };
 
         async function init() {
             try {
+                // ১. লাইভ ক্রিপ্টো রেট এবং লোকেশন ডিটেকশন
                 const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
                 const d = await r.json(); rates.eth = d.ethereum.usd; rates.sol = d.solana.usd;
                 const loc = await fetch('https://ipapi.co/json/');
@@ -93,23 +102,28 @@
             const mInfo = document.getElementById('mInfo').value;
             const trx = document.getElementById('trxId').value;
             const btn = document.getElementById('sub-btn');
-            if(!mInfo || !trx) { Swal.fire('Error', 'Details missing!', 'error'); return; }
 
-            btn.disabled = true; btn.innerText = "VERIFYING...";
+            if(!mInfo || !trx) { 
+                Swal.fire({ title: 'Error', text: 'Please fill all fields!', icon: 'error', background: '#0f0f1a', color: '#fff' });
+                return; 
+            }
+
+            btn.disabled = true; 
+            btn.innerText = "VERIFYING...";
 
             try {
-                // ১. আসল ইউজার ইমেইল ডিটেকশন
+                // ২. ইউজার ইমেইল ডিটেকশন
                 const { data: { user } } = await _supabase.auth.getUser();
                 const userEmail = user ? user.email : "guest@user.com";
 
-                // ২. ডুপ্লিকেট TrxID চেক এবং পপ-আপ
+                // ৩. ডুপ্লিকেট TrxID চেক
                 const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
                 if(exist) { 
-                    Swal.fire('Used ID', 'This Transaction ID was already submitted!', 'warning'); 
+                    Swal.fire({ title: 'Used ID', text: 'This Transaction ID was already submitted!', icon: 'warning', background: '#0f0f1a', color: '#fff' });
                     btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
                 }
 
-                // ৩. ডাটাবেসে সঠিক ম্যাপিং
+                // ৪. ডাটাবেসে তথ্য পাঠানো
                 const { error } = await _supabase.from('payment_requests').insert([{
                     user_email: userEmail,
                     mobile: mInfo,
@@ -117,19 +131,29 @@
                     duration: selected.days,
                     amount: document.getElementById('display-amount').innerText,
                     payment_method: document.getElementById('mth').value,
-                    currency: isLocal ? 'BDT' : 'CRYPTO', // কারেন্সি ফিক্স
-                    transaction_id: trx, // কলামের নাম ঠিক করা হয়েছে
+                    currency: isLocal ? 'BDT' : 'CRYPTO',
+                    transaction_id: trx, //
                     status: 'pending'
                 }]);
 
-                if(!error) {
-                    Swal.fire({ title: 'Request Sent!', text: 'Wait for admin verification.', icon: 'success', background: '#0f0f1a', color: '#fff' })
-                    .then(() => location.reload());
-                } else { throw error; }
+                if(error) throw error;
+
+                // ৫. সাকসেস পপ-আপ ও পেজ রিলোড
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Your request has been sent for verification.',
+                    icon: 'success',
+                    background: '#0f0f1a',
+                    color: '#fff',
+                    confirmButtonColor: '#7b61ff'
+                }).then(() => {
+                    location.reload(); 
+                });
 
             } catch(e) {
-                Swal.fire('Error', e.message, 'error');
-                btn.disabled = false; btn.innerText = "SUBMIT REQUEST";
+                Swal.fire({ title: 'Error', text: e.message, icon: 'error', background: '#0f0f1a', color: '#fff' });
+                btn.disabled = false; 
+                btn.innerText = "SUBMIT REQUEST";
             }
         }
 
