@@ -21,7 +21,7 @@
         .dial-code-prefix { color: #00ff88; font-weight: bold; font-size: 0.95rem; }
         .phone-input-group input { border: none !important; margin: 0 !important; }
 
-        .btn-auth { background: #00ff88; color: #020617; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3; }
+        .btn-auth { background: #00ff88; color: #020617; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
         .btn-auth:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; }
         
         .toggle-link { text-align: center; margin-top: 20px; font-size: 0.9rem; color: #94a3b8; }
@@ -71,39 +71,49 @@
 
     let globalGeo = { country: "BD", dial: "+880", ip: "" };
 
-    // ১. অত্যন্ত শক্তিশালী আইপি ডিটেকশন (Retry Logic সহ)
-    async function fetchGeoData(retries = 3) {
+    // ১. উন্নত আইপি ডিটেকশন (Cloudflare + Ipify ব্যাকআপ সহ)
+    async function fetchGeoData() {
         const infoEl = document.getElementById('ip-info');
         const regBtn = document.getElementById('reg-btn');
-        
-        for(let i = 0; i < retries; i++) {
+        regBtn.disabled = true;
+        regBtn.innerText = "Verifying Network...";
+
+        try {
+            // Cloudflare চেষ্টা
+            let response = await fetch('https://1.1.1.1/cdn-cgi/trace');
+            let text = await response.text();
+            let ip = text.match(/ip=(.*)/)[1];
+            
+            if(ip) {
+                globalGeo.ip = ip;
+                const locRes = await fetch(`https://ipapi.co/${ip}/json/`);
+                const locData = await locRes.json();
+                
+                globalGeo.country = locData.country_code || "BD";
+                globalGeo.dial = locData.country_calling_code || "+880";
+                
+                finishGeoSetup(infoEl, regBtn);
+                return;
+            }
+        } catch(e) {
+            console.log("Cloudflare failed, trying Ipify...");
             try {
                 const res = await fetch('https://api.ipify.org?format=json');
                 const data = await res.json();
-                if(data.ip) {
-                    globalGeo.ip = data.ip;
-                    
-                    // লোকেশন ডাটা আনা
-                    const locRes = await fetch(`https://ipapi.co/${data.ip}/json/`);
-                    const locData = await locRes.json();
-                    
-                    globalGeo.country = locData.country_code || "BD";
-                    globalGeo.dial = locData.country_calling_code || "+880";
-                    
-                    document.getElementById('display-dial-code').innerText = globalGeo.dial;
-                    infoEl.innerText = `Verified IP: ${globalGeo.ip}`;
-                    regBtn.disabled = false;
-                    regBtn.innerText = "Register";
-                    return;
-                }
-            } catch(e) { console.log(`Retry ${i+1} failed...`); }
+                globalGeo.ip = data.ip;
+                finishGeoSetup(infoEl, regBtn);
+            } catch(err) {
+                infoEl.innerText = "Network Error. Please refresh.";
+                regBtn.innerText = "Error!";
+            }
         }
-        
-        // সব চেষ্টা ব্যর্থ হলে অন্তত একটি স্ট্যাটিক আইপি দেখাবে (যাতে Unknown না যায়)
-        globalGeo.ip = "Manual-Check-Required";
+    }
+
+    function finishGeoSetup(infoEl, regBtn) {
+        document.getElementById('display-dial-code').innerText = globalGeo.dial;
+        infoEl.innerText = `Verified IP: ${globalGeo.ip}`;
         regBtn.disabled = false;
         regBtn.innerText = "Register";
-        infoEl.innerText = "Network: Limited Access";
     }
 
     async function init() {
@@ -120,9 +130,8 @@
         const errorEl = document.getElementById('error-msg');
         const regBtn = document.getElementById('reg-btn');
         
-        // আইপি চেক পুনরায় নিশ্চিত করা
-        if(!globalGeo.ip || globalGeo.ip === "Unknown") {
-            errorEl.innerText = "Security Check: Please refresh the page.";
+        if(!globalGeo.ip) {
+            Swal.fire('Wait!', 'Network verification incomplete.', 'warning');
             return;
         }
 
@@ -131,7 +140,7 @@
         const email = document.getElementById('sup-email').value;
         const pass = document.getElementById('sup-pass').value;
 
-        regBtn.innerText = "Creating Account...";
+        regBtn.innerText = "Processing...";
         regBtn.disabled = true;
 
         const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password: pass });
@@ -153,12 +162,12 @@
             }], { onConflict: 'id' });
 
             if(profileError) {
-                errorEl.innerText = "Profile Error: " + profileError.message;
+                errorEl.innerText = "Database Error: " + profileError.message;
                 regBtn.disabled = false;
             } else {
                 Swal.fire({
                     title: 'Registration Successful!',
-                    text: 'Your profile has been secured.',
+                    text: 'Account created for IP: ' + globalGeo.ip,
                     icon: 'success',
                     background: '#1e293b',
                     color: '#fff',
@@ -168,7 +177,6 @@
         }
     }
 
-    // Login function remains same
     async function handleLogin() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-password').value;
