@@ -17,7 +17,6 @@
         .auth-box h2 { color: #00ff88; text-align: center; margin-bottom: 20px; }
         .auth-box input { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; }
         
-        /* ফোন নাম্বার ইনপুটের জন্য বিশেষ স্টাইল */
         .phone-input-group { position: relative; display: flex; align-items: center; background: #0f172a; border: 1px solid #334155; border-radius: 8px; margin: 10px 0; }
         .dial-code-prefix { padding-left: 12px; color: #00ff88; font-weight: bold; font-size: 0.9rem; pointer-events: none; }
         .phone-input-group input { border: none !important; margin: 0 !important; flex-grow: 1; }
@@ -69,22 +68,32 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let globalGeo = { country: "BD", dial: "+880", ip: "0.0.0.0" };
+    let globalGeo = { country: "BD", dial: "+880", ip: "Fetching..." };
+
+    // ১. উন্নত আইপি ডিটেকশন লজিক
+    async function fetchGeoData() {
+        try {
+            // আরও নির্ভুল আইপি সার্ভিসের ব্যবহার
+            const res = await fetch('https://api.ipify.org?format=json');
+            const ipData = await res.json();
+            globalGeo.ip = ipData.ip;
+
+            const resLoc = await fetch(`https://ipapi.co/${ipData.ip}/json/`);
+            const locData = await resLoc.json();
+            
+            globalGeo.country = locData.country_code || "BD";
+            globalGeo.dial = locData.country_calling_code || "+880";
+            
+            document.getElementById('display-dial-code').innerText = globalGeo.dial;
+            document.getElementById('ip-info').innerText = `Location: ${locData.country_name} (${globalGeo.ip})`;
+        } catch(e) {
+            console.log("Geo error, using default");
+            document.getElementById('ip-info').innerText = "Location: Bangladesh (Default)";
+        }
+    }
 
     async function init() {
-        // শুরুতে লোকেশন চেক করে ডায়াল কোড রেডি রাখা
-        try {
-            const res = await fetch('https://ipapi.co/json/');
-            const data = await res.json();
-            globalGeo = { 
-                country: data.country_code || "BD", 
-                dial: data.country_calling_code || "+880", 
-                ip: data.ip || "0.0.0.0" 
-            };
-            document.getElementById('display-dial-code').innerText = globalGeo.dial;
-            document.getElementById('ip-info').innerText = "Location: " + data.country_name;
-        } catch(e) { console.log("Default Geo Loaded"); }
-
+        await fetchGeoData();
         const { data: { session } } = await _supabase.auth.getSession();
         if (session) { window.location.href = 'index.html'; } 
         else {
@@ -96,7 +105,7 @@
     async function handleSignup() {
         const name = document.getElementById('sup-name').value;
         const rawPhone = document.getElementById('sup-phone').value;
-        const fullPhone = globalGeo.dial + rawPhone; // অটো ডায়াল কোড সহ পূর্ণ নাম্বার
+        const fullPhone = globalGeo.dial + rawPhone;
         const email = document.getElementById('sup-email').value;
         const pass = document.getElementById('sup-pass').value;
         const confirm = document.getElementById('sup-confirm').value;
@@ -110,15 +119,15 @@
         if(authError) {
             errorEl.innerText = authError.message;
         } else if(authData.user) {
-            // ডাটাবেসে dail_code এবং registration_ip আপডেট করার লজিক
+            // ডুপ্লিকেট কনফ্লিক্ট এড়াতে upsert ব্যবহার
             const { error: profileError } = await _supabase.from('profiles').upsert([{
                 id: authData.user.id,
                 full_name: name,
                 phone_number: fullPhone,
                 email: email,
                 country_code: globalGeo.country,
-                dial_code: globalGeo.dial, // এই কলামটি এখন আপডেট হবে
-                registration_ip: globalGeo.ip, // এই কলামটিও এখন আপডেট হবে
+                dial_code: globalGeo.dial, 
+                registration_ip: globalGeo.ip, // আসল আইপি এখন সেভ হবে
                 currency: (globalGeo.country === 'BD' ? 'BDT' : 'USD')
             }], { onConflict: 'id' });
 
@@ -133,10 +142,11 @@
     function showSignup() { 
         document.getElementById('login-section').style.display = 'none'; 
         document.getElementById('signup-section').style.display = 'block'; 
-        document.getElementById('display-dial-code').innerText = globalGeo.dial; // ফর্ম বদলালে ডায়াল কোড আপডেট
+        document.getElementById('display-dial-code').innerText = globalGeo.dial;
     }
     
     function showLogin() { document.getElementById('signup-section').style.display = 'none'; document.getElementById('login-section').style.display = 'block'; }
+    
     async function handleLogin() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-password').value;
