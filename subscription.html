@@ -3,42 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Sports | VIP Access</title>
+    <title>Pro Sports | VIP Activation</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
         :root { --p-purple: #7b61ff; --a-cyan: #00f2ff; --bg: #050508; }
         body { background: var(--bg); background-image: radial-gradient(circle at 50% -20%, #1a103d 0%, #050508 100%); color: #fff; font-family: 'Poppins', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 100px 20px; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: linear-gradient(145deg, #0f0f1a, #050508); width: 95%; max-width: 380px; padding: 35px 25px; border-radius: 30px; border: 1px solid rgba(123,97,255,0.2); text-align: center; }
+        
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { background: linear-gradient(145deg, #0f0f1a, #050508); width: 95%; max-width: 380px; padding: 35px 25px; border-radius: 30px; border: 1px solid rgba(123,97,255,0.2); text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        
         .info-box { background: rgba(123,97,255,0.05); padding: 20px; border-radius: 20px; border: 1px dashed var(--p-purple); margin-bottom: 25px; }
         .input-wrapper { position: relative; margin-bottom: 20px; text-align: left; }
         .input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--p-purple); }
-        .input-wrapper input, .input-wrapper select { width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: #fff; outline: none; box-sizing: border-box; }
-        .btn-activate { background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: 800; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; }
-        .btn-activate:disabled { opacity: 0.6; cursor: not-allowed; }
-        .plan-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 400px; }
+        .input-wrapper input, .input-wrapper select { width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: #fff; outline: none; box-sizing: border-box; font-size: 0.9rem; }
+        
+        .btn-activate { background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: 800; font-family: 'Orbitron'; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .btn-activate:disabled { background: #333; color: #777; cursor: not-allowed; box-shadow: none; }
+        
+        #plan-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; width: 100%; max-width: 400px; }
     </style>
 </head>
 <body>
 
-    <div id="plan-list" class="plan-grid"></div>
+    <div id="plan-list"></div>
 
     <div id="pModal" class="modal">
-        <div class="modal-content animate__animated animate__zoomIn">
-            <h3 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:20px;">SECURE ACTIVATION</h3>
+        <div class="modal-content">
+            <h3 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:20px; letter-spacing:1px;">SECURE ACTIVATION</h3>
             <div class="info-box">
-                <div id="display-amount" style="font-size:1.4rem; font-weight:700;">Loading...</div>
-                <div id="display-address" style="font-size:0.7rem; color:var(--p-purple); word-break:break-all; margin-top:5px;">Connecting...</div>
+                <div id="display-amount" style="font-size:1.4rem; font-weight:700; color:#fff;">...</div>
+                <div id="display-address" style="font-size:0.75rem; color:var(--p-purple); word-break:break-all; margin-top:8px;">Connecting...</div>
             </div>
+            
             <div class="input-wrapper"><i class="fas fa-wallet"></i><select id="mth" onchange="updateUI()"></select></div>
-            <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Sender Wallet/Phone"></div>
+            <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Your Wallet/Phone Address"></div>
             <div class="input-wrapper"><i class="fas fa-receipt"></i><input type="text" id="trxId" placeholder="Transaction ID (TrxID)"></div>
+            
             <button class="btn-activate" id="sub-btn" onclick="submitOrder()">SUBMIT REQUEST</button>
-            <p onclick="closeModal()" style="font-size:0.7rem; color:#555; cursor:pointer; margin-top:15px;">CANCEL TRANSACTION</p>
+            <p onclick="closeModal()" style="font-size:0.75rem; color:#666; cursor:pointer; margin-top:18px; text-decoration:underline;">CANCEL TRANSACTION</p>
         </div>
     </div>
 
@@ -48,10 +53,8 @@
         const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
         const WALLETS = { 
-            bKash: "017XXXXXXXX (Personal)", 
-            Nagad: "018XXXXXXXX (Personal)", 
-            USDT: "T9zBxxxxxxxxxxxxxxxxx (TRC20)", 
-            ETH: "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe (ERC20)", 
+            bKash: "017XXXXXXXX (Personal)", Nagad: "018XXXXXXXX (Personal)", 
+            USDT: "T9zBxxxxxxxxxxxxxxxxx (TRC20)", ETH: "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe (ERC20)", 
             SOL: "7xKXEcxxxxxxxxxxxxxxxxx (Solana)" 
         };
 
@@ -59,7 +62,6 @@
 
         async function init() {
             try {
-                // ১. লাইভ ক্রিপ্টো রেট এবং লোকেশন ডিটেকশন
                 const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
                 const d = await r.json(); rates.eth = d.ethereum.usd; rates.sol = d.solana.usd;
                 const loc = await fetch('https://ipapi.co/json/');
@@ -70,12 +72,14 @@
 
         async function loadPlans() {
             const { data } = await _supabase.from('subscription_plans').select('*').eq('is_active', true);
-            document.getElementById('plan-list').innerHTML = data.map(p => `
+            if(data) {
+                document.getElementById('plan-list').innerHTML = data.map(p => `
                 <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
                     <h4 style="font-size:0.7rem; color:#888; margin:0;">${p.plan_name}</h4>
                     <h2 style="margin:10px 0;">${isLocal ? '৳'+p.price_bdt : '$'+p.price_usd}</h2>
                     <button class="btn-activate" style="padding:10px; font-size:0.6rem;" onclick="openModal(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">GET ACCESS</button>
                 </div>`).join('');
+            }
         }
 
         function openModal(usd, bdt, name, days) {
@@ -104,7 +108,7 @@
             const btn = document.getElementById('sub-btn');
 
             if(!mInfo || !trx) { 
-                Swal.fire({ title: 'Error', text: 'Please fill all fields!', icon: 'error', background: '#0f0f1a', color: '#fff' });
+                Swal.fire({ title: 'Wait!', text: 'Wallet and TrxID are required.', icon: 'info', background: '#0f0f1a', color: '#fff' });
                 return; 
             }
 
@@ -112,18 +116,19 @@
             btn.innerText = "VERIFYING...";
 
             try {
-                // ২. ইউজার ইমেইল ডিটেকশন
+                // ১. ইউজার ইমেইল গেট করা
                 const { data: { user } } = await _supabase.auth.getUser();
                 const userEmail = user ? user.email : "guest@user.com";
 
-                // ৩. ডুপ্লিকেট TrxID চেক
+                // ২. ডুপ্লিকেট TrxID চেক
                 const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
+                
                 if(exist) { 
-                    Swal.fire({ title: 'Used ID', text: 'This Transaction ID was already submitted!', icon: 'warning', background: '#0f0f1a', color: '#fff' });
+                    Swal.fire({ title: 'Error', text: 'This TrxID has already been submitted!', icon: 'error', background: '#0f0f1a', color: '#fff' });
                     btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
                 }
 
-                // ৪. ডাটাবেসে তথ্য পাঠানো
+                // ৩. ডাটাবেসে সেভ করা
                 const { error } = await _supabase.from('payment_requests').insert([{
                     user_email: userEmail,
                     mobile: mInfo,
@@ -138,10 +143,10 @@
 
                 if(error) throw error;
 
-                // ৫. সাকসেস পপ-আপ ও পেজ রিলোড
+                // ৪. সাকসেস মেসেজ এবং রিলোড
                 Swal.fire({
                     title: 'Success!',
-                    text: 'Your request has been sent for verification.',
+                    text: 'Request sent! Admin will verify soon.',
                     icon: 'success',
                     background: '#0f0f1a',
                     color: '#fff',
@@ -151,7 +156,8 @@
                 });
 
             } catch(e) {
-                Swal.fire({ title: 'Error', text: e.message, icon: 'error', background: '#0f0f1a', color: '#fff' });
+                console.error(e);
+                Swal.fire({ title: 'Failed', text: 'Something went wrong. Please try again.', icon: 'error', background: '#0f0f1a', color: '#fff' });
                 btn.disabled = false; 
                 btn.innerText = "SUBMIT REQUEST";
             }
