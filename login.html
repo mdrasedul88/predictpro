@@ -16,6 +16,12 @@
         @keyframes slideUp { to { transform: translateY(0); opacity: 1; } }
         .auth-box h2 { color: #00ff88; text-align: center; margin-bottom: 20px; }
         .auth-box input { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; box-sizing: border-box; }
+        
+        /* ফোন নাম্বার ইনপুটের জন্য বিশেষ স্টাইল */
+        .phone-input-group { position: relative; display: flex; align-items: center; background: #0f172a; border: 1px solid #334155; border-radius: 8px; margin: 10px 0; }
+        .dial-code-prefix { padding-left: 12px; color: #00ff88; font-weight: bold; font-size: 0.9rem; pointer-events: none; }
+        .phone-input-group input { border: none !important; margin: 0 !important; flex-grow: 1; }
+
         .btn-auth { background: #00ff88; color: #020617; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .toggle-link { text-align: center; margin-top: 15px; font-size: 0.9rem; color: #94a3b8; }
         .toggle-link a { color: #00ff88; text-decoration: none; font-weight: bold; cursor: pointer; }
@@ -37,10 +43,17 @@
             <button class="btn-auth" onclick="handleLogin()">Login</button>
             <p class="toggle-link">New here? <a onclick="showSignup()">Create Account</a></p>
         </div>
+
         <div id="signup-section" class="auth-box" style="display: none;">
             <h2>Create Account</h2>
+            <p id="ip-info" style="font-size: 0.7rem; color: #00ff88; text-align: center; margin-bottom: 5px;"></p>
             <input type="text" id="sup-name" placeholder="Full Name">
-            <input type="tel" id="sup-phone" placeholder="Mobile Number">
+            
+            <div class="phone-input-group">
+                <span id="display-dial-code" class="dial-code-prefix">+880</span>
+                <input type="tel" id="sup-phone" placeholder="Mobile Number">
+            </div>
+
             <input type="email" id="sup-email" placeholder="Email Address">
             <input type="password" id="sup-pass" placeholder="Password">
             <input type="password" id="sup-confirm" placeholder="Confirm Password">
@@ -56,7 +69,22 @@
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    let globalGeo = { country: "BD", dial: "+880", ip: "0.0.0.0" };
+
     async function init() {
+        // শুরুতে লোকেশন চেক করে ডায়াল কোড রেডি রাখা
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            const data = await res.json();
+            globalGeo = { 
+                country: data.country_code || "BD", 
+                dial: data.country_calling_code || "+880", 
+                ip: data.ip || "0.0.0.0" 
+            };
+            document.getElementById('display-dial-code').innerText = globalGeo.dial;
+            document.getElementById('ip-info').innerText = "Location: " + data.country_name;
+        } catch(e) { console.log("Default Geo Loaded"); }
+
         const { data: { session } } = await _supabase.auth.getSession();
         if (session) { window.location.href = 'index.html'; } 
         else {
@@ -65,6 +93,50 @@
         }
     }
 
+    async function handleSignup() {
+        const name = document.getElementById('sup-name').value;
+        const rawPhone = document.getElementById('sup-phone').value;
+        const fullPhone = globalGeo.dial + rawPhone; // অটো ডায়াল কোড সহ পূর্ণ নাম্বার
+        const email = document.getElementById('sup-email').value;
+        const pass = document.getElementById('sup-pass').value;
+        const confirm = document.getElementById('sup-confirm').value;
+        const errorEl = document.getElementById('error-msg');
+
+        if(pass !== confirm) { errorEl.innerText = "Passwords do not match"; return; }
+        if(!rawPhone) { errorEl.innerText = "Phone number is required"; return; }
+
+        const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password: pass });
+
+        if(authError) {
+            errorEl.innerText = authError.message;
+        } else if(authData.user) {
+            // ডাটাবেসে dail_code এবং registration_ip আপডেট করার লজিক
+            const { error: profileError } = await _supabase.from('profiles').upsert([{
+                id: authData.user.id,
+                full_name: name,
+                phone_number: fullPhone,
+                email: email,
+                country_code: globalGeo.country,
+                dial_code: globalGeo.dial, // এই কলামটি এখন আপডেট হবে
+                registration_ip: globalGeo.ip, // এই কলামটিও এখন আপডেট হবে
+                currency: (globalGeo.country === 'BD' ? 'BDT' : 'USD')
+            }], { onConflict: 'id' });
+
+            if(profileError) errorEl.innerText = "Database Error: " + profileError.message;
+            else {
+                alert("Account Created Successfully!");
+                window.location.href = 'index.html';
+            }
+        }
+    }
+
+    function showSignup() { 
+        document.getElementById('login-section').style.display = 'none'; 
+        document.getElementById('signup-section').style.display = 'block'; 
+        document.getElementById('display-dial-code').innerText = globalGeo.dial; // ফর্ম বদলালে ডায়াল কোড আপডেট
+    }
+    
+    function showLogin() { document.getElementById('signup-section').style.display = 'none'; document.getElementById('login-section').style.display = 'block'; }
     async function handleLogin() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-password').value;
@@ -72,49 +144,6 @@
         if(error) document.getElementById('error-msg').innerText = error.message;
         else window.location.href = 'index.html';
     }
-
-    async function handleSignup() {
-        const name = document.getElementById('sup-name').value;
-        const phone = document.getElementById('sup-phone').value;
-        const email = document.getElementById('sup-email').value;
-        const pass = document.getElementById('sup-pass').value;
-        const confirm = document.getElementById('sup-confirm').value;
-        const errorEl = document.getElementById('error-msg');
-
-        if(pass !== confirm) { errorEl.innerText = "Passwords do not match"; return; }
-
-        let country = "BD";
-        try {
-            const res = await fetch('https://ipapi.co/json/');
-            const geo = await res.json();
-            country = geo.country_code || "BD";
-        } catch(e) { console.log("Defaulting to BD"); }
-
-        const { data: authData, error: authError } = await _supabase.auth.signUp({ email, password: pass });
-
-        if(authError) {
-            errorEl.innerText = authError.message;
-        } else if(authData.user) {
-            // UPSERT লজিক যা ডুপ্লিকেট এরর হওয়া বন্ধ করবে
-            const { error: profileError } = await _supabase.from('profiles').upsert([{
-                id: authData.user.id,
-                full_name: name,
-                phone_number: phone,
-                email: email,
-                country_code: country,
-                currency: (country === 'BD' ? 'BDT' : 'USD')
-            }], { onConflict: 'id' });
-
-            if(profileError) errorEl.innerText = "Profile Error: " + profileError.message;
-            else {
-                alert("Registration Successful!");
-                window.location.href = 'index.html';
-            }
-        }
-    }
-
-    function showSignup() { document.getElementById('login-section').style.display = 'none'; document.getElementById('signup-section').style.display = 'block'; }
-    function showLogin() { document.getElementById('signup-section').style.display = 'none'; document.getElementById('login-section').style.display = 'block'; }
 
     init();
 </script>
