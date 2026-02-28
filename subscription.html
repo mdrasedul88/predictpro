@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Sports | VIP Access</title>
+    <title>Pro Sports | Premium Access</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -28,17 +27,17 @@
     <div id="plan-list" class="plan-grid"></div>
 
     <div id="pModal" class="modal">
-        <div class="modal-content animate__animated animate__zoomIn">
+        <div class="modal-content">
             <h3 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:20px;">SECURE ACTIVATION</h3>
             <div class="info-box">
                 <div id="display-amount" style="font-size:1.4rem; font-weight:700;">Loading...</div>
                 <div id="display-address" style="font-size:0.7rem; color:var(--p-purple); word-break:break-all; margin-top:5px;">Connecting...</div>
             </div>
             <div class="input-wrapper"><i class="fas fa-wallet"></i><select id="mth" onchange="updateUI()"></select></div>
-            <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Your Wallet/Phone Address"></div>
+            <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Sender Wallet/Phone"></div>
             <div class="input-wrapper"><i class="fas fa-receipt"></i><input type="text" id="trxId" placeholder="Transaction ID (TrxID)"></div>
             <button class="btn-activate" id="sub-btn" onclick="submitOrder()">SUBMIT REQUEST</button>
-            <p onclick="closeModal()" style="font-size:0.7rem; color:#555; cursor:pointer; margin-top:15px;">CANCEL</p>
+            <p onclick="closeModal()" style="font-size:0.7rem; color:#555; cursor:pointer; margin-top:15px;">CANCEL TRANSACTION</p>
         </div>
     </div>
 
@@ -48,11 +47,9 @@
         const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
         const WALLETS = { bKash: "017XXXXXXXX (Personal)", Nagad: "018XXXXXXXX (Personal)", USDT: "T9zBxxxxxxxxxxxxxxxxx (TRC20)", ETH: "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe (ERC20)", SOL: "7xKXEcxxxxxxxxxxxxxxxxx (Solana)" };
-        let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 }; let userEmail = "guest@user.com";
+        let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 };
 
         async function init() {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (session) userEmail = session.user.email;
             try {
                 const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
                 const d = await r.json(); rates.eth = d.ethereum.usd; rates.sol = d.solana.usd;
@@ -96,29 +93,44 @@
             const mInfo = document.getElementById('mInfo').value;
             const trx = document.getElementById('trxId').value;
             const btn = document.getElementById('sub-btn');
-            if(!mInfo || !trx) { Swal.fire('Error', 'Missing details!', 'error'); return; }
+            if(!mInfo || !trx) { Swal.fire('Error', 'Details missing!', 'error'); return; }
 
             btn.disabled = true; btn.innerText = "VERIFYING...";
 
-            // ১. ডুপ্লিকেট TrxID চেক
-            const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
-            if(exist) { 
-                Swal.fire('Duplicate', 'This ID is already used!', 'warning'); 
-                btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
+            try {
+                // ১. আসল ইউজার ইমেইল ডিটেকশন
+                const { data: { user } } = await _supabase.auth.getUser();
+                const userEmail = user ? user.email : "guest@user.com";
+
+                // ২. ডুপ্লিকেট TrxID চেক এবং পপ-আপ
+                const { data: exist } = await _supabase.from('payment_requests').select('transaction_id').eq('transaction_id', trx).maybeSingle();
+                if(exist) { 
+                    Swal.fire('Used ID', 'This Transaction ID was already submitted!', 'warning'); 
+                    btn.disabled = false; btn.innerText = "SUBMIT REQUEST"; return; 
+                }
+
+                // ৩. ডাটাবেসে সঠিক ম্যাপিং
+                const { error } = await _supabase.from('payment_requests').insert([{
+                    user_email: userEmail,
+                    mobile: mInfo,
+                    plan_name: selected.name,
+                    duration: selected.days,
+                    amount: document.getElementById('display-amount').innerText,
+                    payment_method: document.getElementById('mth').value,
+                    currency: isLocal ? 'BDT' : 'CRYPTO', // কারেন্সি ফিক্স
+                    transaction_id: trx, // কলামের নাম ঠিক করা হয়েছে
+                    status: 'pending'
+                }]);
+
+                if(!error) {
+                    Swal.fire({ title: 'Request Sent!', text: 'Wait for admin verification.', icon: 'success', background: '#0f0f1a', color: '#fff' })
+                    .then(() => location.reload());
+                } else { throw error; }
+
+            } catch(e) {
+                Swal.fire('Error', e.message, 'error');
+                btn.disabled = false; btn.innerText = "SUBMIT REQUEST";
             }
-
-            const { error } = await _supabase.from('payment_requests').insert([{
-                user_email: userEmail, mobile: mInfo, plan_name: selected.name,
-                duration: selected.days, amount: document.getElementById('display-amount').innerText,
-                payment_method: document.getElementById('mth').value,
-                currency: isLocal ? 'BDT' : 'CRYPTO', // ২. কারেন্সি ফিক্স
-                transaction_id: trx, status: 'pending'
-            }]);
-
-            if(!error) {
-                Swal.fire({ title: 'Success!', text: 'Request sent for verification.', icon: 'success', background: '#0f0f1a', color: '#fff' })
-                .then(() => location.reload());
-            } else { Swal.fire('Error', error.message, 'error'); btn.disabled = false; }
         }
 
         function closeModal() { document.getElementById('pModal').style.display = 'none'; }
