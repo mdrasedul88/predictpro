@@ -3,99 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout | Pro Sports</title>
+    <title>Secure Checkout | Pro Sports</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
-        body { 
-            background: #0b0e14; 
-            color: #ffffff; 
-            font-family: 'Inter', sans-serif; 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .payment-container { 
-            background: #1a1f26;
-            width: 100%; 
-            max-width: 400px; 
-            padding: 30px 25px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            text-align: center;
-        }
-
-        .info-box { 
-            background: #2b2f36; 
-            padding: 20px; 
-            border-radius: 12px; 
-            margin-bottom: 25px;
-            border: 1px solid #3b404a;
-        }
-
-        #display-amount { font-size: 1.8rem; font-weight: 700; color: #fcd535; margin-bottom: 10px; }
-        
-        #display-address { 
-            font-size: 0.85rem; 
-            color: #eaecef; 
-            background: #1e2329;
-            padding: 12px;
-            border-radius: 8px;
-            word-break: break-all;
-            font-family: monospace;
-            border: 1px dashed #474d57;
-            cursor: pointer;
-            min-height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .input-wrapper { position: relative; margin-bottom: 15px; text-align: left; }
+        body { background: #0b0e14; color: #ffffff; font-family: 'Inter', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .payment-container { background: #1a1f26; width: 100%; max-width: 400px; padding: 35px 25px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.4); text-align: center; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .info-box { background: #2b2f36; padding: 25px 20px; border-radius: 14px; margin-bottom: 25px; border: 1px solid #3b404a; }
+        #display-amount { font-size: 2rem; font-weight: 700; color: #fcd535; margin-bottom: 12px; }
+        #display-address { font-size: 0.85rem; color: #eaecef; background: #1e2329; padding: 14px; border-radius: 10px; word-break: break-all; font-family: monospace; border: 1px dashed #474d57; cursor: pointer; min-height: 50px; display: flex; align-items: center; justify-content: center; }
+        .input-wrapper { position: relative; margin-bottom: 16px; text-align: left; }
         .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #848e9c; }
-
-        input, select { 
-            width: 100%; 
-            padding: 14px 14px 14px 40px; 
-            background: #2b2f36; 
-            border: 1px solid #474d57; 
-            border-radius: 10px; 
-            color: #fff; 
-            outline: none; 
-            box-sizing: border-box; 
-            font-size: 0.95rem;
-        }
-
-        .btn-activate { 
-            background: #fcd535; 
-            color: #000; 
-            border: none; 
-            width: 100%; 
-            padding: 16px; 
-            border-radius: 10px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            margin-top: 10px;
-        }
+        input, select { width: 100%; padding: 14px 14px 14px 42px; background: #2b2f36; border: 1px solid #474d57; border-radius: 12px; color: #fff; outline: none; box-sizing: border-box; font-size: 0.95rem; }
+        .btn-activate { background: #fcd535; color: #000; border: none; width: 100%; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 12px; }
     </style>
 </head>
 <body>
 
     <div class="payment-container">
         <h3>Secure Checkout</h3>
-        <p id="plan-display" style="color: #848e9c; font-size: 0.9rem; margin-bottom: 25px;">Processing...</p>
+        <p id="plan-display" style="color:#848e9c; font-size:0.9rem;">Loading plan details...</p>
         
         <div class="info-box">
             <div id="display-amount">...</div>
             <div id="display-address" onclick="copyAddress()">Fetching address...</div>
-            <small style="color:#5e6673; margin-top:8px; display:block;">Click address to copy</small>
+            <small style="color:#5e6673; margin-top:10px; display:block; font-size: 0.75rem;">Click address to copy</small>
         </div>
 
         <div class="input-wrapper">
@@ -103,21 +38,21 @@
             <select id="mth" onchange="updateUI()"></select>
         </div>
         <div class="input-wrapper">
-            <i class="fas fa-user"></i>
-            <input type="text" id="mInfo" placeholder="Sender Wallet or Phone">
+            <i class="fas fa-user-circle"></i>
+            <input type="text" id="mInfo" placeholder="Sender Wallet / Phone Number">
         </div>
         <div class="input-wrapper">
-            <i class="fas fa-receipt"></i>
+            <i class="fas fa-hashtag"></i>
             <input type="text" id="trxId" placeholder="Transaction ID (TrxID)">
         </div>
         
         <button class="btn-activate" id="sub-btn" onclick="finalOrderSubmit()">Complete Purchase</button>
-        <a href="subscription.html" style="color: #848e9c; text-decoration: none; font-size: 0.85rem; margin-top: 20px; display: inline-block;">Return to Plans</a>
+        <a href="subscription.html" style="color:#848e9c; text-decoration:none; font-size:0.85rem; margin-top:20px; display:block;">Return to Plans</a>
     </div>
 
     <script>
         const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
-        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3o8P_aLZQ';
         const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
         let WALLETS = {}; let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 };
@@ -130,16 +65,16 @@
             document.getElementById('plan-display').innerText = `${selected.name} • ${selected.days} Days Access`;
 
             try {
-                // ১. ডাটাবেস থেকে সকল মেথড লোড করা
+                // ১. ডাটাবেস থেকে মেথড লোড (আপনার স্ক্রিনশট অনুযায়ী)
                 const { data: wData } = await _supabase.from('wallets').select('method_name, address');
                 if(wData) {
+                    WALLETS = {};
                     wData.forEach(w => { 
-                        // ডাটাবেস থেকে আসা নামকে (যেমন USDT) কি হিসেবে সেভ করা
-                        WALLETS[w.method_name.toUpperCase().trim()] = w.address; 
+                        WALLETS[w.method_name.trim()] = w.address; 
                     });
                 }
 
-                // ২. লোকেশন ও ক্রিপ্টো রেট ফেচ করা
+                // ২. ইউজার লোকেশন ও ক্রিপ্টো রেট ফেচ
                 const ipRes = await fetch('https://ipapi.co/json/');
                 const lData = await ipRes.json();
                 isLocal = (lData.country_code === 'BD');
@@ -156,15 +91,15 @@
 
         function setupMethods() {
             const m = document.getElementById('mth');
-            // ড্রপডাউন অপশন সেট করা
+            // আপনার ডাটাবেসের নামের সাথে হুবহু মিল
             m.innerHTML = isLocal ? 
-                `<option value="BKASH">bKash (Personal)</option><option value="NAGAD">Nagad (Personal)</option>` : 
-                `<option value="USDT">USDT (TRC20)</option><option value="ETH">Ethereum (ERC20)</option><option value="SOL">Solana (SOL)</option>`;
+                `<option value="bKash (Personal)">bKash (Personal)</option><option value="Nagad (Personal)">Nagad (Personal)</option>` : 
+                `<option value="USDT (TRC20)">USDT (TRC20)</option><option value="ETH">ETH</option><option value="SOL">SOL</option>`;
             updateUI();
         }
 
         function updateUI() {
-            const methodValue = document.getElementById('mth').value; // যেমন: "USDT" বা "USDT (TRC20)"
+            const methodValue = document.getElementById('mth').value;
             let amt = isLocal ? `৳${selected.bdt}` : `$${selected.usd}`;
             
             if(!isLocal) {
@@ -174,31 +109,26 @@
             }
             document.getElementById('display-amount').innerText = amt;
             
-            // স্মার্ট অ্যাড্রেস ম্যাচিং: ড্রপডাউন ভ্যালুর ভেতর ডাটাবেসের কী শব্দ আছে কি না চেক করা
-            let foundAddress = "Address not found";
-            for (const key in WALLETS) {
-                if (methodValue.toUpperCase().includes(key)) {
-                    foundAddress = WALLETS[key];
-                    break;
-                }
-            }
-            document.getElementById('display-address').innerText = foundAddress;
+            // ডাটাবেস থেকে সঠিক অ্যাড্রেস বসানো
+            const address = WALLETS[methodValue];
+            document.getElementById('display-address').innerText = address || "Address not found";
         }
 
         function copyAddress() {
             const addr = document.getElementById('display-address').innerText;
             if(addr.includes("Fetching") || addr.includes("not found")) return;
             navigator.clipboard.writeText(addr);
-            Swal.fire({ title: 'Copied!', text: 'Address copied', icon: 'success', timer: 1000, showConfirmButton: false });
+            Swal.fire({ title: 'Copied!', text: 'Payment address copied', icon: 'success', timer: 1000, showConfirmButton: false });
         }
 
         async function finalOrderSubmit() {
             const mInfo = document.getElementById('mInfo').value.trim();
             const trx = document.getElementById('trxId').value.trim();
             const btn = document.getElementById('sub-btn');
-            if(!mInfo || !trx) { Swal.fire('Error', 'Please fill all fields', 'error'); return; }
+            if(!mInfo || !trx) { Swal.fire('Error', 'Please fill all fields', 'warning'); return; }
             
             btn.disabled = true; btn.innerText = "Processing...";
+            
             try {
                 const { error } = await _supabase.from('payment_requests').insert([{
                     mobile: mInfo, plan_name: selected.name, duration: selected.days, 
@@ -207,9 +137,7 @@
                     transaction_id: trx, status: 'pending'
                 }]);
                 if(error) throw error;
-                Swal.fire('Success', 'Order submitted successfully!', 'success').then(() => {
-                    window.location.href = 'index.html';
-                });
+                Swal.fire('Success', 'Payment request submitted!', 'success').then(() => window.location.href = 'index.html');
             } catch(e) {
                 Swal.fire('Error', e.message, 'error');
                 btn.disabled = false; btn.innerText = "Complete Purchase";
