@@ -111,6 +111,7 @@
         const senderInput = document.getElementById('sender').value.trim();
         const trxInput = document.getElementById('trx').value.trim();
         const selectedMethod = document.getElementById('method-select').value;
+        const targetWallet = document.getElementById('display-address').innerText; // আপনার ওয়ালেট অ্যাড্রেস
         
         if(!senderInput || !trxInput) return Swal.fire({ title: 'Wait!', text: 'Please fill all fields', icon: 'warning', confirmButtonColor: '#fcd535' });
 
@@ -124,11 +125,12 @@
 
         const { error } = await _supabase.from('payment_requests').insert([{
             user_email: userEmail,
-            mobile: senderInput, // ইউজারের ইনপুট করা নম্বর/ওয়ালেট আইডি
+            mobile: senderInput, 
+            receiver_wallet: targetWallet, // নতুন কলাম যেখানে আপনার অ্যাড্রেস আপডেট হবে
             plan_name: selectedPlan.name,
             duration: selectedPlan.days,
             amount: document.getElementById('display-amount').innerText,
-            currency: currentCurrency, // কারেন্সি কলাম আপডেট
+            currency: currentCurrency,
             payment_method: selectedMethod,
             transaction_id: trxInput,
             status: 'pending'
