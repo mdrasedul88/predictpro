@@ -31,14 +31,15 @@
 </div>
 
 <script>
-    // আপনার Supabase কনফিগ
+    // আপনার Supabase কনফিগ (Project URL এবং Publishable Key)
     const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
     const S_KEY = 'sb_publishable_nBp3MOmMuz8KiezUL0hnjQ_Q-H1ScrL'; 
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
     let WALLETS = {}; 
     let selectedPlan = {}; 
-    let isBD = true; // ডিফল্ট বাংলাদেশ
+    let isBD = true;
+    let liveRates = { eth: 0, sol: 0 }; // লাইভ দাম জমানোর জন্য
 
     async function init() {
         const params = new URLSearchParams(window.location.search);
@@ -47,41 +48,37 @@
         selectedPlan = JSON.parse(decodeURIComponent(data));
 
         try {
-            // ১. নির্ভুল আইপি চেক (এটি সব সময় আগে হবে)
-            const ipRes = await fetch('https://ipapi.co/json/');
-            const ipData = await ipRes.json();
-            // যদি কান্ট্রি কোড 'BD' না হয়, তবেই সে ডলার দেখাবে
-            isBD = (ipData.country_code === 'BD');
+            // ১. আইপি এবং লাইভ ক্রিপ্টো রেট ফেচ করা
+            const [ipRes, rateRes] = await Promise.all([
+                fetch('https://ipapi.co/json/').then(res => res.json()),
+                fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd').then(res => res.json())
+            ]);
 
-            // ২. ডাটাবেস থেকে অ্যাড্রেস লোড
+            isBD = (ipRes.country_code === 'BD');
+            liveRates.eth = rateRes.ethereum.usd;
+            liveRates.sol = rateRes.solana.usd;
+
+            // ২. Supabase থেকে অ্যাড্রেস লোড
             const { data: wData } = await _supabase.from('wallets').select('*');
             if (wData) {
                 WALLETS = {};
-                wData.forEach(w => { 
-                    WALLETS[w.method_name.trim()] = w.address; 
-                });
+                wData.forEach(w => { WALLETS[w.method_name.trim()] = w.address; });
             }
-        } catch (e) { 
-            isBD = true; // এরর হলে সেফটি হিসেবে বাংলাদেশ দেখাবে
-        }
+        } catch (e) { isBD = true; }
 
         renderOptions();
     }
 
     function renderOptions() {
         const sel = document.getElementById('method-select');
-        
         if (isBD) {
-            // বাংলাদেশি ইউজারদের জন্য
-            sel.innerHTML = `
-                <option value="bKash (Personal)">bKash (Personal)</option>
-                <option value="Nagad (Personal)">Nagad (Personal)</option>`;
+            sel.innerHTML = `<option value="bKash (Personal)">bKash (Personal)</option>
+                             <option value="Nagad (Personal)">Nagad (Personal)</option>
+                             <option value="USDT (TRC20)">USDT (TRC20)</option>`;
         } else {
-            // বিদেশি ইউজারদের জন্য (এখানেই SOL, ETH যোগ করা হলো)
-            sel.innerHTML = `
-                <option value="USDT (TRC20)">USDT (TRC20)</option>
-                <option value="SOL">Solana (SOL)</option>
-                <option value="ETH">Ethereum (ETH)</option>`;
+            sel.innerHTML = `<option value="USDT (TRC20)">USDT (TRC20)</option>
+                             <option value="ETH">Ethereum (ETH)</option>
+                             <option value="SOL">Solana (SOL)</option>`;
         }
         updateUI();
     }
@@ -91,25 +88,58 @@
         const amtBox = document.getElementById('display-amount');
         const addrBox = document.getElementById('display-address');
 
-        // ৩. কারেন্সি ফিক্স (বিদেশের জন্য সব সময় ডলার)
-        if (!isBD || val.includes("USDT") || val === "SOL" || val === "ETH") {
-            amtBox.innerText = selectedPlan.usd + " USDT/USD";
+        // ৩. অটো কনভার্সন লজিক (লাইভ মার্কেট প্রাইস অনুযায়ী)
+        let finalAmount = "";
+        if (val === "ETH" && liveRates.eth > 0) {
+            finalAmount = (selectedPlan.usd / liveRates.eth).toFixed(6) + " ETH";
+        } else if (val === "SOL" && liveRates.sol > 0) {
+            finalAmount = (selectedPlan.usd / liveRates.sol).toFixed(4) + " SOL";
+        } else if (val === "USDT (TRC20)") {
+            finalAmount = selectedPlan.usd + " USDT";
         } else {
-            amtBox.innerText = "৳" + selectedPlan.bdt;
+            finalAmount = "৳" + selectedPlan.bdt;
         }
 
-        // ৪. অ্যাড্রেস লোডিং ফিক্স
+        amtBox.innerText = finalAmount;
+
+        // ৪. অ্যাড্রেস সেট করা
         const addr = WALLETS[val];
-        if (addr) {
-            addrBox.innerText = addr;
-        } else {
-            // যদি ডাটাবেসে SOL/ETH না থাকে, তবে একটি মেসেজ দেখাবে
-            addrBox.innerText = "Address not set in Database";
+        addrBox.innerText = addr || "Address not found";
+    }
+
+    // ৫. কপি লজিক (অ্যাড্রেস বক্সে ক্লিক করলে কপি হবে)
+    async function copyText() {
+        const addrText = document.getElementById('display-address').innerText;
+        
+        if (addrText === "Fetching..." || addrText.includes("not found")) return;
+
+        try {
+            await navigator.clipboard.writeText(addrText);
+            // SweetAlert দিয়ে কপি কনফার্মেশন
+            Swal.fire({
+                title: 'Copied!',
+                text: 'Address copied to clipboard',
+                icon: 'success',
+                timer: 1000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        } catch (err) {
+            // ব্যাকআপ কপি মেথড (পুরনো মোবাইলের জন্য)
+            const el = document.createElement('textarea');
+            el.value = addrText;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            alert("Address Copied!");
         }
     }
 
     init();
 </script>
+
 
 </body>
 </html>
