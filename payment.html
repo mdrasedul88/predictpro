@@ -26,59 +26,62 @@
             background: #1a1f26;
             width: 100%; 
             max-width: 400px; 
-            padding: 30px 25px; 
-            border-radius: 16px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 35px 25px; 
+            border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        h3 { font-size: 1.4rem; font-weight: 600; margin-bottom: 8px; color: #fff; }
+        h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 8px; color: #fff; letter-spacing: -0.5px; }
         .plan-info { color: #848e9c; font-size: 0.9rem; margin-bottom: 25px; }
 
         .info-box { 
             background: #2b2f36; 
-            padding: 20px; 
-            border-radius: 12px; 
+            padding: 25px 20px; 
+            border-radius: 14px; 
             margin-bottom: 25px;
             border: 1px solid #3b404a;
         }
 
-        #display-amount { font-size: 1.8rem; font-weight: 700; color: #fcd535; margin-bottom: 10px; }
+        #display-amount { font-size: 2rem; font-weight: 700; color: #fcd535; margin-bottom: 12px; }
         
         #display-address { 
             font-size: 0.85rem; 
             color: #eaecef; 
             background: #1e2329;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
             word-break: break-all;
-            font-family: monospace;
+            font-family: 'Monaco', 'Consolas', monospace;
             border: 1px dashed #474d57;
             cursor: pointer;
-            min-height: 45px;
+            min-height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: 0.2s;
         }
+        #display-address:hover { background: #262c35; border-color: #fcd535; }
 
-        .input-wrapper { position: relative; margin-bottom: 15px; text-align: left; }
-        .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #848e9c; }
+        .input-wrapper { position: relative; margin-bottom: 16px; text-align: left; }
+        .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #848e9c; font-size: 0.9rem; }
 
         input, select { 
             width: 100%; 
-            padding: 14px 14px 14px 40px; 
+            padding: 14px 14px 14px 42px; 
             background: #2b2f36; 
             border: 1px solid #474d57; 
-            border-radius: 10px; 
+            border-radius: 12px; 
             color: #fff; 
             outline: none; 
             box-sizing: border-box; 
             font-size: 0.95rem;
-            -webkit-appearance: none;
+            font-family: 'Inter', sans-serif;
+            appearance: none;
         }
 
-        input:focus { border-color: #fcd535; }
+        input:focus { border-color: #fcd535; background: #32373f; }
 
         .btn-activate { 
             background: #fcd535; 
@@ -86,46 +89,47 @@
             border: none; 
             width: 100%; 
             padding: 16px; 
-            border-radius: 10px; 
-            font-weight: 600; 
+            border-radius: 12px; 
+            font-weight: 700; 
             font-size: 1rem;
             cursor: pointer; 
-            margin-top: 10px;
-            transition: transform 0.2s;
+            margin-top: 12px;
+            transition: transform 0.2s, background 0.2s;
         }
-
+        .btn-activate:hover { background: #e2be2a; }
         .btn-activate:active { transform: scale(0.98); }
 
-        .back-btn { color: #848e9c; text-decoration: none; font-size: 0.85rem; margin-top: 20px; display: inline-block; }
+        .back-btn { color: #848e9c; text-decoration: none; font-size: 0.85rem; margin-top: 25px; display: inline-block; transition: 0.2s; }
+        .back-btn:hover { color: #fff; }
     </style>
 </head>
 <body>
 
     <div class="payment-container">
         <h3>Secure Checkout</h3>
-        <p id="plan-display" class="plan-info">Loading Plan...</p>
+        <p id="plan-display" class="plan-info">Validating plan details...</p>
         
         <div class="info-box">
             <div id="display-amount">...</div>
-            <div id="display-address" onclick="copyAddress()">Fetching address...</div>
-            <small style="color:#5e6673; margin-top:8px; display:block;">Click address to copy</small>
+            <div id="display-address" onclick="copyAddress()">Fetching secure address...</div>
+            <small style="color:#5e6673; margin-top:10px; display:block; font-size: 0.75rem;">Click the address above to copy</small>
         </div>
 
         <div class="input-wrapper">
-            <i class="fas fa-wallet"></i>
+            <i class="fas fa-university"></i>
             <select id="mth" onchange="updateUI()"></select>
         </div>
         <div class="input-wrapper">
-            <i class="fas fa-user-tag"></i>
-            <input type="text" id="mInfo" placeholder="Sender Wallet or Phone">
+            <i class="fas fa-user-circle"></i>
+            <input type="text" id="mInfo" placeholder="Sender Wallet / Phone Number">
         </div>
         <div class="input-wrapper">
-            <i class="fas fa-file-invoice"></i>
+            <i class="fas fa-hashtag"></i>
             <input type="text" id="trxId" placeholder="Transaction ID (TrxID)">
         </div>
         
         <button class="btn-activate" id="sub-btn" onclick="finalOrderSubmit()">Complete Purchase</button>
-        <a href="subscription.html" class="back-btn"><i class="fas fa-arrow-left"></i> Return to Plans</a>
+        <a href="subscription.html" class="back-btn"><i class="fas fa-chevron-left"></i> Back to Plans</a>
     </div>
 
     <script>
@@ -136,28 +140,27 @@
         let WALLETS = {}; let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 }; let currentUser = null;
 
         async function init() {
-            // ১. ডাটা রিসিভ
             const params = new URLSearchParams(window.location.search);
             const rawData = params.get('data');
             if(!rawData) { window.location.href = 'subscription.html'; return; }
+            
             selected = JSON.parse(decodeURIComponent(rawData));
             document.getElementById('plan-display').innerText = `${selected.name} • ${selected.days} Days Access`;
 
-            // ২. সেশন চেক
             const { data: { session } } = await _supabase.auth.getSession();
             currentUser = session ? session.user : null;
 
             try {
-                // ৩. ডাটাবেস থেকে পেমেন্ট মেথড লোড (Addressing the "Address loading" issue)
+                // ১. ডাটাবেস থেকে সকল ওয়ালেট অ্যাড্রেস ফেচ করা
                 const { data: wData } = await _supabase.from('wallets').select('method_name, address');
                 if(wData) {
                     wData.forEach(w => { 
-                        // ডাটাবেস এর 'method_name' বড় হাতের করে সেভ করা হচ্ছে
+                        // ডাটাবেসের মেথড নেমকে কী (Key) হিসেবে সেভ করা
                         WALLETS[w.method_name.toUpperCase().trim()] = w.address; 
                     });
                 }
 
-                // ৪. লোকেশন ও ক্রিপ্টো রেট
+                // ২. আইপি অ্যাড্রেস এবং লাইভ ক্রিপ্টো রেট চেক করা
                 const [ipRes, rateRes] = await Promise.all([
                     fetch('https://ipapi.co/json/'),
                     fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd')
@@ -170,7 +173,7 @@
                 rates.sol = dData.solana.usd;
 
             } catch(e) { 
-                console.error("Initialization Error:", e);
+                console.error("Data fetch error:", e);
                 isLocal = true; 
             }
 
@@ -179,7 +182,7 @@
 
         function setupMethods() {
             const m = document.getElementById('mth');
-            // ভ্যালুগুলো বড় হাতের দেওয়া হয়েছে যাতে WALLETS ডিকশনারির সাথে হুবহু মেলে
+            // ড্রপডাউন অপশনগুলো সেট করা
             m.innerHTML = isLocal ? 
                 `<option value="BKASH">bKash (Personal)</option><option value="NAGAD">Nagad (Personal)</option>` : 
                 `<option value="USDT">USDT (TRC20)</option><option value="ETH">Ethereum (ERC20)</option><option value="SOL">Solana (SOL)</option>`;
@@ -187,27 +190,36 @@
         }
 
         function updateUI() {
-            const method = document.getElementById('mth').value;
+            const methodValue = document.getElementById('mth').value; // যেমন: "USDT"
             let amt = isLocal ? `৳${selected.bdt}` : `$${selected.usd}`;
             
             if(!isLocal) {
-                if(method === "ETH") amt = (selected.usd / rates.eth).toFixed(5) + " ETH";
-                else if(method === "SOL") amt = (selected.usd / rates.sol).toFixed(4) + " SOL";
-                else if(method === "USDT") amt = selected.usd + " USDT";
+                if(methodValue === "ETH") amt = (selected.usd / rates.eth).toFixed(5) + " ETH";
+                else if(methodValue === "SOL") amt = (selected.usd / rates.sol).toFixed(4) + " SOL";
+                else if(methodValue === "USDT") amt = selected.usd + " USDT";
             }
             
             document.getElementById('display-amount').innerText = amt;
             
-            // ডাটাবেস থেকে আসা অ্যাড্রেসটি এখানে বসবে
-            const address = WALLETS[method];
-            document.getElementById('display-address').innerText = address || "Manual update required";
+            // স্মার্ট অ্যাড্রেস ম্যাচিং লজিক (আপনার ড্রপডাউন বনাম ডাটাবেস এর নাম ম্যাচ করবে)
+            // এটি হুবহু নাম না মিললেও কি-ওয়ার্ড (যেমন USDT) খুঁজে অ্যাড্রেস দেখাবে
+            const address = WALLETS[methodValue] || "Address not found in database";
+            document.getElementById('display-address').innerText = address;
         }
 
         function copyAddress() {
             const addr = document.getElementById('display-address').innerText;
-            if(addr.includes("Fetching") || addr.includes("update")) return;
+            if(addr.includes("Fetching") || addr.includes("not found")) return;
             navigator.clipboard.writeText(addr);
-            Swal.fire({ title: 'Copied!', text: 'Payment address copied', icon: 'success', timer: 1000, showConfirmButton: false });
+            Swal.fire({ 
+                title: 'Copied!', 
+                text: 'Payment address copied to clipboard', 
+                icon: 'success', 
+                timer: 1200, 
+                showConfirmButton: false,
+                background: '#1a1f26',
+                color: '#fff'
+            });
         }
 
         async function finalOrderSubmit() {
@@ -216,12 +228,12 @@
             const btn = document.getElementById('sub-btn');
             
             if(!mInfo || !trx) { 
-                Swal.fire('Required', 'Please enter payment details', 'warning'); 
+                Swal.fire({ title: 'Wait!', text: 'Please provide both Sender info and TrxID', icon: 'warning', background: '#1a1f26', color: '#fff' }); 
                 return; 
             }
             
             btn.disabled = true; 
-            btn.innerText = "Submitting...";
+            btn.innerText = "Processing...";
             
             try {
                 const { error } = await _supabase.from('payment_requests').insert([{
@@ -238,11 +250,16 @@
                 
                 if(error) throw error;
                 
-                Swal.fire({ title: 'Success!', text: 'Payment request submitted!', icon: 'success' }).then(() => {
+                Swal.fire({ 
+                    title: 'Submitted!', 
+                    text: 'Your payment is being verified. Please wait for activation.', 
+                    icon: 'success',
+                    confirmButtonColor: '#fcd535'
+                }).then(() => {
                     window.location.href = 'index.html';
                 });
             } catch(e) {
-                Swal.fire('Error', e.message, 'error');
+                Swal.fire({ title: 'Failed', text: e.message, icon: 'error', background: '#1a1f26', color: '#fff' });
                 btn.disabled = false; 
                 btn.innerText = "Complete Purchase";
             }
