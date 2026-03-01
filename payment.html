@@ -6,25 +6,17 @@
     <title>Secure Checkout</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
         body { background: #0b0e14; color: #fff; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
         .card { background: #1a1f26; width: 100%; max-width: 380px; padding: 25px; border-radius: 20px; border: 1px solid #2b2f36; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        /* প্ল্যান ডিসপ্লে স্টাইল */
         .plan-badge { background: rgba(252, 213, 53, 0.1); color: #fcd535; padding: 5px 15px; border-radius: 50px; font-size: 0.8rem; font-weight: 600; display: inline-block; margin-top: 8px; border: 1px solid rgba(252, 213, 53, 0.2); }
-        
         .box { background: #2b2f36; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #3b404a; }
         #display-amount { font-size: 2.2rem; font-weight: 800; color: #fcd535; }
         #display-address { font-size: 0.85rem; background: #12161c; padding: 15px; border-radius: 10px; border: 1px dashed #474d57; cursor: pointer; color: #fcd535; min-height: 45px; display: flex; align-items: center; justify-content: center; word-break: break-all; margin-top: 10px; font-weight: bold; transition: all 0.3s; }
-        #display-address:active { transform: scale(0.98); background: #1a1f26; }
-        
-        input, select { width: 100%; padding: 14px; margin-bottom: 15px; background: #2b2f36; border: 1px solid #474d57; border-radius: 10px; color: #fff; font-size: 1rem; box-sizing: border-box; outline: none; transition: border 0.3s; }
-        input:focus { border-color: #fcd535; }
-        
+        input, select { width: 100%; padding: 14px; margin-bottom: 15px; background: #2b2f36; border: 1px solid #474d57; border-radius: 10px; color: #fff; font-size: 1rem; box-sizing: border-box; outline: none; }
         button { background: #fcd535; color: #000; border: none; width: 100%; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1rem; transition: transform 0.2s; }
         button:active { transform: scale(0.96); }
-
-        /* প্রিমিয়াম টপ পপআপ এনিমেশন */
         .swal2-top-center-custom { margin-top: 10px !important; border-radius: 50px !important; background: #fcd535 !important; color: #000 !important; font-weight: bold !important; box-shadow: 0 4px 15px rgba(252, 213, 53, 0.4) !important; }
     </style>
 </head>
@@ -62,7 +54,6 @@
         if(!data) return;
         selectedPlan = JSON.parse(decodeURIComponent(data));
 
-        // ১. প্ল্যান ইনফো আপডেট করা
         document.getElementById('plan-display').innerText = `${selectedPlan.name} (${selectedPlan.days} Days Access)`;
 
         try {
@@ -72,8 +63,8 @@
             ]);
 
             isBD = (ipRes.country_code === 'BD');
-            liveRates.eth = rateRes.ethereum.usd;
-            liveRates.sol = rateRes.solana.usd;
+            liveRates.eth = rateRes.ethereum.usd || 0;
+            liveRates.sol = rateRes.solana.usd || 0;
 
             const { data: wData } = await _supabase.from('wallets').select('*');
             if (wData) {
@@ -81,86 +72,35 @@
                 wData.forEach(w => { WALLETS[w.method_name.trim()] = w.address; });
             }
         } catch (e) { isBD = true; }
-
         renderOptions();
     }
 
     function renderOptions() {
         const sel = document.getElementById('method-select');
-        if (isBD) {
-            sel.innerHTML = `<option value="bKash (Personal)">bKash (Personal)</option>
-                             <option value="Nagad (Personal)">Nagad (Personal)</option>
-                             <option value="USDT (TRC20)">USDT (TRC20)</option>`;
-        } else {
-            sel.innerHTML = `<option value="USDT (TRC20)">USDT (TRC20)</option>
-                             <option value="ETH">Ethereum (ETH)</option>
-                             <option value="SOL">Solana (SOL)</option>`;
-        }
+        sel.innerHTML = isBD ? 
+            `<option value="bKash (Personal)">bKash (Personal)</option><option value="Nagad (Personal)">Nagad (Personal)</option><option value="USDT (TRC20)">USDT (TRC20)</option>` : 
+            `<option value="USDT (TRC20)">USDT (TRC20)</option><option value="ETH">Ethereum (ETH)</option><option value="SOL">Solana (SOL)</option>`;
         updateUI();
     }
 
     function updateUI() {
         const val = document.getElementById('method-select').value;
         const amtBox = document.getElementById('display-amount');
-        const addrBox = document.getElementById('display-address');
-
-        let finalAmount = "";
-        if (val === "ETH" && liveRates.eth > 0) {
-            finalAmount = (selectedPlan.usd / liveRates.eth).toFixed(6) + " ETH";
-        } else if (val === "SOL" && liveRates.sol > 0) {
-            finalAmount = (selectedPlan.usd / liveRates.sol).toFixed(4) + " SOL";
-        } else if (val === "USDT (TRC20)") {
-            finalAmount = selectedPlan.usd + " USDT";
-        } else {
-            finalAmount = "৳" + selectedPlan.bdt;
-        }
-
+        let finalAmount = (val === "ETH") ? (selectedPlan.usd / liveRates.eth).toFixed(6) + " ETH" :
+                          (val === "SOL") ? (selectedPlan.usd / liveRates.sol).toFixed(4) + " SOL" :
+                          (val.includes("USDT")) ? selectedPlan.usd + " USDT" : "৳" + selectedPlan.bdt;
         amtBox.innerText = finalAmount;
-        addrBox.innerText = WALLETS[val] || "Address not found";
+        document.getElementById('display-address').innerText = WALLETS[val] || "Address not found";
     }
 
-    // --- প্রিমিয়াম কপি লজিক ---
     async function copyAddr() {
         const addrText = document.getElementById('display-address').innerText;
-        if (addrText === "Loading Address..." || addrText === "Address not found") return;
-
+        if (addrText.includes("Loading") || addrText.includes("not found")) return;
         try {
             await navigator.clipboard.writeText(addrText);
-            showCopyToast();
-        } catch (err) {
-            const tempInput = document.createElement("input");
-            tempInput.value = addrText;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            showCopyToast();
-        }
-    }
-
-    // প্রিমিয়াম পপআপ এনিমেশন ফাংশন
-    function showCopyToast() {
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top', // স্ক্রিন সেন্টারের একদম উপরে
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: false,
-            customClass: {
-                popup: 'swal2-top-center-custom'
-            },
-            showClass: {
-                popup: 'animate__animated animate__fadeInDown' // উপর থেকে নিচে নামবে
-            },
-            hideClass: {
-                popup: 'animate__animated animate__fadeOutUp' // উপরে উঠে যাবে
-            }
-        });
-
-        Toast.fire({
-            icon: 'success',
-            title: 'Address Copied Successfully'
-        });
+            const Toast = Swal.mixin({ toast: true, position: 'top', showConfirmButton: false, timer: 1500, customClass: { popup: 'swal2-top-center-custom' }, showClass: { popup: 'animate__animated animate__fadeInDown' }, hideClass: { popup: 'animate__animated animate__fadeOutUp' } });
+            Toast.fire({ icon: 'success', title: 'Address Copied Successfully' });
+        } catch (err) { alert("Copied!"); }
     }
 
     async function submit() {
@@ -168,31 +108,45 @@
         const t = document.getElementById('trx').value;
         if(!s || !t) return Swal.fire({ title: 'Wait!', text: 'Please fill all fields', icon: 'warning', confirmButtonColor: '#fcd535' });
 
+        // এরর ফিক্স: লোকাল স্টোরেজ থেকে ইমেইল সংগ্রহ
+        const userEmail = localStorage.getItem('userEmail') || "guest@user.com";
+
         const subBtn = document.getElementById('sub-btn');
         subBtn.disabled = true;
         subBtn.innerText = "Processing...";
 
         const { error } = await _supabase.from('payment_requests').insert([{
-            mobile: s, plan_name: selectedPlan.name, duration: selectedPlan.days,
+            user_email: userEmail, // এই লাইনটি আপনার এরর সমাধান করবে
+            mobile: s, 
+            plan_name: selectedPlan.name, 
+            duration: selectedPlan.days,
             amount: document.getElementById('display-amount').innerText,
             payment_method: document.getElementById('method-select').value,
-            transaction_id: t, status: 'pending'
+            transaction_id: t, 
+            status: 'pending'
         }]);
 
         if(!error) {
-            Swal.fire({ title: 'Success', text: 'Order Submitted Successfully!', icon: 'success', confirmButtonColor: '#fcd535' })
-            .then(() => window.location.href='index.html');
+            // প্রিমিয়াম সাকসেস পপআপ এবং রিডাইরেক্ট
+            Swal.fire({
+                title: 'Payment Received!',
+                text: 'Your request is being processed.',
+                icon: 'success',
+                showConfirmButton: false,
+                timer: 2500,
+                timerProgressBar: true,
+                showClass: { popup: 'animate__animated animate__zoomIn' },
+                hideClass: { popup: 'animate__animated animate__zoomOut' }
+            }).then(() => {
+                window.location.href = 'index.html';
+            });
         } else {
-            Swal.fire('Error', error.message, 'error');
+            Swal.fire({ title: 'Submission Failed', text: error.message, icon: 'error', confirmButtonColor: '#fcd535' });
             subBtn.disabled = false;
             subBtn.innerText = "Submit Payment";
         }
     }
-
     init();
 </script>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-
 </body>
 </html>
