@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ইন্টারফেইসকে গ্লোবাল স্ট্যান্ডার্ড করার জন্য ফন্ট ও কালার প্যালেট */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         body { 
@@ -56,6 +55,10 @@
             font-family: monospace;
             border: 1px dashed #474d57;
             cursor: pointer;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .input-wrapper { position: relative; margin-bottom: 15px; text-align: left; }
@@ -99,7 +102,7 @@
         
         <div class="info-box">
             <div id="display-amount">...</div>
-            <div id="display-address" onclick="copyAddress()">Fetching address...</div>
+            <div id="display-address" onclick="copyAddress()">Address loading...</div>
             <small style="color:#5e6673; margin-top:8px; display:block;">Click address to copy</small>
         </div>
 
@@ -138,31 +141,39 @@
             currentUser = session ? session.user : null;
 
             try {
-                // ১. আইপি চেক
-                const loc = await fetch('https://ipapi.co/json/');
-                const lData = await loc.json(); 
-                isLocal = (lData.country_code === 'BD');
-
-                // ২. ক্রিপ্টো রেট
-                const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
-                const d = await r.json(); rates.eth = d.ethereum.usd; rates.sol = d.solana.usd;
-
-                // ৩. ডাটাবেস থেকে নম্বর লোড (Wait for Data)
+                // ১. পেমেন্ট তথ্য আগে লোড করা (Await usage)
                 const { data: wData } = await _supabase.from('wallets').select('method_name, address');
                 if(wData) {
                     wData.forEach(w => { 
-                        // ডাটাবেসে নাম "USDT" থাকলেও যেন "USDT (TRC20)" এর সাথে মিলে যায়
-                        WALLETS[w.method_name.toUpperCase()] = w.address; 
+                        // ডাটাবেসের নামকে কি-তে সেভ করা
+                        WALLETS[w.method_name.toUpperCase().trim()] = w.address; 
                     });
                 }
-            } catch(e) { isLocal = true; }
+
+                // ২. আইপি এবং ক্রিপ্টো রেট চেক
+                const [ipRes, rateRes] = await Promise.all([
+                    fetch('https://ipapi.co/json/'),
+                    fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd')
+                ]);
+                
+                const lData = await ipRes.json();
+                const dData = await rateRes.json();
+                
+                isLocal = (lData.country_code === 'BD');
+                rates.eth = dData.ethereum.usd;
+                rates.sol = dData.solana.usd;
+
+            } catch(e) { 
+                console.log("Error loading data:", e);
+                isLocal = true; 
+            }
 
             setupMethods();
         }
 
         function setupMethods() {
             const m = document.getElementById('mth');
-            // ভ্যালুগুলোতে শুধু মূল নাম রাখা হয়েছে যাতে ডাটাবেসের সাথে মিলে যায়
+            // ভ্যালুগুলো বড় হাতের অক্ষরে রাখা হয়েছে যাতে WALLETS অবজেক্টের সাথে মিলে যায়
             m.innerHTML = isLocal ? 
                 `<option value="BKASH">bKash (Personal)</option><option value="NAGAD">Nagad (Personal)</option>` : 
                 `<option value="USDT">USDT (TRC20)</option><option value="ETH">Ethereum (ERC20)</option><option value="SOL">Solana (SOL)</option>`;
@@ -172,19 +183,23 @@
         function updateUI() {
             const method = document.getElementById('mth').value;
             let amt = isLocal ? `৳${selected.bdt}` : `$${selected.usd}`;
+            
             if(!isLocal) {
                 if(method === "ETH") amt = (selected.usd / rates.eth).toFixed(5) + " ETH";
                 else if(method === "SOL") amt = (selected.usd / rates.sol).toFixed(4) + " SOL";
                 else if(method === "USDT") amt = selected.usd + " USDT";
             }
+            
             document.getElementById('display-amount').innerText = amt;
             
-            // ডাটাবেসের মূল নামের সাথে ম্যাচ করা হচ্ছে
-            document.getElementById('display-address').innerText = WALLETS[method] || "Address loading...";
+            // WALLETS থেকে সঠিক অ্যাড্রেস খুঁজে বের করা
+            const address = WALLETS[method];
+            document.getElementById('display-address').innerText = address || "Address loading...";
         }
 
         function copyAddress() {
             const addr = document.getElementById('display-address').innerText;
+            if(addr.includes("loading")) return;
             navigator.clipboard.writeText(addr);
             Swal.fire({ title: 'Copied!', text: 'Address copied to clipboard', icon: 'success', timer: 1000, showConfirmButton: false });
         }
@@ -193,22 +208,37 @@
             const mInfo = document.getElementById('mInfo').value;
             const trx = document.getElementById('trxId').value;
             const btn = document.getElementById('sub-btn');
-            if(!mInfo || !trx) { Swal.fire('Error', 'Please fill all fields', 'error'); return; }
-            btn.disabled = true; btn.innerText = "Processing...";
+            
+            if(!mInfo || !trx) { 
+                Swal.fire('Error', 'Please fill all fields', 'error'); 
+                return; 
+            }
+            
+            btn.disabled = true; 
+            btn.innerText = "Processing...";
+            
             try {
                 const { error } = await _supabase.from('payment_requests').insert([{
-                    user_email: currentUser?.email || 'Guest', mobile: mInfo, plan_name: selected.name,
-                    duration: selected.days, amount: document.getElementById('display-amount').innerText,
+                    user_email: currentUser?.email || 'Guest', 
+                    mobile: mInfo, 
+                    plan_name: selected.name,
+                    duration: selected.days, 
+                    amount: document.getElementById('display-amount').innerText,
                     payment_method: document.getElementById('mth').value,
-                    currency: isLocal ? 'BDT' : 'CRYPTO', transaction_id: trx, status: 'pending'
+                    currency: isLocal ? 'BDT' : 'CRYPTO', 
+                    transaction_id: trx, 
+                    status: 'pending'
                 }]);
+                
                 if(error) throw error;
+                
                 Swal.fire({ title: 'Success!', text: 'Request submitted successfully!', icon: 'success' }).then(() => {
                     window.location.href = 'index.html';
                 });
             } catch(e) {
                 Swal.fire('Error', e.message, 'error');
-                btn.disabled = false; btn.innerText = "Complete Purchase";
+                btn.disabled = false; 
+                btn.innerText = "Complete Purchase";
             }
         }
         init();
