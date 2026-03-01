@@ -11,28 +11,29 @@
         .card { background: #1a1f26; width: 100%; max-width: 380px; padding: 25px; border-radius: 15px; border: 1px solid #2b2f36; text-align: center; }
         .box { background: #2b2f36; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #3b404a; }
         #display-amount { font-size: 2rem; font-weight: 800; color: #fcd535; }
-        #display-address { font-size: 0.85rem; background: #12161c; padding: 12px; border-radius: 8px; border: 1px dashed #474d57; cursor: pointer; color: #fcd535; min-height: 45px; display: flex; align-items: center; justify-content: center; word-break: break-all; margin-top: 10px; }
-        input, select { width: 100%; padding: 14px; margin-bottom: 15px; background: #2b2f36; border: 1px solid #474d57; border-radius: 10px; color: #fff; font-size: 1rem; box-sizing: border-box; }
-        button { background: #fcd535; color: #000; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+        #display-address { font-size: 0.85rem; background: #12161c; padding: 12px; border-radius: 8px; border: 1px dashed #474d57; cursor: pointer; color: #fcd535; min-height: 45px; display: flex; align-items: center; justify-content: center; word-break: break-all; margin-top: 10px; font-weight: bold; }
+        input, select { width: 100%; padding: 14px; margin-bottom: 15px; background: #2b2f36; border: 1px solid #474d57; border-radius: 10px; color: #fff; font-size: 1rem; box-sizing: border-box; outline: none; }
+        button { background: #fcd535; color: #000; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 1rem; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h3 id="plan-name">Loading Plan...</h3>
+    <h3 id="plan-name" style="margin:0;">Secure Checkout</h3>
     <div class="box">
         <div id="display-amount">...</div>
-        <div id="display-address" onclick="copyAddr()">Address Loading...</div>
+        <div id="display-address" onclick="copyAddr()">Loading Address...</div>
     </div>
     <select id="method-select" onchange="updateUI()"></select>
-    <input type="text" id="sender" placeholder="Your Number / Wallet">
+    <input type="text" id="sender" placeholder="Sender Number / Wallet">
     <input type="text" id="trx" placeholder="Transaction ID (TrxID)">
     <button id="sub-btn" onclick="submit()">Submit Payment</button>
 </div>
 
 <script>
+    // গুরুত্বপূর্ণ: আপনার ড্যাশবোর্ড থেকে সঠিক anon public key এখানে বসান
     const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
-    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3o8P_aLZQ';
+    const S_KEY = 'sb_publishable_nBp3MOmMuz8KiezUL0hnjQ_Q-H1ScrL'; 
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
     let WALLETS = {}; let plan = {}; let isBD = true;
@@ -42,19 +43,20 @@
         const data = params.get('data');
         if(!data) return;
         plan = JSON.parse(decodeURIComponent(data));
-        document.getElementById('plan-name').innerText = plan.name;
-
+        
         try {
             // ১. আইপি চেক (বাংলাদেশ কি না)
             const ip = await fetch('https://ipapi.co/json/').then(res => res.json());
             isBD = (ip.country_code === 'BD');
 
-            // ২. ডাটাবেস থেকে তথ্য লোড
+            // ২. ডাটাবেস থেকে অ্যাড্রেস আনা
             const { data: wData, error } = await _supabase.from('wallets').select('*');
             if (error) {
-                alert("Supabase Error: " + error.message);
+                // এখানে এরর দেখালে বুঝবেন Key বা RLS সমস্যা
+                Swal.fire('Supabase Error', error.message, 'error');
             }
             if (wData) {
+                WALLETS = {};
                 wData.forEach(w => { WALLETS[w.method_name.trim()] = w.address; });
             }
         } catch (e) { isBD = true; }
@@ -64,7 +66,7 @@
 
     function renderUI() {
         const sel = document.getElementById('method-select');
-        // আইপি অনুযায়ী অপশন দেখানো
+        // লোকেশন অনুযায়ী অপশন ফিল্টার
         sel.innerHTML = isBD ? 
             `<option value="bKash (Personal)">bKash (Personal)</option><option value="Nagad (Personal)">Nagad (Personal)</option>` : 
             `<option value="USDT (TRC20)">USDT (TRC20)</option>`;
@@ -73,16 +75,14 @@
 
     function updateUI() {
         const val = document.getElementById('method-select').value;
+        // অ্যামাউন্ট এবং অ্যাড্রেস সেট করা
         document.getElementById('display-amount').innerText = val.includes("USDT") ? plan.usd + " USDT" : "৳" + plan.bdt;
-        
-        // অ্যাড্রেস দেখানো
-        const addr = WALLETS[val];
-        document.getElementById('display-address').innerText = addr || "Wait... Loading from DB";
+        document.getElementById('display-address').innerText = WALLETS[val] || "Address Loading...";
     }
 
     function copyAddr() {
         const t = document.getElementById('display-address').innerText;
-        if(t.includes("Wait")) return;
+        if(t.includes("Loading")) return;
         navigator.clipboard.writeText(t);
         Swal.fire({ title: 'Copied!', icon: 'success', timer: 800, showConfirmButton: false });
     }
@@ -90,7 +90,7 @@
     async function submit() {
         const s = document.getElementById('sender').value;
         const t = document.getElementById('trx').value;
-        if(!s || !t) return Swal.fire('Error', 'Fill all fields', 'error');
+        if(!s || !t) return Swal.fire('Error', 'Fill all fields', 'warning');
 
         document.getElementById('sub-btn').disabled = true;
         const { error } = await _supabase.from('payment_requests').insert([{
@@ -100,7 +100,7 @@
             transaction_id: t, status: 'pending'
         }]);
 
-        if(!error) Swal.fire('Success', 'Payment Submitted', 'success').then(() => window.location.href='index.html');
+        if(!error) Swal.fire('Success', 'Order Submitted!', 'success').then(() => window.location.href='index.html');
         else { Swal.fire('Error', error.message, 'error'); document.getElementById('sub-btn').disabled = false; }
     }
     init();
