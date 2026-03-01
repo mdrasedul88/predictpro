@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout | Pro Sports</title>
+    <title>Secure Checkout | Pro Sports</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -30,6 +30,7 @@
             border-radius: 16px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         h3 { font-size: 1.4rem; font-weight: 600; margin-bottom: 8px; color: #fff; }
@@ -55,7 +56,7 @@
             font-family: monospace;
             border: 1px dashed #474d57;
             cursor: pointer;
-            min-height: 40px;
+            min-height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -74,6 +75,7 @@
             outline: none; 
             box-sizing: border-box; 
             font-size: 0.95rem;
+            -webkit-appearance: none;
         }
 
         input:focus { border-color: #fcd535; }
@@ -89,7 +91,10 @@
             font-size: 1rem;
             cursor: pointer; 
             margin-top: 10px;
+            transition: transform 0.2s;
         }
+
+        .btn-activate:active { transform: scale(0.98); }
 
         .back-btn { color: #848e9c; text-decoration: none; font-size: 0.85rem; margin-top: 20px; display: inline-block; }
     </style>
@@ -98,11 +103,11 @@
 
     <div class="payment-container">
         <h3>Secure Checkout</h3>
-        <p id="plan-display" class="plan-info">Processing...</p>
+        <p id="plan-display" class="plan-info">Loading Plan...</p>
         
         <div class="info-box">
             <div id="display-amount">...</div>
-            <div id="display-address" onclick="copyAddress()">Address loading...</div>
+            <div id="display-address" onclick="copyAddress()">Fetching address...</div>
             <small style="color:#5e6673; margin-top:8px; display:block;">Click address to copy</small>
         </div>
 
@@ -111,16 +116,16 @@
             <select id="mth" onchange="updateUI()"></select>
         </div>
         <div class="input-wrapper">
-            <i class="fas fa-user"></i>
+            <i class="fas fa-user-tag"></i>
             <input type="text" id="mInfo" placeholder="Sender Wallet or Phone">
         </div>
         <div class="input-wrapper">
-            <i class="fas fa-receipt"></i>
+            <i class="fas fa-file-invoice"></i>
             <input type="text" id="trxId" placeholder="Transaction ID (TrxID)">
         </div>
         
         <button class="btn-activate" id="sub-btn" onclick="finalOrderSubmit()">Complete Purchase</button>
-        <a href="subscription.html" class="back-btn"><i class="fas fa-chevron-left"></i> Return to Plans</a>
+        <a href="subscription.html" class="back-btn"><i class="fas fa-arrow-left"></i> Return to Plans</a>
     </div>
 
     <script>
@@ -131,31 +136,32 @@
         let WALLETS = {}; let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 }; let currentUser = null;
 
         async function init() {
+            // ১. ডাটা রিসিভ
             const params = new URLSearchParams(window.location.search);
             const rawData = params.get('data');
             if(!rawData) { window.location.href = 'subscription.html'; return; }
             selected = JSON.parse(decodeURIComponent(rawData));
-            document.getElementById('plan-display').innerText = `${selected.name} • ${selected.days} Days`;
+            document.getElementById('plan-display').innerText = `${selected.name} • ${selected.days} Days Access`;
 
+            // ২. সেশন চেক
             const { data: { session } } = await _supabase.auth.getSession();
             currentUser = session ? session.user : null;
 
             try {
-                // ১. পেমেন্ট তথ্য আগে লোড করা (Await usage)
+                // ৩. ডাটাবেস থেকে পেমেন্ট মেথড লোড (Addressing the "Address loading" issue)
                 const { data: wData } = await _supabase.from('wallets').select('method_name, address');
                 if(wData) {
                     wData.forEach(w => { 
-                        // ডাটাবেসের নামকে কি-তে সেভ করা
+                        // ডাটাবেস এর 'method_name' বড় হাতের করে সেভ করা হচ্ছে
                         WALLETS[w.method_name.toUpperCase().trim()] = w.address; 
                     });
                 }
 
-                // ২. আইপি এবং ক্রিপ্টো রেট চেক
+                // ৪. লোকেশন ও ক্রিপ্টো রেট
                 const [ipRes, rateRes] = await Promise.all([
                     fetch('https://ipapi.co/json/'),
                     fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd')
                 ]);
-                
                 const lData = await ipRes.json();
                 const dData = await rateRes.json();
                 
@@ -164,7 +170,7 @@
                 rates.sol = dData.solana.usd;
 
             } catch(e) { 
-                console.log("Error loading data:", e);
+                console.error("Initialization Error:", e);
                 isLocal = true; 
             }
 
@@ -173,7 +179,7 @@
 
         function setupMethods() {
             const m = document.getElementById('mth');
-            // ভ্যালুগুলো বড় হাতের অক্ষরে রাখা হয়েছে যাতে WALLETS অবজেক্টের সাথে মিলে যায়
+            // ভ্যালুগুলো বড় হাতের দেওয়া হয়েছে যাতে WALLETS ডিকশনারির সাথে হুবহু মেলে
             m.innerHTML = isLocal ? 
                 `<option value="BKASH">bKash (Personal)</option><option value="NAGAD">Nagad (Personal)</option>` : 
                 `<option value="USDT">USDT (TRC20)</option><option value="ETH">Ethereum (ERC20)</option><option value="SOL">Solana (SOL)</option>`;
@@ -192,34 +198,34 @@
             
             document.getElementById('display-amount').innerText = amt;
             
-            // WALLETS থেকে সঠিক অ্যাড্রেস খুঁজে বের করা
+            // ডাটাবেস থেকে আসা অ্যাড্রেসটি এখানে বসবে
             const address = WALLETS[method];
-            document.getElementById('display-address').innerText = address || "Address loading...";
+            document.getElementById('display-address').innerText = address || "Manual update required";
         }
 
         function copyAddress() {
             const addr = document.getElementById('display-address').innerText;
-            if(addr.includes("loading")) return;
+            if(addr.includes("Fetching") || addr.includes("update")) return;
             navigator.clipboard.writeText(addr);
-            Swal.fire({ title: 'Copied!', text: 'Address copied to clipboard', icon: 'success', timer: 1000, showConfirmButton: false });
+            Swal.fire({ title: 'Copied!', text: 'Payment address copied', icon: 'success', timer: 1000, showConfirmButton: false });
         }
 
         async function finalOrderSubmit() {
-            const mInfo = document.getElementById('mInfo').value;
-            const trx = document.getElementById('trxId').value;
+            const mInfo = document.getElementById('mInfo').value.trim();
+            const trx = document.getElementById('trxId').value.trim();
             const btn = document.getElementById('sub-btn');
             
             if(!mInfo || !trx) { 
-                Swal.fire('Error', 'Please fill all fields', 'error'); 
+                Swal.fire('Required', 'Please enter payment details', 'warning'); 
                 return; 
             }
             
             btn.disabled = true; 
-            btn.innerText = "Processing...";
+            btn.innerText = "Submitting...";
             
             try {
                 const { error } = await _supabase.from('payment_requests').insert([{
-                    user_email: currentUser?.email || 'Guest', 
+                    user_email: currentUser?.email || 'guest_user', 
                     mobile: mInfo, 
                     plan_name: selected.name,
                     duration: selected.days, 
@@ -232,7 +238,7 @@
                 
                 if(error) throw error;
                 
-                Swal.fire({ title: 'Success!', text: 'Request submitted successfully!', icon: 'success' }).then(() => {
+                Swal.fire({ title: 'Success!', text: 'Payment request submitted!', icon: 'success' }).then(() => {
                     window.location.href = 'index.html';
                 });
             } catch(e) {
