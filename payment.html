@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout | Pro Sports</title>
+    <title>Secure Checkout | Pro Sports</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,28 +13,24 @@
         .payment-card { background: #1a1f26; width: 100%; max-width: 380px; padding: 25px; border-radius: 15px; border: 1px solid #2b2f36; text-align: center; }
         .amount-box { background: #2b2f36; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #3b404a; }
         #display-amount { font-size: 2rem; font-weight: 800; color: #fcd535; margin-bottom: 10px; }
-        #display-address { font-size: 0.85rem; background: #12161c; padding: 12px; border-radius: 8px; border: 1px dashed #474d57; cursor: pointer; min-height: 45px; display: flex; align-items: center; justify-content: center; word-break: break-all; color: #fcd535; }
+        #display-address { font-size: 0.85rem; background: #12161c; padding: 12px; border-radius: 8px; border: 1px dashed #474d57; cursor: pointer; min-height: 45px; display: flex; align-items: center; justify-content: center; word-break: break-all; color: #fcd535; font-weight: 600; }
         input, select { width: 100%; padding: 14px; margin-bottom: 15px; background: #2b2f36; border: 1px solid #474d57; border-radius: 10px; color: #fff; font-size: 1rem; box-sizing: border-box; }
-        .btn-pay { background: #fcd535; color: #000; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+        .btn-pay { background: #fcd535; color: #000; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 1rem; }
     </style>
 </head>
 <body>
 
 <div class="payment-card">
-    <h3 style="margin:0;">Payment Checkout</h3>
-    <p id="plan-info" style="color:#848e9c; font-size:0.85rem; margin:10px 0;">Loading plan...</p>
+    <h3 style="margin:0;">Secure Checkout</h3>
+    <p id="plan-info" style="color:#848e9c; font-size:0.85rem; margin:10px 0;">Detecting location...</p>
 
     <div class="amount-box">
         <div id="display-amount">...</div>
-        <div id="display-address" onclick="copyText()">Fetching address...</div>
+        <div id="display-address" onclick="copyText()">Loading Address...</div>
     </div>
 
-    <select id="method-select" onchange="updateUI()">
-        <option value="bKash (Personal)">bKash (Personal)</option>
-        <option value="Nagad (Personal)">Nagad (Personal)</option>
-        <option value="USDT (TRC20)">USDT (TRC20)</option>
-    </select>
-    <input type="text" id="sender-info" placeholder="Wallet / Phone Number">
+    <select id="method-select" onchange="updateUI()"></select>
+    <input type="text" id="sender-info" placeholder="Sender Wallet / Phone">
     <input type="text" id="trx-id" placeholder="Transaction ID (TrxID)">
     <button class="btn-pay" id="sub-btn" onclick="submitOrder()">Submit Payment</button>
 </div>
@@ -44,58 +40,77 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3o8P_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    let WALLETS = {}; let selectedPlan = {};
+    let WALLETS = {}; 
+    let selectedPlan = {}; 
+    let isBD = true;
 
     async function init() {
+        // ১. ইউজার ডাটা রিসিভ
         const params = new URLSearchParams(window.location.search);
         const data = params.get('data');
         if(!data) return;
         selectedPlan = JSON.parse(decodeURIComponent(data));
-        document.getElementById('plan-info').innerText = selectedPlan.name + " (" + selectedPlan.days + " Days Access)";
-        document.getElementById('display-amount').innerText = "৳" + selectedPlan.bdt;
 
         try {
-            // ১. ডাটাবেস থেকে ডাটা ফেচ করা
+            // ২. আইপি ডিটেকশন (বাংলাদেশ কি না চেক করা)
+            const ipRes = await fetch('https://ipapi.co/json/');
+            const ipData = await ipRes.json();
+            isBD = (ipData.country_code === 'BD');
+            
+            document.getElementById('plan-info').innerText = `${selectedPlan.name} (${selectedPlan.days} Days)`;
+
+            // ৩. Supabase থেকে ডাটা ফেচ করা
             const { data: wData, error } = await _supabase.from('wallets').select('*');
             if(wData) {
+                WALLETS = {};
                 wData.forEach(w => { 
                     WALLETS[w.method_name.trim()] = w.address; 
                 });
-                console.log("Wallets Loaded:", WALLETS);
-                // ডাটা লোড হওয়ার পরেই কেবল UI আপডেট হবে
-                updateUI();
             }
+
+            // ৪. অপশন রেন্ডার করা (বাংলাদেশি নাকি বিদেশি)
+            renderOptions();
+
         } catch(e) { 
-            console.log("Database Error:", e);
+            console.log(e); 
+            isBD = true; // এরর হলে ডিফল্ট বাংলাদেশ ধরবে
+            renderOptions();
         }
+    }
+
+    function renderOptions() {
+        const sel = document.getElementById('method-select');
+        if(isBD) {
+            sel.innerHTML = `
+                <option value="bKash (Personal)">bKash (Personal)</option>
+                <option value="Nagad (Personal)">Nagad (Personal)</option>`;
+        } else {
+            sel.innerHTML = `
+                <option value="USDT (TRC20)">USDT (TRC20)</option>`;
+        }
+        updateUI();
     }
 
     function updateUI() {
         const val = document.getElementById('method-select').value;
         
-        // অ্যামাউন্ট সেট করা
+        // ৫. কারেন্সি সেট করা
         if(val.includes("USDT")) {
             document.getElementById('display-amount').innerText = selectedPlan.usd + " USDT";
         } else {
             document.getElementById('display-amount').innerText = "৳" + selectedPlan.bdt;
         }
 
-        // ২. অ্যাড্রেস বসানোর স্মার্ট লজিক
+        // ৬. অ্যাড্রেস বসানো (ডাটাবেস থেকে)
         const addr = WALLETS[val];
-        const addrElement = document.getElementById('display-address');
-        
-        if (addr) {
-            addrElement.innerText = addr;
-        } else {
-            addrElement.innerText = "Loading Address...";
-        }
+        document.getElementById('display-address').innerText = addr || "Address Loading...";
     }
 
     function copyText() {
         const txt = document.getElementById('display-address').innerText;
         if(txt.includes("Loading")) return;
         navigator.clipboard.writeText(txt);
-        Swal.fire({ title: 'Copied!', icon: 'success', timer: 800, showConfirmButton: false });
+        Swal.fire({ title: 'Copied!', icon: 'success', timer: 1000, showConfirmButton: false });
     }
 
     async function submitOrder() {
@@ -109,22 +124,23 @@
         btn.innerText = "Processing...";
 
         const { error } = await _supabase.from('payment_requests').insert([{
-            mobile: info, plan_name: selectedPlan.name, duration: selectedPlan.days,
+            mobile: info, 
+            plan_name: selectedPlan.name, 
+            duration: selectedPlan.days,
             amount: document.getElementById('display-amount').innerText,
             payment_method: document.getElementById('method-select').value,
-            transaction_id: trx, status: 'pending'
+            transaction_id: trx, 
+            status: 'pending'
         }]);
 
         if(!error) {
-            Swal.fire('Success', 'Request Sent!', 'success').then(() => window.location.href='index.html');
+            Swal.fire('Success', 'Order Submitted!', 'success').then(() => window.location.href='index.html');
         } else {
             Swal.fire('Error', error.message, 'error');
             btn.disabled = false;
-            btn.innerText = "Submit Payment";
         }
     }
-    
-    // শুরুতেই কল করা
+
     init();
 </script>
 </body>
