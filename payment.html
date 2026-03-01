@@ -13,7 +13,7 @@
         .payment-card { background: #1a1f26; width: 100%; max-width: 380px; padding: 25px; border-radius: 15px; border: 1px solid #2b2f36; text-align: center; }
         .amount-box { background: #2b2f36; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #3b404a; }
         #display-amount { font-size: 2rem; font-weight: 800; color: #fcd535; margin-bottom: 10px; }
-        #display-address { font-size: 0.85rem; background: #12161c; padding: 12px; border-radius: 8px; border: 1px dashed #474d57; cursor: pointer; min-height: 45px; display: flex; align-items: center; justify-content: center; word-break: break-all; }
+        #display-address { font-size: 0.85rem; background: #12161c; padding: 12px; border-radius: 8px; border: 1px dashed #474d57; cursor: pointer; min-height: 45px; display: flex; align-items: center; justify-content: center; word-break: break-all; color: #fcd535; }
         input, select { width: 100%; padding: 14px; margin-bottom: 15px; background: #2b2f36; border: 1px solid #474d57; border-radius: 10px; color: #fff; font-size: 1rem; box-sizing: border-box; }
         .btn-pay { background: #fcd535; color: #000; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: 700; cursor: pointer; }
     </style>
@@ -22,14 +22,18 @@
 
 <div class="payment-card">
     <h3 style="margin:0;">Payment Checkout</h3>
-    <p id="plan-info" style="color:#848e9c; font-size:0.85rem; margin:10px 0;">Loading...</p>
+    <p id="plan-info" style="color:#848e9c; font-size:0.85rem; margin:10px 0;">Loading plan...</p>
 
     <div class="amount-box">
         <div id="display-amount">...</div>
-        <div id="display-address" onclick="copyText()">Fetching...</div>
+        <div id="display-address" onclick="copyText()">Fetching address...</div>
     </div>
 
-    <select id="method-select" onchange="updateUI()"></select>
+    <select id="method-select" onchange="updateUI()">
+        <option value="bKash (Personal)">bKash (Personal)</option>
+        <option value="Nagad (Personal)">Nagad (Personal)</option>
+        <option value="USDT (TRC20)">USDT (TRC20)</option>
+    </select>
     <input type="text" id="sender-info" placeholder="Wallet / Phone Number">
     <input type="text" id="trx-id" placeholder="Transaction ID (TrxID)">
     <button class="btn-pay" id="sub-btn" onclick="submitOrder()">Submit Payment</button>
@@ -40,49 +44,56 @@
     const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3o8P_aLZQ';
     const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    let WALLETS = {}; let selectedPlan = {}; let isBD = true;
+    let WALLETS = {}; let selectedPlan = {};
 
     async function init() {
         const params = new URLSearchParams(window.location.search);
         const data = params.get('data');
         if(!data) return;
         selectedPlan = JSON.parse(decodeURIComponent(data));
-        document.getElementById('plan-info').innerText = selectedPlan.name + " (" + selectedPlan.days + " Days)";
+        document.getElementById('plan-info').innerText = selectedPlan.name + " (" + selectedPlan.days + " Days Access)";
+        document.getElementById('display-amount').innerText = "৳" + selectedPlan.bdt;
 
         try {
-            // ১. সরাসরি ডাটাবেস থেকে ডাটা ফেচ
-            const { data: wData } = await _supabase.from('wallets').select('*');
+            // ১. ডাটাবেস থেকে ডাটা ফেচ করা
+            const { data: wData, error } = await _supabase.from('wallets').select('*');
             if(wData) {
-                wData.forEach(w => { WALLETS[w.method_name.trim()] = w.address; });
+                wData.forEach(w => { 
+                    WALLETS[w.method_name.trim()] = w.address; 
+                });
+                console.log("Wallets Loaded:", WALLETS);
+                // ডাটা লোড হওয়ার পরেই কেবল UI আপডেট হবে
+                updateUI();
             }
-            // ২. লোকেশন চেক
-            const ip = await fetch('https://ipapi.co/json/').then(res => res.json());
-            isBD = (ip.country_code === 'BD');
-        } catch(e) { isBD = true; }
-
-        renderMethods();
-    }
-
-    function renderMethods() {
-        const sel = document.getElementById('method-select');
-        // আপনার ডাটাবেসের নামের সাথে ১০০% মিল
-        sel.innerHTML = isBD ? 
-            `<option value="bKash (Personal)">bKash (Personal)</option><option value="Nagad (Personal)">Nagad (Personal)</option>` : 
-            `<option value="USDT (TRC20)">USDT (TRC20)</option><option value="ETH">ETH</option><option value="SOL">SOL</option>`;
-        updateUI();
+        } catch(e) { 
+            console.log("Database Error:", e);
+        }
     }
 
     function updateUI() {
         const val = document.getElementById('method-select').value;
-        document.getElementById('display-amount').innerText = isBD ? "৳" + selectedPlan.bdt : selectedPlan.usd + " USDT";
         
-        // অ্যাড্রেস ম্যাচিং লজিক
+        // অ্যামাউন্ট সেট করা
+        if(val.includes("USDT")) {
+            document.getElementById('display-amount').innerText = selectedPlan.usd + " USDT";
+        } else {
+            document.getElementById('display-amount').innerText = "৳" + selectedPlan.bdt;
+        }
+
+        // ২. অ্যাড্রেস বসানোর স্মার্ট লজিক
         const addr = WALLETS[val];
-        document.getElementById('display-address').innerText = addr || "Select method to see address";
+        const addrElement = document.getElementById('display-address');
+        
+        if (addr) {
+            addrElement.innerText = addr;
+        } else {
+            addrElement.innerText = "Loading Address...";
+        }
     }
 
     function copyText() {
         const txt = document.getElementById('display-address').innerText;
+        if(txt.includes("Loading")) return;
         navigator.clipboard.writeText(txt);
         Swal.fire({ title: 'Copied!', icon: 'success', timer: 800, showConfirmButton: false });
     }
@@ -90,9 +101,13 @@
     async function submitOrder() {
         const info = document.getElementById('sender-info').value.trim();
         const trx = document.getElementById('trx-id').value.trim();
-        if(!info || !trx) return Swal.fire('Wait!', 'Fill all fields', 'warning');
+        const btn = document.getElementById('sub-btn');
 
-        document.getElementById('sub-btn').disabled = true;
+        if(!info || !trx) return Swal.fire('Error', 'Fill all fields', 'warning');
+
+        btn.disabled = true;
+        btn.innerText = "Processing...";
+
         const { error } = await _supabase.from('payment_requests').insert([{
             mobile: info, plan_name: selectedPlan.name, duration: selectedPlan.days,
             amount: document.getElementById('display-amount').innerText,
@@ -100,9 +115,16 @@
             transaction_id: trx, status: 'pending'
         }]);
 
-        if(!error) Swal.fire('Success', 'Payment Submitted', 'success').then(() => window.location.href='index.html');
-        else { Swal.fire('Error', error.message, 'error'); document.getElementById('sub-btn').disabled = false; }
+        if(!error) {
+            Swal.fire('Success', 'Request Sent!', 'success').then(() => window.location.href='index.html');
+        } else {
+            Swal.fire('Error', error.message, 'error');
+            btn.disabled = false;
+            btn.innerText = "Submit Payment";
+        }
     }
+    
+    // শুরুতেই কল করা
     init();
 </script>
 </body>
