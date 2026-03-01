@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Payment | Pro Sports</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
+        body { 
+            background: #050508; 
+            background-image: radial-gradient(circle at 50% -20%, #1a103d 0%, #050508 100%); 
+            color: #fff; font-family: 'Poppins', sans-serif; 
+            margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; 
+        }
+        .payment-container { 
+            background: linear-gradient(145deg, #0f0f1a, #050508); 
+            width: 90%; max-width: 400px; padding: 40px 30px; 
+            border-radius: 30px; border: 1px solid rgba(123,97,255,0.2); text-align: center; 
+        }
+        .info-box { background: rgba(123,97,255,0.05); padding: 20px; border-radius: 20px; border: 1px dashed #7b61ff; margin-bottom: 25px; }
+        .input-wrapper { position: relative; margin-bottom: 15px; text-align: left; }
+        .input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #7b61ff; }
+        .input-wrapper input, .input-wrapper select { 
+            width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.02); 
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: #fff; outline: none; box-sizing: border-box; 
+        }
+        .btn-activate { 
+            background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000; border: none; 
+            width: 100%; padding: 16px; border-radius: 15px; font-weight: 800; font-family: 'Orbitron'; cursor: pointer; 
+        }
+        .back-btn { color: #666; text-decoration: none; font-size: 0.8rem; margin-top: 20px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <div class="payment-container">
+        <h3 style="font-family:'Orbitron'; color:#00f2ff; margin-bottom:20px;">SECURE ACTIVATION</h3>
+        <p id="plan-display" style="font-size: 0.8rem; color: #888; margin-bottom: 10px;"></p>
+        
+        <div class="info-box">
+            <div id="display-amount" style="font-size:1.6rem; font-weight:700;">Loading...</div>
+            <div id="display-address" style="font-size:0.7rem; color:#7b61ff; word-break:break-all; margin-top:5px;">Connecting to server...</div>
+        </div>
+
+        <div class="input-wrapper"><i class="fas fa-wallet"></i><select id="mth" onchange="updateUI()"></select></div>
+        <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Sender Wallet/Phone"></div>
+        <div class="input-wrapper"><i class="fas fa-receipt"></i><input type="text" id="trxId" placeholder="Transaction ID (TrxID)"></div>
+        
+        <button class="btn-activate" id="sub-btn" onclick="finalOrderSubmit()">SUBMIT REQUEST</button>
+        
+        <a href="subscription.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Plans</a>
+    </div>
+
+    <script>
+        const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
+        const _supabase = window.supabase.createClient(S_URL, S_KEY);
+
+        let WALLETS = {}; // ডাটাবেস থেকে আসবে
+        let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 }; let currentUser = null;
+
+        async function init() {
+            // URL থেকে ডাটা রিসিভ করা
+            const params = new URLSearchParams(window.location.search);
+            const rawData = params.get('data');
+            if(!rawData) { window.location.href = 'subscription.html'; return; }
+            selected = JSON.parse(decodeURIComponent(rawData));
+            document.getElementById('plan-display').innerText = `Plan: ${selected.name} (${selected.days} Days)`;
+
+            const { data: { session } } = await _supabase.auth.getSession();
+            currentUser = session ? session.user : null;
+
+            try {
+                // ১. আইপি চেক
+                const loc = await fetch('https://ipapi.co/json/');
+                const lData = await loc.json(); 
+                isLocal = (lData.country_code === 'BD');
+
+                // ২. ক্রিপ্টো রেট চেক (যদি লোকাল না হয়)
+                const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
+                const d = await r.json(); rates.eth = d.ethereum.usd; rates.sol = d.solana.usd;
+
+                // ৩. ডাটাবেস (Wallets Table) থেকে নম্বর ফেচ করা
+                const { data: wData } = await _supabase.from('wallets').select('*');
+                wData.forEach(w => { WALLETS[w.method_name] = w.address; });
+
+            } catch(e) { console.log(e); isLocal = true; }
+
+            setupMethods();
+        }
+
+        function setupMethods() {
+            const m = document.getElementById('mth');
+            m.innerHTML = isLocal ? 
+                `<option value="bKash">bKash</option><option value="Nagad">Nagad</option>` : 
+                `<option value="USDT">USDT (TRC20)</option><option value="ETH">ETH (ERC20)</option><option value="SOL">SOL (Solana)</option>`;
+            updateUI();
+        }
+
+        function updateUI() {
+            const method = document.getElementById('mth').value;
+            let amt = isLocal ? `৳${selected.bdt}` : `$${selected.usd}`;
+            if(!isLocal) {
+                if(method === "ETH") amt = (selected.usd / rates.eth).toFixed(5) + " ETH";
+                else if(method === "SOL") amt = (selected.usd / rates.sol).toFixed(4) + " SOL";
+                else if(method === "USDT") amt = selected.usd + " USDT";
+            }
+            document.getElementById('display-amount').innerText = amt;
+            document.getElementById('display-address').innerText = WALLETS[method] || "Updating Number...";
+        }
+
+        async function finalOrderSubmit() {
+            const mInfo = document.getElementById('mInfo').value;
+            const trx = document.getElementById('trxId').value;
+            const btn = document.getElementById('sub-btn');
+            if(!mInfo || !trx) { Swal.fire('Error', 'সব ঘর পূরণ করুন', 'error'); return; }
+            btn.disabled = true; btn.innerText = "VERIFYING...";
+            try {
+                const { error } = await _supabase.from('payment_requests').insert([{
+                    user_email: currentUser.email, mobile: mInfo, plan_name: selected.name,
+                    duration: selected.days, amount: document.getElementById('display-amount').innerText,
+                    payment_method: document.getElementById('mth').value,
+                    currency: isLocal ? 'BDT' : 'CRYPTO', transaction_id: trx, status: 'pending'
+                }]);
+                if(error) throw error;
+                Swal.fire({ title: 'Success!', text: 'রিকোয়েস্ট জমা হয়েছে।', icon: 'success', timer: 2000, showConfirmButton: false });
+                setTimeout(() => window.location.href = 'index.html', 2000);
+            } catch(e) {
+                Swal.fire('Error', e.message, 'error');
+                btn.disabled = false; btn.innerText = "SUBMIT REQUEST";
+            }
+        }
+        init();
+    </script>
+</body>
+</html>
