@@ -25,7 +25,7 @@
             background: var(--bg); 
             background-image: radial-gradient(circle at 50% -20%, #1a103d 0%, #050508 100%); 
             color: #fff; 
-            font-family: 'Poppins', sans-serif; 
+            font-family: 'Poppins', sans-serif; /* নরমাল ফন্ট */
             margin: 0; 
             display: flex; 
             flex-direction: column; 
@@ -44,11 +44,11 @@
             padding: 20px;
         }
 
-        /* ক্লিন কার্ড ডিজাইন (প্যাডিং ১৫% কমানো হয়েছে) */
+        /* ক্লিন কার্ড ডিজাইন */
         .premium-card { 
             background: var(--card-bg);
             border-radius: 20px; 
-            padding: 30px 17px; /* আগে ২০পিক্সেল ছিল, এখন ১৫% কমিয়ে ১৭পিক্সেল করা হয়েছে */
+            padding: 30px 20px; 
             position: relative; 
             border: 1px solid rgba(255, 255, 255, 0.1); 
             transition: transform 0.3s ease;
@@ -120,7 +120,7 @@
         }
 
         .plan-features li i { 
-            color: #2ecc71; 
+            color: #2ecc71; /* সাকসেস গ্রিন কালার চেকমার্কের জন্য */
             font-size: 0.9rem; 
         }
 
@@ -157,6 +157,7 @@
     <div id="plan-list"></div>
 
     <script>
+        // আপনার অরিজিনাল স্ক্রিপ্ট (কোনো পরিবর্তন করা হয়নি)
         const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(S_URL, S_KEY);
