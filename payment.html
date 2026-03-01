@@ -33,9 +33,6 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 8px; color: #fff; letter-spacing: -0.5px; }
-        .plan-info { color: #848e9c; font-size: 0.9rem; margin-bottom: 25px; }
-
         .info-box { 
             background: #2b2f36; 
             padding: 25px 20px; 
@@ -53,19 +50,17 @@
             padding: 14px;
             border-radius: 10px;
             word-break: break-all;
-            font-family: 'Monaco', 'Consolas', monospace;
+            font-family: monospace;
             border: 1px dashed #474d57;
             cursor: pointer;
             min-height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: 0.2s;
         }
-        #display-address:hover { background: #262c35; border-color: #fcd535; }
 
         .input-wrapper { position: relative; margin-bottom: 16px; text-align: left; }
-        .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #848e9c; font-size: 0.9rem; }
+        .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #848e9c; }
 
         input, select { 
             width: 100%; 
@@ -77,11 +72,7 @@
             outline: none; 
             box-sizing: border-box; 
             font-size: 0.95rem;
-            font-family: 'Inter', sans-serif;
-            appearance: none;
         }
-
-        input:focus { border-color: #fcd535; background: #32373f; }
 
         .btn-activate { 
             background: #fcd535; 
@@ -94,25 +85,19 @@
             font-size: 1rem;
             cursor: pointer; 
             margin-top: 12px;
-            transition: transform 0.2s, background 0.2s;
         }
-        .btn-activate:hover { background: #e2be2a; }
-        .btn-activate:active { transform: scale(0.98); }
-
-        .back-btn { color: #848e9c; text-decoration: none; font-size: 0.85rem; margin-top: 25px; display: inline-block; transition: 0.2s; }
-        .back-btn:hover { color: #fff; }
     </style>
 </head>
 <body>
 
     <div class="payment-container">
         <h3>Secure Checkout</h3>
-        <p id="plan-display" class="plan-info">Validating plan details...</p>
+        <p id="plan-display" style="color:#848e9c; font-size:0.9rem;">Loading plan...</p>
         
         <div class="info-box">
             <div id="display-amount">...</div>
-            <div id="display-address" onclick="copyAddress()">Fetching secure address...</div>
-            <small style="color:#5e6673; margin-top:10px; display:block; font-size: 0.75rem;">Click the address above to copy</small>
+            <div id="display-address" onclick="copyAddress()">Fetching address...</div>
+            <small style="color:#5e6673; margin-top:10px; display:block; font-size: 0.75rem;">Click address to copy</small>
         </div>
 
         <div class="input-wrapper">
@@ -129,7 +114,7 @@
         </div>
         
         <button class="btn-activate" id="sub-btn" onclick="finalOrderSubmit()">Complete Purchase</button>
-        <a href="subscription.html" class="back-btn"><i class="fas fa-chevron-left"></i> Back to Plans</a>
+        <a href="subscription.html" style="color:#848e9c; text-decoration:none; font-size:0.85rem; margin-top:20px; display:block;">Return to Plans</a>
     </div>
 
     <script>
@@ -137,52 +122,44 @@
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-        let WALLETS = {}; let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 }; let currentUser = null;
+        let WALLETS = {}; let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 };
 
         async function init() {
             const params = new URLSearchParams(window.location.search);
             const rawData = params.get('data');
             if(!rawData) { window.location.href = 'subscription.html'; return; }
-            
             selected = JSON.parse(decodeURIComponent(rawData));
             document.getElementById('plan-display').innerText = `${selected.name} • ${selected.days} Days Access`;
 
-            const { data: { session } } = await _supabase.auth.getSession();
-            currentUser = session ? session.user : null;
-
             try {
-                // ১. ডাটাবেস থেকে সকল ওয়ালেট অ্যাড্রেস ফেচ করা
+                // ১. ডাটাবেস থেকে সকল মেথড লোড
                 const { data: wData } = await _supabase.from('wallets').select('method_name, address');
                 if(wData) {
                     wData.forEach(w => { 
-                        // ডাটাবেসের মেথড নেমকে কী (Key) হিসেবে সেভ করা
+                        // ডাটাবেসের মেথড নেমকে আপারকেস করে স্টোর করা
                         WALLETS[w.method_name.toUpperCase().trim()] = w.address; 
                     });
                 }
 
-                // ২. আইপি অ্যাড্রেস এবং লাইভ ক্রিপ্টো রেট চেক করা
-                const [ipRes, rateRes] = await Promise.all([
-                    fetch('https://ipapi.co/json/'),
-                    fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd')
-                ]);
+                // ২. ইউজার লোকেশন চেক
+                const ipRes = await fetch('https://ipapi.co/json/');
                 const lData = await ipRes.json();
-                const dData = await rateRes.json();
-                
                 isLocal = (lData.country_code === 'BD');
+
+                // ৩. ক্রিপ্টো রেট ফেচ করা
+                const rateRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
+                const dData = await rateRes.json();
                 rates.eth = dData.ethereum.usd;
                 rates.sol = dData.solana.usd;
 
-            } catch(e) { 
-                console.error("Data fetch error:", e);
-                isLocal = true; 
-            }
+            } catch(e) { isLocal = true; }
 
             setupMethods();
         }
 
         function setupMethods() {
             const m = document.getElementById('mth');
-            // ড্রপডাউন অপশনগুলো সেট করা
+            // পেমেন্ট অপশনগুলো ডাটাবেসের নামের সাথে মিল রেখে সেট করা
             m.innerHTML = isLocal ? 
                 `<option value="BKASH">bKash (Personal)</option><option value="NAGAD">Nagad (Personal)</option>` : 
                 `<option value="USDT">USDT (TRC20)</option><option value="ETH">Ethereum (ERC20)</option><option value="SOL">Solana (SOL)</option>`;
@@ -190,7 +167,7 @@
         }
 
         function updateUI() {
-            const methodValue = document.getElementById('mth').value; // যেমন: "USDT"
+            const methodValue = document.getElementById('mth').value;
             let amt = isLocal ? `৳${selected.bdt}` : `$${selected.usd}`;
             
             if(!isLocal) {
@@ -198,70 +175,40 @@
                 else if(methodValue === "SOL") amt = (selected.usd / rates.sol).toFixed(4) + " SOL";
                 else if(methodValue === "USDT") amt = selected.usd + " USDT";
             }
-            
             document.getElementById('display-amount').innerText = amt;
             
-            // স্মার্ট অ্যাড্রেস ম্যাচিং লজিক (আপনার ড্রপডাউন বনাম ডাটাবেস এর নাম ম্যাচ করবে)
-            // এটি হুবহু নাম না মিললেও কি-ওয়ার্ড (যেমন USDT) খুঁজে অ্যাড্রেস দেখাবে
-            const address = WALLETS[methodValue] || "Address not found in database";
-            document.getElementById('display-address').innerText = address;
+            // মেইন লজিক: ড্রপডাউনের ভ্যালু যদি ডাটাবেসের নামের অংশ হয় (যেমন USDT), তবেই অ্যাড্রেস দেখাবে
+            const dbKey = Object.keys(WALLETS).find(key => methodValue.includes(key));
+            document.getElementById('display-address').innerText = dbKey ? WALLETS[dbKey] : "Address not found";
         }
 
         function copyAddress() {
             const addr = document.getElementById('display-address').innerText;
             if(addr.includes("Fetching") || addr.includes("not found")) return;
             navigator.clipboard.writeText(addr);
-            Swal.fire({ 
-                title: 'Copied!', 
-                text: 'Payment address copied to clipboard', 
-                icon: 'success', 
-                timer: 1200, 
-                showConfirmButton: false,
-                background: '#1a1f26',
-                color: '#fff'
-            });
+            Swal.fire({ title: 'Copied!', text: 'Address copied', icon: 'success', timer: 1000, showConfirmButton: false });
         }
 
         async function finalOrderSubmit() {
             const mInfo = document.getElementById('mInfo').value.trim();
             const trx = document.getElementById('trxId').value.trim();
             const btn = document.getElementById('sub-btn');
+            if(!mInfo || !trx) { Swal.fire('Error', 'Fill all fields', 'warning'); return; }
             
-            if(!mInfo || !trx) { 
-                Swal.fire({ title: 'Wait!', text: 'Please provide both Sender info and TrxID', icon: 'warning', background: '#1a1f26', color: '#fff' }); 
-                return; 
-            }
-            
-            btn.disabled = true; 
-            btn.innerText = "Processing...";
+            btn.disabled = true; btn.innerText = "Processing...";
             
             try {
                 const { error } = await _supabase.from('payment_requests').insert([{
-                    user_email: currentUser?.email || 'guest_user', 
-                    mobile: mInfo, 
-                    plan_name: selected.name,
-                    duration: selected.days, 
+                    mobile: mInfo, plan_name: selected.name, duration: selected.days, 
                     amount: document.getElementById('display-amount').innerText,
                     payment_method: document.getElementById('mth').value,
-                    currency: isLocal ? 'BDT' : 'CRYPTO', 
-                    transaction_id: trx, 
-                    status: 'pending'
+                    transaction_id: trx, status: 'pending'
                 }]);
-                
                 if(error) throw error;
-                
-                Swal.fire({ 
-                    title: 'Submitted!', 
-                    text: 'Your payment is being verified. Please wait for activation.', 
-                    icon: 'success',
-                    confirmButtonColor: '#fcd535'
-                }).then(() => {
-                    window.location.href = 'index.html';
-                });
+                Swal.fire('Success', 'Verification pending!', 'success').then(() => window.location.href = 'index.html');
             } catch(e) {
-                Swal.fire({ title: 'Failed', text: e.message, icon: 'error', background: '#1a1f26', color: '#fff' });
-                btn.disabled = false; 
-                btn.innerText = "Complete Purchase";
+                Swal.fire('Error', e.message, 'error');
+                btn.disabled = false; btn.innerText = "Complete Purchase";
             }
         }
         init();
