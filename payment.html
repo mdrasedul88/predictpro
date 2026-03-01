@@ -3,176 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Payment | Pro Sports</title>
+    <title>Checkout | Pro Sports</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+        /* ইন্টারফেইসকে গ্লোবাল স্ট্যান্ডার্ড করার জন্য ফন্ট ও কালার প্যালেট */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         body { 
-            background: #080810; 
-            background-image: radial-gradient(circle at 50% 0%, #151525 0%, #080810 100%); 
+            background: #0b0e14; 
             color: #ffffff; 
-            font-family: 'Inter', 'Poppins', sans-serif; 
+            font-family: 'Inter', sans-serif; 
             margin: 0; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            min-height: 100vh; 
+            min-height: 100vh;
+            padding: 20px;
         }
 
         .payment-container { 
-            background: rgba(20, 20, 35, 0.95);
-            backdrop-filter: blur(10px);
-            width: 90%; 
-            max-width: 420px; 
-            padding: 40px 25px; 
-            border-radius: 20px; 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
+            background: #1a1f26;
+            width: 100%; 
+            max-width: 400px; 
+            padding: 30px 25px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             text-align: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
 
-        h3 {
-            font-weight: 700;
-            font-size: 1.5rem;
-            letter-spacing: -0.5px;
-            margin-bottom: 10px;
-            color: #ffffff;
-        }
-
-        .plan-info {
-            font-size: 0.9rem;
-            color: #a0a0b0;
-            margin-bottom: 25px;
-        }
+        h3 { font-size: 1.4rem; font-weight: 600; margin-bottom: 8px; color: #fff; }
+        .plan-info { color: #848e9c; font-size: 0.9rem; margin-bottom: 25px; }
 
         .info-box { 
-            background: rgba(255, 255, 255, 0.03); 
-            padding: 25px 15px; 
-            border-radius: 16px; 
-            border: 1px solid rgba(123, 97, 255, 0.3); 
-            margin-bottom: 30px; 
+            background: #2b2f36; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 25px;
+            border: 1px solid #3b404a;
         }
 
-        #display-amount { 
-            font-size: 1.8rem; 
-            font-weight: 700; 
-            color: #ffffff;
-            margin-bottom: 8px;
-        }
-
+        #display-amount { font-size: 1.8rem; font-weight: 700; color: #fcd535; margin-bottom: 10px; }
+        
         #display-address { 
             font-size: 0.85rem; 
-            color: #7b61ff; 
+            color: #eaecef; 
+            background: #1e2329;
+            padding: 12px;
+            border-radius: 8px;
             word-break: break-all;
             font-family: monospace;
-            background: rgba(123, 97, 255, 0.1);
-            padding: 8px;
-            border-radius: 8px;
+            border: 1px dashed #474d57;
+            cursor: pointer;
         }
 
-        .input-wrapper { 
-            position: relative; 
-            margin-bottom: 18px; 
-            text-align: left; 
-        }
+        .input-wrapper { position: relative; margin-bottom: 15px; text-align: left; }
+        .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #848e9c; }
 
-        .input-wrapper i { 
-            position: absolute; 
-            left: 15px; 
-            top: 50%; 
-            transform: translateY(-50%); 
-            color: #7b61ff; 
-            font-size: 1rem;
-        }
-
-        .input-wrapper input, .input-wrapper select { 
+        input, select { 
             width: 100%; 
-            padding: 14px 15px 14px 45px; 
-            background: rgba(255, 255, 255, 0.05); 
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            border-radius: 12px; 
+            padding: 14px 14px 14px 40px; 
+            background: #2b2f36; 
+            border: 1px solid #474d57; 
+            border-radius: 10px; 
             color: #fff; 
             outline: none; 
             box-sizing: border-box; 
             font-size: 0.95rem;
-            transition: 0.3s;
         }
 
-        .input-wrapper input:focus {
-            border-color: #7b61ff;
-            background: rgba(255, 255, 255, 0.08);
-        }
+        input:focus { border-color: #fcd535; }
 
         .btn-activate { 
-            background: #7b61ff;
-            color: #ffffff; 
+            background: #fcd535; 
+            color: #000; 
             border: none; 
             width: 100%; 
             padding: 16px; 
-            border-radius: 12px; 
+            border-radius: 10px; 
             font-weight: 600; 
             font-size: 1rem;
             cursor: pointer; 
-            transition: 0.3s;
             margin-top: 10px;
         }
 
-        .btn-activate:hover {
-            background: #6a52e6;
-            transform: translateY(-2px);
-        }
-
-        .back-btn { 
-            color: #606070; 
-            text-decoration: none; 
-            font-size: 0.85rem; 
-            margin-top: 25px; 
-            display: inline-block; 
-            transition: 0.3s;
-        }
-
-        .back-btn:hover { color: #ffffff; }
-
-        /* Custom alert styling */
-        .swal2-popup {
-            background: #151525 !important;
-            color: #fff !important;
-            border-radius: 20px !important;
-        }
+        .back-btn { color: #848e9c; text-decoration: none; font-size: 0.85rem; margin-top: 20px; display: inline-block; }
     </style>
 </head>
 <body>
 
     <div class="payment-container">
         <h3>Secure Checkout</h3>
-        <div id="plan-display" class="plan-info">Loading plan details...</div>
+        <p id="plan-display" class="plan-info">Processing...</p>
         
         <div class="info-box">
             <div id="display-amount">...</div>
-            <div id="display-address">Fetching address...</div>
+            <div id="display-address" onclick="copyAddress()">Fetching address...</div>
+            <small style="color:#5e6673; margin-top:8px; display:block;">Click address to copy</small>
         </div>
 
         <div class="input-wrapper">
-            <i class="fas fa-university"></i>
+            <i class="fas fa-wallet"></i>
             <select id="mth" onchange="updateUI()"></select>
         </div>
-        
         <div class="input-wrapper">
-            <i class="fas fa-user-circle"></i>
-            <input type="text" id="mInfo" placeholder="Sender Wallet/Phone Number">
+            <i class="fas fa-user"></i>
+            <input type="text" id="mInfo" placeholder="Sender Wallet or Phone">
         </div>
-        
         <div class="input-wrapper">
-            <i class="fas fa-hashtag"></i>
+            <i class="fas fa-receipt"></i>
             <input type="text" id="trxId" placeholder="Transaction ID (TrxID)">
         </div>
         
         <button class="btn-activate" id="sub-btn" onclick="finalOrderSubmit()">Complete Purchase</button>
-        
-        <a href="subscription.html" class="back-btn"><i class="fas fa-arrow-left"></i> Return to Plans</a>
+        <a href="subscription.html" class="back-btn"><i class="fas fa-chevron-left"></i> Return to Plans</a>
     </div>
 
     <script>
@@ -180,52 +125,46 @@
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
         const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-        let WALLETS = {}; 
-        let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 }; let currentUser = null;
+        let WALLETS = {}; let selected = {}; let isLocal = true; let rates = { eth: 0, sol: 0 }; let currentUser = null;
 
         async function init() {
             const params = new URLSearchParams(window.location.search);
             const rawData = params.get('data');
             if(!rawData) { window.location.href = 'subscription.html'; return; }
-            
             selected = JSON.parse(decodeURIComponent(rawData));
-            document.getElementById('plan-display').innerText = `${selected.name} • ${selected.days} Days Access`;
+            document.getElementById('plan-display').innerText = `${selected.name} • ${selected.days} Days`;
 
             const { data: { session } } = await _supabase.auth.getSession();
             currentUser = session ? session.user : null;
 
             try {
-                // ১. পেমেন্ট নম্বর আগে লোড হবে (await ব্যবহার করা হয়েছে)
-                const { data: wData, error: wError } = await _supabase.from('wallets').select('*');
-                if (wData) {
-                    wData.forEach(w => { WALLETS[w.method_name] = w.address; });
-                }
-
-                // ২. আইপি ও ক্রিপ্টো রেট চেক
-                const [locRes, rateRes] = await Promise.all([
-                    fetch('https://ipapi.co/json/'),
-                    fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd')
-                ]);
-                
-                const lData = await locRes.json();
-                const rData = await rateRes.json();
-                
+                // ১. আইপি চেক
+                const loc = await fetch('https://ipapi.co/json/');
+                const lData = await loc.json(); 
                 isLocal = (lData.country_code === 'BD');
-                rates.eth = rData.ethereum.usd;
-                rates.sol = rData.solana.usd;
 
-            } catch(e) { 
-                console.error("Initialization error:", e);
-                isLocal = true; 
-            }
+                // ২. ক্রিপ্টো রেট
+                const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
+                const d = await r.json(); rates.eth = d.ethereum.usd; rates.sol = d.solana.usd;
+
+                // ৩. ডাটাবেস থেকে নম্বর লোড (Wait for Data)
+                const { data: wData } = await _supabase.from('wallets').select('method_name, address');
+                if(wData) {
+                    wData.forEach(w => { 
+                        // ডাটাবেসে নাম "USDT" থাকলেও যেন "USDT (TRC20)" এর সাথে মিলে যায়
+                        WALLETS[w.method_name.toUpperCase()] = w.address; 
+                    });
+                }
+            } catch(e) { isLocal = true; }
 
             setupMethods();
         }
 
         function setupMethods() {
             const m = document.getElementById('mth');
+            // ভ্যালুগুলোতে শুধু মূল নাম রাখা হয়েছে যাতে ডাটাবেসের সাথে মিলে যায়
             m.innerHTML = isLocal ? 
-                `<option value="bKash">bKash (Personal)</option><option value="Nagad">Nagad (Personal)</option>` : 
+                `<option value="BKASH">bKash (Personal)</option><option value="NAGAD">Nagad (Personal)</option>` : 
                 `<option value="USDT">USDT (TRC20)</option><option value="ETH">Ethereum (ERC20)</option><option value="SOL">Solana (SOL)</option>`;
             updateUI();
         }
@@ -233,59 +172,43 @@
         function updateUI() {
             const method = document.getElementById('mth').value;
             let amt = isLocal ? `৳${selected.bdt}` : `$${selected.usd}`;
-            
             if(!isLocal) {
                 if(method === "ETH") amt = (selected.usd / rates.eth).toFixed(5) + " ETH";
                 else if(method === "SOL") amt = (selected.usd / rates.sol).toFixed(4) + " SOL";
                 else if(method === "USDT") amt = selected.usd + " USDT";
             }
-            
             document.getElementById('display-amount').innerText = amt;
-            // নম্বর না পাওয়া গেলে একটি ডিফল্ট মেসেজ
-            document.getElementById('display-address').innerText = WALLETS[method] || "Address not available";
+            
+            // ডাটাবেসের মূল নামের সাথে ম্যাচ করা হচ্ছে
+            document.getElementById('display-address').innerText = WALLETS[method] || "Address loading...";
+        }
+
+        function copyAddress() {
+            const addr = document.getElementById('display-address').innerText;
+            navigator.clipboard.writeText(addr);
+            Swal.fire({ title: 'Copied!', text: 'Address copied to clipboard', icon: 'success', timer: 1000, showConfirmButton: false });
         }
 
         async function finalOrderSubmit() {
-            const mInfo = document.getElementById('mInfo').value.trim();
-            const trx = document.getElementById('trxId').value.trim();
+            const mInfo = document.getElementById('mInfo').value;
+            const trx = document.getElementById('trxId').value;
             const btn = document.getElementById('sub-btn');
-
-            if(!mInfo || !trx) { 
-                Swal.fire('Required', 'Please provide your payment details.', 'warning'); 
-                return; 
-            }
-
-            btn.disabled = true; 
-            btn.innerText = "Processing...";
-
+            if(!mInfo || !trx) { Swal.fire('Error', 'Please fill all fields', 'error'); return; }
+            btn.disabled = true; btn.innerText = "Processing...";
             try {
                 const { error } = await _supabase.from('payment_requests').insert([{
-                    user_email: currentUser?.email || 'guest', 
-                    mobile: mInfo, 
-                    plan_name: selected.name,
-                    duration: selected.days, 
-                    amount: document.getElementById('display-amount').innerText,
+                    user_email: currentUser?.email || 'Guest', mobile: mInfo, plan_name: selected.name,
+                    duration: selected.days, amount: document.getElementById('display-amount').innerText,
                     payment_method: document.getElementById('mth').value,
-                    currency: isLocal ? 'BDT' : 'CRYPTO', 
-                    transaction_id: trx, 
-                    status: 'pending'
+                    currency: isLocal ? 'BDT' : 'CRYPTO', transaction_id: trx, status: 'pending'
                 }]);
-
                 if(error) throw error;
-
-                Swal.fire({
-                    title: 'Request Received',
-                    text: 'Your payment is being verified. Access will be granted shortly.',
-                    icon: 'success',
-                    confirmButtonColor: '#7b61ff'
-                }).then(() => {
+                Swal.fire({ title: 'Success!', text: 'Request submitted successfully!', icon: 'success' }).then(() => {
                     window.location.href = 'index.html';
                 });
-
             } catch(e) {
-                Swal.fire('Submission Failed', e.message, 'error');
-                btn.disabled = false; 
-                btn.innerText = "Complete Purchase";
+                Swal.fire('Error', e.message, 'error');
+                btn.disabled = false; btn.innerText = "Complete Purchase";
             }
         }
         init();
