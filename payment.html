@@ -104,27 +104,26 @@
     }
 
     async function submit() {
-        const s_input = document.getElementById('sender').value;
-        const t_input = document.getElementById('trx').value;
+        const s_input = document.getElementById('sender').value.trim();
+        const t_input = document.getElementById('trx').value.trim();
         if(!s_input || !t_input) return Swal.fire({ title: 'Wait!', text: 'Please fill all fields', icon: 'warning', confirmButtonColor: '#fcd535' });
 
         const subBtn = document.getElementById('sub-btn');
         subBtn.disabled = true;
         subBtn.innerText = "Processing...";
 
-        // রেজিস্ট্রেশন তথ্য সংগ্রহ (আপনার সাইটের অরিজিনাল ডাটা)
-        const regEmail = localStorage.getItem('userEmail') || "not_found";
-        const regMobile = localStorage.getItem('userPhone') || "not_found";
+        // আপনার রেজিস্ট্রেশন সিস্টেমের লোকাল স্টোরেজ থেকে ইমেইল সংগ্রহ
+        const regEmail = localStorage.getItem('userEmail') || "guest@gmail.com";
         
         const selectedMethod = document.getElementById('method-select').value;
         const targetWallet = document.getElementById('display-address').innerText;
         const currentCurrency = (selectedMethod.includes("bKash") || selectedMethod.includes("Nagad")) ? "BDT" : "USDT/Crypto";
 
+        // সল্যুশন: ডাটাবেসে বিদ্যমান কলামের নামের সাথে মিল রেখে ডাটা পাঠানো
         const { error } = await _supabase.from('payment_requests').insert([{
-            user_email: regEmail,      // ইউজারের আসল রেজিস্ট্রেশন ইমেইল
-            mobile: regMobile,         // ইউজারের আসল রেজিস্ট্রেশন মোবাইল
-            sender_id: s_input,        // ইনপুট বক্সে দেওয়া নম্বর/ওয়ালেট (নতুন কলাম দরকার হতে পারে)
-            receiver_wallet: targetWallet, 
+            user_email: regEmail,
+            mobile: s_input,             // ইনপুট বক্সে দেওয়া ইউজারের নম্বর
+            receiver_wallet: targetWallet, // আপনার অ্যাড্রেস (এই কলামটি অবশ্যই ডাটাবেসে থাকতে হবে)
             plan_name: selectedPlan.name, 
             duration: selectedPlan.days,
             amount: document.getElementById('display-amount').innerText,
