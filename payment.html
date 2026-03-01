@@ -33,7 +33,7 @@
     </div>
 
     <select id="method-select" onchange="updateUI()"></select>
-    <input type="text" id="sender" placeholder="Your Number / Wallet ID">
+    <input type="text" id="sender" placeholder="Your Number / Wallet Address">
     <input type="text" id="trx" placeholder="Transaction ID (TrxID)">
     <button id="sub-btn" onclick="submit()">Submit Payment</button>
 </div>
@@ -86,13 +86,9 @@
     function updateUI() {
         const val = document.getElementById('method-select').value;
         const amtBox = document.getElementById('display-amount');
-        let finalAmount = "";
-        
-        if (val === "ETH") finalAmount = (selectedPlan.usd / liveRates.eth).toFixed(6) + " ETH";
-        else if (val === "SOL") finalAmount = (selectedPlan.usd / liveRates.sol).toFixed(4) + " SOL";
-        else if (val.includes("USDT")) finalAmount = selectedPlan.usd + " USDT";
-        else finalAmount = "৳" + selectedPlan.bdt;
-
+        let finalAmount = (val === "ETH") ? (selectedPlan.usd / liveRates.eth).toFixed(6) + " ETH" :
+                          (val === "SOL") ? (selectedPlan.usd / liveRates.sol).toFixed(4) + " SOL" :
+                          (val.includes("USDT")) ? selectedPlan.usd + " USDT" : "৳" + selectedPlan.bdt;
         amtBox.innerText = finalAmount;
         document.getElementById('display-address').innerText = WALLETS[val] || "Address not found";
     }
@@ -108,45 +104,51 @@
     }
 
     async function submit() {
-        const senderInput = document.getElementById('sender').value.trim();
-        const trxInput = document.getElementById('trx').value.trim();
-        const selectedMethod = document.getElementById('method-select').value;
-        const targetWallet = document.getElementById('display-address').innerText; // আপনার ওয়ালেট অ্যাড্রেস
-        
-        if(!senderInput || !trxInput) return Swal.fire({ title: 'Wait!', text: 'Please fill all fields', icon: 'warning', confirmButtonColor: '#fcd535' });
+        const s_input = document.getElementById('sender').value;
+        const t_input = document.getElementById('trx').value;
+        if(!s_input || !t_input) return Swal.fire({ title: 'Wait!', text: 'Please fill all fields', icon: 'warning', confirmButtonColor: '#fcd535' });
 
         const subBtn = document.getElementById('sub-btn');
         subBtn.disabled = true;
         subBtn.innerText = "Processing...";
 
-        // তথ্য শুদ্ধিকরণ (Data Corrections)
-        const userEmail = localStorage.getItem('userEmail') || "guest@gmail.com";
+        // রেজিস্ট্রেশন তথ্য সংগ্রহ (আপনার সাইটের অরিজিনাল ডাটা)
+        const regEmail = localStorage.getItem('userEmail') || "not_found";
+        const regMobile = localStorage.getItem('userPhone') || "not_found";
+        
+        const selectedMethod = document.getElementById('method-select').value;
+        const targetWallet = document.getElementById('display-address').innerText;
         const currentCurrency = (selectedMethod.includes("bKash") || selectedMethod.includes("Nagad")) ? "BDT" : "USDT/Crypto";
 
         const { error } = await _supabase.from('payment_requests').insert([{
-            user_email: userEmail,
-            mobile: senderInput, 
-            receiver_wallet: targetWallet, // নতুন কলাম যেখানে আপনার অ্যাড্রেস আপডেট হবে
-            plan_name: selectedPlan.name,
+            user_email: regEmail,      // ইউজারের আসল রেজিস্ট্রেশন ইমেইল
+            mobile: regMobile,         // ইউজারের আসল রেজিস্ট্রেশন মোবাইল
+            sender_id: s_input,        // ইনপুট বক্সে দেওয়া নম্বর/ওয়ালেট (নতুন কলাম দরকার হতে পারে)
+            receiver_wallet: targetWallet, 
+            plan_name: selectedPlan.name, 
             duration: selectedPlan.days,
             amount: document.getElementById('display-amount').innerText,
             currency: currentCurrency,
             payment_method: selectedMethod,
-            transaction_id: trxInput,
+            transaction_id: t_input, 
             status: 'pending'
         }]);
 
         if(!error) {
             Swal.fire({
-                title: 'Success!',
-                text: 'Payment Submitted! Redirecting...',
+                title: 'Payment Received!',
+                text: 'Your request is being processed.',
                 icon: 'success',
                 showConfirmButton: false,
-                timer: 2000,
-                showClass: { popup: 'animate__animated animate__zoomIn' }
-            }).then(() => { window.location.href = 'index.html'; });
+                timer: 2500,
+                timerProgressBar: true,
+                showClass: { popup: 'animate__animated animate__zoomIn' },
+                hideClass: { popup: 'animate__animated animate__zoomOut' }
+            }).then(() => {
+                window.location.href = 'index.html';
+            });
         } else {
-            Swal.fire({ title: 'Error', text: error.message, icon: 'error' });
+            Swal.fire({ title: 'Submission Failed', text: error.message, icon: 'error', confirmButtonColor: '#fcd535' });
             subBtn.disabled = false;
             subBtn.innerText = "Submit Payment";
         }
