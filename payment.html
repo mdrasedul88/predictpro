@@ -45,7 +45,7 @@
 
     let WALLETS = {}; 
     let selectedPlan = {}; 
-    let isBD = true;
+    let isBD = false; // ডিফল্ট হিসেবে false রাখলাম যাতে বাইরের দেশ আগে পায়
     let liveRates = { eth: 0, sol: 0 };
 
     async function init() {
@@ -57,12 +57,15 @@
         document.getElementById('plan-display').innerText = `${selectedPlan.name} (${selectedPlan.days} Days Access)`;
 
         try {
+            // IP এবং রেট চেক
             const [ipRes, rateRes] = await Promise.all([
                 fetch('https://ipapi.co/json/').then(res => res.json()),
                 fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd').then(res => res.json())
             ]);
 
+            // কড়া চেক: শুধুমাত্র বাংলাদেশ হলে true হবে
             isBD = (ipRes.country_code === 'BD');
+            
             liveRates.eth = rateRes.ethereum.usd || 0;
             liveRates.sol = rateRes.solana.usd || 0;
 
@@ -71,24 +74,46 @@
                 WALLETS = {};
                 wData.forEach(w => { WALLETS[w.method_name.trim()] = w.address; });
             }
-        } catch (e) { isBD = true; }
+        } catch (e) { 
+            console.log("IP check failed, defaulting to International");
+            isBD = false; 
+        }
         renderOptions();
     }
 
     function renderOptions() {
         const sel = document.getElementById('method-select');
-        sel.innerHTML = isBD ? 
-            `<option value="bKash (Personal)">bKash (Personal)</option><option value="Nagad (Personal)">Nagad (Personal)</option><option value="USDT (TRC20)">USDT (TRC20)</option>` : 
-            `<option value="USDT (TRC20)">USDT (TRC20)</option><option value="ETH">Ethereum (ETH)</option><option value="SOL">Solana (SOL)</option>`;
+        // বাংলাদেশ হলে বিকাশ/নগদ, অন্যথায় শুধু ডলার মেথড
+        if (isBD) {
+            sel.innerHTML = `
+                <option value="bKash (Personal)">bKash (Personal)</option>
+                <option value="Nagad (Personal)">Nagad (Personal)</option>
+                <option value="USDT (TRC20)">USDT (TRC20)</option>`;
+        } else {
+            sel.innerHTML = `
+                <option value="USDT (TRC20)">USDT (TRC20)</option>
+                <option value="ETH">Ethereum (ETH)</option>
+                <option value="SOL">Solana (SOL)</option>`;
+        }
         updateUI();
     }
 
     function updateUI() {
         const val = document.getElementById('method-select').value;
         const amtBox = document.getElementById('display-amount');
-        let finalAmount = (val === "ETH") ? (selectedPlan.usd / liveRates.eth).toFixed(6) + " ETH" :
-                          (val === "SOL") ? (selectedPlan.usd / liveRates.sol).toFixed(4) + " SOL" :
-                          (val.includes("USDT")) ? selectedPlan.usd + " USDT" : "৳" + selectedPlan.bdt;
+        let finalAmount = "";
+        
+        // এমাউন্ট লজিক ফিক্স
+        if (val === "ETH") {
+            finalAmount = (selectedPlan.usd / liveRates.eth).toFixed(6) + " ETH";
+        } else if (val === "SOL") {
+            finalAmount = (selectedPlan.usd / liveRates.sol).toFixed(4) + " SOL";
+        } else if (val.includes("USDT")) {
+            finalAmount = "$" + selectedPlan.usd + " USDT";
+        } else {
+            finalAmount = "৳" + selectedPlan.bdt;
+        }
+
         amtBox.innerText = finalAmount;
         document.getElementById('display-address').innerText = WALLETS[val] || "Address not found";
     }
@@ -112,24 +137,21 @@
         subBtn.disabled = true;
         subBtn.innerText = "Processing...";
 
-        // আপনার রেজিস্ট্রেশন সিস্টেমের লোকাল স্টোরেজ থেকে ইমেইল সংগ্রহ
         const regEmail = localStorage.getItem('userEmail') || "guest@gmail.com";
-        
         const selectedMethod = document.getElementById('method-select').value;
         const targetWallet = document.getElementById('display-address').innerText;
-        const currentCurrency = (selectedMethod.includes("bKash") || selectedMethod.includes("Nagad")) ? "BDT" : "USDT/Crypto";
+        const currentCurrency = (selectedMethod.includes("bKash") || selectedMethod.includes("Nagad")) ? "BDT" : "USD";
 
-        // সল্যুশন: ডাটাবেসে বিদ্যমান কলামের নামের সাথে মিল রেখে ডাটা পাঠানো
         const { error } = await _supabase.from('payment_requests').insert([{
             user_email: regEmail,
-            mobile: s_input,             // ইনপুট বক্সে দেওয়া ইউজারের নম্বর
-            receiver_wallet: targetWallet, // আপনার অ্যাড্রেস (এই কলামটি অবশ্যই ডাটাবেসে থাকতে হবে)
-            plan_name: selectedPlan.name, 
+            mobile: s_input,
+            receiver_wallet: targetWallet,
+            plan_name: selectedPlan.name,
             duration: selectedPlan.days,
             amount: document.getElementById('display-amount').innerText,
             currency: currentCurrency,
             payment_method: selectedMethod,
-            transaction_id: t_input, 
+            transaction_id: t_input,
             status: 'pending'
         }]);
 
