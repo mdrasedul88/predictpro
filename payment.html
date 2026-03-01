@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Checkout | Pro Sports</title>
+    <title>Checkout | Pro Sports</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -26,48 +26,47 @@
             background: #1a1f26;
             width: 100%; 
             max-width: 400px; 
-            padding: 35px 25px; 
-            border-radius: 20px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            padding: 30px 25px; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .info-box { 
             background: #2b2f36; 
-            padding: 25px 20px; 
-            border-radius: 14px; 
+            padding: 20px; 
+            border-radius: 12px; 
             margin-bottom: 25px;
             border: 1px solid #3b404a;
         }
 
-        #display-amount { font-size: 2rem; font-weight: 700; color: #fcd535; margin-bottom: 12px; }
+        #display-amount { font-size: 1.8rem; font-weight: 700; color: #fcd535; margin-bottom: 10px; }
         
         #display-address { 
             font-size: 0.85rem; 
             color: #eaecef; 
             background: #1e2329;
-            padding: 14px;
-            border-radius: 10px;
+            padding: 12px;
+            border-radius: 8px;
             word-break: break-all;
             font-family: monospace;
             border: 1px dashed #474d57;
             cursor: pointer;
-            min-height: 50px;
+            min-height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .input-wrapper { position: relative; margin-bottom: 16px; text-align: left; }
+        .input-wrapper { position: relative; margin-bottom: 15px; text-align: left; }
         .input-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #848e9c; }
 
         input, select { 
             width: 100%; 
-            padding: 14px 14px 14px 42px; 
+            padding: 14px 14px 14px 40px; 
             background: #2b2f36; 
             border: 1px solid #474d57; 
-            border-radius: 12px; 
+            border-radius: 10px; 
             color: #fff; 
             outline: none; 
             box-sizing: border-box; 
@@ -80,11 +79,10 @@
             border: none; 
             width: 100%; 
             padding: 16px; 
-            border-radius: 12px; 
-            font-weight: 700; 
-            font-size: 1rem;
+            border-radius: 10px; 
+            font-weight: 600; 
             cursor: pointer; 
-            margin-top: 12px;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -92,12 +90,12 @@
 
     <div class="payment-container">
         <h3>Secure Checkout</h3>
-        <p id="plan-display" style="color:#848e9c; font-size:0.9rem;">Loading plan...</p>
+        <p id="plan-display" style="color: #848e9c; font-size: 0.9rem; margin-bottom: 25px;">Processing...</p>
         
         <div class="info-box">
             <div id="display-amount">...</div>
             <div id="display-address" onclick="copyAddress()">Fetching address...</div>
-            <small style="color:#5e6673; margin-top:10px; display:block; font-size: 0.75rem;">Click address to copy</small>
+            <small style="color:#5e6673; margin-top:8px; display:block;">Click address to copy</small>
         </div>
 
         <div class="input-wrapper">
@@ -105,16 +103,16 @@
             <select id="mth" onchange="updateUI()"></select>
         </div>
         <div class="input-wrapper">
-            <i class="fas fa-user-circle"></i>
-            <input type="text" id="mInfo" placeholder="Sender Wallet / Phone Number">
+            <i class="fas fa-user"></i>
+            <input type="text" id="mInfo" placeholder="Sender Wallet or Phone">
         </div>
         <div class="input-wrapper">
-            <i class="fas fa-hashtag"></i>
+            <i class="fas fa-receipt"></i>
             <input type="text" id="trxId" placeholder="Transaction ID (TrxID)">
         </div>
         
         <button class="btn-activate" id="sub-btn" onclick="finalOrderSubmit()">Complete Purchase</button>
-        <a href="subscription.html" style="color:#848e9c; text-decoration:none; font-size:0.85rem; margin-top:20px; display:block;">Return to Plans</a>
+        <a href="subscription.html" style="color: #848e9c; text-decoration: none; font-size: 0.85rem; margin-top: 20px; display: inline-block;">Return to Plans</a>
     </div>
 
     <script>
@@ -132,21 +130,20 @@
             document.getElementById('plan-display').innerText = `${selected.name} • ${selected.days} Days Access`;
 
             try {
-                // ১. ডাটাবেস থেকে সকল মেথড লোড
+                // ১. ডাটাবেস থেকে সকল মেথড লোড করা
                 const { data: wData } = await _supabase.from('wallets').select('method_name, address');
                 if(wData) {
                     wData.forEach(w => { 
-                        // ডাটাবেসের মেথড নেমকে আপারকেস করে স্টোর করা
+                        // ডাটাবেস থেকে আসা নামকে (যেমন USDT) কি হিসেবে সেভ করা
                         WALLETS[w.method_name.toUpperCase().trim()] = w.address; 
                     });
                 }
 
-                // ২. ইউজার লোকেশন চেক
+                // ২. লোকেশন ও ক্রিপ্টো রেট ফেচ করা
                 const ipRes = await fetch('https://ipapi.co/json/');
                 const lData = await ipRes.json();
                 isLocal = (lData.country_code === 'BD');
 
-                // ৩. ক্রিপ্টো রেট ফেচ করা
                 const rateRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum,solana&vs_currencies=usd');
                 const dData = await rateRes.json();
                 rates.eth = dData.ethereum.usd;
@@ -159,7 +156,7 @@
 
         function setupMethods() {
             const m = document.getElementById('mth');
-            // পেমেন্ট অপশনগুলো ডাটাবেসের নামের সাথে মিল রেখে সেট করা
+            // ড্রপডাউন অপশন সেট করা
             m.innerHTML = isLocal ? 
                 `<option value="BKASH">bKash (Personal)</option><option value="NAGAD">Nagad (Personal)</option>` : 
                 `<option value="USDT">USDT (TRC20)</option><option value="ETH">Ethereum (ERC20)</option><option value="SOL">Solana (SOL)</option>`;
@@ -167,19 +164,25 @@
         }
 
         function updateUI() {
-            const methodValue = document.getElementById('mth').value;
+            const methodValue = document.getElementById('mth').value; // যেমন: "USDT" বা "USDT (TRC20)"
             let amt = isLocal ? `৳${selected.bdt}` : `$${selected.usd}`;
             
             if(!isLocal) {
-                if(methodValue === "ETH") amt = (selected.usd / rates.eth).toFixed(5) + " ETH";
-                else if(methodValue === "SOL") amt = (selected.usd / rates.sol).toFixed(4) + " SOL";
-                else if(methodValue === "USDT") amt = selected.usd + " USDT";
+                if(methodValue.includes("ETH")) amt = (selected.usd / rates.eth).toFixed(5) + " ETH";
+                else if(methodValue.includes("SOL")) amt = (selected.usd / rates.sol).toFixed(4) + " SOL";
+                else if(methodValue.includes("USDT")) amt = selected.usd + " USDT";
             }
             document.getElementById('display-amount').innerText = amt;
             
-            // মেইন লজিক: ড্রপডাউনের ভ্যালু যদি ডাটাবেসের নামের অংশ হয় (যেমন USDT), তবেই অ্যাড্রেস দেখাবে
-            const dbKey = Object.keys(WALLETS).find(key => methodValue.includes(key));
-            document.getElementById('display-address').innerText = dbKey ? WALLETS[dbKey] : "Address not found";
+            // স্মার্ট অ্যাড্রেস ম্যাচিং: ড্রপডাউন ভ্যালুর ভেতর ডাটাবেসের কী শব্দ আছে কি না চেক করা
+            let foundAddress = "Address not found";
+            for (const key in WALLETS) {
+                if (methodValue.toUpperCase().includes(key)) {
+                    foundAddress = WALLETS[key];
+                    break;
+                }
+            }
+            document.getElementById('display-address').innerText = foundAddress;
         }
 
         function copyAddress() {
@@ -193,10 +196,9 @@
             const mInfo = document.getElementById('mInfo').value.trim();
             const trx = document.getElementById('trxId').value.trim();
             const btn = document.getElementById('sub-btn');
-            if(!mInfo || !trx) { Swal.fire('Error', 'Fill all fields', 'warning'); return; }
+            if(!mInfo || !trx) { Swal.fire('Error', 'Please fill all fields', 'error'); return; }
             
             btn.disabled = true; btn.innerText = "Processing...";
-            
             try {
                 const { error } = await _supabase.from('payment_requests').insert([{
                     mobile: mInfo, plan_name: selected.name, duration: selected.days, 
@@ -205,7 +207,9 @@
                     transaction_id: trx, status: 'pending'
                 }]);
                 if(error) throw error;
-                Swal.fire('Success', 'Verification pending!', 'success').then(() => window.location.href = 'index.html');
+                Swal.fire('Success', 'Order submitted successfully!', 'success').then(() => {
+                    window.location.href = 'index.html';
+                });
             } catch(e) {
                 Swal.fire('Error', e.message, 'error');
                 btn.disabled = false; btn.innerText = "Complete Purchase";
