@@ -9,54 +9,78 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* আপনার বর্তমান সব CSS এখানে থাকবে */
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        /* আপনার অরিজিনাল সব CSS এখানে হুবহু আছে */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap');
         :root { --p-purple: #7b61ff; --a-cyan: #00f2ff; --bg: #050508; --vip-gold: #ffcc00; }
-        body { background: var(--bg); background-image: radial-gradient(circle at 50% -20%, #1a103d 0%, #050508 100%); color: #fff; font-family: 'Poppins', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 0; }
-        .navbar { width: 100%; background: rgba(15, 15, 26, 0.8); backdrop-filter: blur(10px); padding: 15px 0; text-align: center; border-bottom: 1px solid rgba(123, 97, 255, 0.2); position: sticky; top: 0; z-index: 1000; margin-bottom: 20px; }
-        .nav-title { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--a-cyan); text-transform: uppercase; }
-        #plan-list { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; padding-bottom: 40px; }
-        .premium-card { background: linear-gradient(145deg, rgba(20, 20, 30, 0.8), rgba(5, 5, 8, 0.9)); border-radius: 25px; padding: 25px 20px; position: relative; border: 1px solid rgba(123, 97, 255, 0.2); text-align: center; width: 85%; max-width: 320px; box-sizing: border-box; }
-        .vip-badge { position: absolute; top: 12px; right: -28px; background: var(--vip-gold); color: #000; font-size: 0.55rem; font-weight: 800; padding: 4px 30px; transform: rotate(45deg); }
+        body { background: var(--bg); background-image: radial-gradient(circle at 50% -20%, #1a103d 0%, #050508 100%); color: #fff; font-family: 'Poppins', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 80px 0; }
+        #plan-list { display: flex; flex-direction: column; align-items: center; gap: 25px; width: 100%; }
+        .premium-card { background: linear-gradient(145deg, rgba(20, 20, 30, 0.8), rgba(5, 5, 8, 0.9)); border-radius: 25px; padding: 25px 20px; position: relative; border: 1px solid rgba(123, 97, 255, 0.2); transition: 0.4s; overflow: hidden; text-align: center; width: 80%; max-width: 320px; box-sizing: border-box; }
+        .premium-card:hover { transform: scale(1.02); border-color: var(--a-cyan); box-shadow: 0 10px 25px rgba(0, 242, 255, 0.15); }
+        .vip-badge { position: absolute; top: 12px; right: -28px; background: var(--vip-gold); color: #000; font-size: 0.55rem; font-weight: 800; padding: 4px 30px; transform: rotate(45deg); font-family: 'Orbitron'; }
         .plan-icon { font-size: 1.8rem; margin-bottom: 8px; color: var(--p-purple); }
-        .plan-name { font-size: 0.9rem; font-weight: 600; color: #ccc; text-transform: uppercase; }
-        .plan-price { font-size: 2.2rem; font-weight: 700; margin: 10px 0; color: #fff; }
+        .plan-name { font-family: 'Orbitron'; font-size: 0.75rem; color: #ccc; letter-spacing: 1.5px; text-transform: uppercase; }
+        .plan-price { font-size: 2rem; font-weight: 700; margin: 10px 0; background: linear-gradient(to right, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .plan-features { list-style: none; padding: 0; margin: 15px 0; text-align: left; display: inline-block; }
-        .plan-features li { font-size: 0.8rem; color: #999; margin: 5px 0; display: flex; align-items: center; gap: 10px; }
-        .plan-features li i { color: var(--a-cyan); font-size: 0.7rem; }
-        .btn-premium { background: linear-gradient(90deg, var(--p-purple), var(--a-cyan)); color: #000; border: none; padding: 14px; border-radius: 15px; font-weight: 700; font-size: 0.8rem; cursor: pointer; width: 100%; text-transform: uppercase; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); display: none; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: linear-gradient(145deg, #0f0f1a, #050508); width: 90%; max-width: 380px; padding: 35px 25px; border-radius: 30px; border: 1px solid rgba(123,97,255,0.2); text-align: center; }
-        .info-box { background: rgba(123,97,255,0.05); padding: 20px; border-radius: 20px; border: 1px dashed var(--p-purple); margin-bottom: 25px; }
-        .input-wrapper { position: relative; margin-bottom: 15px; text-align: left; }
-        .input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--p-purple); }
-        .input-wrapper input, .input-wrapper select { width: 100%; padding: 15px 15px 15px 45px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: #fff; outline: none; box-sizing: border-box; font-family: 'Poppins'; }
-        .btn-activate { background: linear-gradient(90deg, #7b61ff, #00f2ff); color: #000; border: none; width: 100%; padding: 16px; border-radius: 15px; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        .plan-features li { font-size: 0.7rem; color: #999; margin: 5px 0; display: flex; align-items: center; gap: 10px; }
+        .plan-features li i { color: var(--a-cyan); font-size: 0.6rem; }
+        .btn-premium { background: linear-gradient(90deg, var(--p-purple), var(--a-cyan)); color: #000; border: none; padding: 14px; border-radius: 15px; font-weight: 800; font-family: 'Orbitron'; font-size: 0.7rem; cursor: pointer; width: 100%; margin-top: 10px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <h1 class="nav-title">Select Your Access</h1>
-    </nav>
+    <h2 style="font-family:'Orbitron'; color:var(--a-cyan); margin-bottom:30px; letter-spacing:2px; font-size:1rem;">SELECT YOUR ACCESS</h2>
     
     <div id="plan-list"></div>
 
-    <div id="pModal" class="modal">
-        <div class="modal-content animate__animated animate__fadeInUp">
-            <h3 style="color:var(--a-cyan); margin-bottom:20px; font-weight: 700;">SECURE ACTIVATION</h3>
-            <div class="info-box">
-                <div id="display-amount" style="font-size:1.4rem; font-weight:700;">...</div>
-                <div id="display-address" style="font-size:0.7rem; color:var(--p-purple); word-break:break-all; margin-top:5px;">Connecting...</div>
-            </div>
-            <div class="input-wrapper"><i class="fas fa-wallet"></i><select id="mth" onchange="updateUI()"></select></div>
-            <div class="input-wrapper"><i class="fas fa-id-card"></i><input type="text" id="mInfo" placeholder="Sender Wallet/Phone"></div>
-            <div class="input-wrapper"><i class="fas fa-receipt"></i><input type="text" id="trxId" placeholder="Transaction ID (TrxID)"></div>
-            <button class="btn-activate" id="sub-btn" onclick="finalOrderSubmit()">SUBMIT REQUEST</button>
-            <p style="font-size:0.6rem; color:#666; margin-top:15px;">Secure Encryption Enabled</p>
-        </div>
-    </div>
+    <script>
+        const S_URL = 'https://cclfxvmpgkytzebuhwpj.supabase.co';
+        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjbGZ4dm1wZ2t5dHplYnVod3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MDUyNTIsImV4cCI6MjA4NzQ4MTI1Mn0.-x_bxezKwaiJBdkTrJaXJuN95614sTHvTR3oBP_aLZQ';
+        const _supabase = window.supabase.createClient(S_URL, S_KEY);
 
-    <script src="js/payment-handler.js"></script>
+        let isLocal = true;
+        let currentUser = null;
+
+        async function init() {
+            const { data: { session } } = await _supabase.auth.getSession();
+            currentUser = session ? session.user : null;
+            try {
+                const loc = await fetch('https://ipapi.co/json/');
+                const lData = await loc.json(); 
+                isLocal = (lData.country_code === 'BD');
+            } catch(e) { isLocal = true; }
+            loadPlans();
+        }
+
+        async function loadPlans() {
+            const { data } = await _supabase.from('subscription_plans').select('*').eq('is_active', true);
+            document.getElementById('plan-list').innerHTML = data.map(p => `
+                <div class="premium-card animate__animated animate__fadeInUp">
+                    <div class="vip-badge">VIP</div>
+                    <div class="plan-icon"><i class="fas fa-crown"></i></div>
+                    <div class="plan-name">${p.plan_name}</div>
+                    <div class="plan-price">${isLocal ? '৳'+p.price_bdt : '$'+p.price_usd}</div>
+                    <ul class="plan-features">
+                        <li><i class="fas fa-check"></i> VIP Match Tips</li>
+                        <li><i class="fas fa-check"></i> 24/7 Priority Support</li>
+                        <li><i class="fas fa-check"></i> High Accuracy Rates</li>
+                    </ul>
+                    <button class="btn-premium" onclick="goToPayment(${p.price_usd}, ${p.price_bdt}, '${p.plan_name}', ${p.duration_days})">
+                        ACTIVATE VIP
+                    </button>
+                </div>`).join('');
+        }
+
+        function goToPayment(usd, bdt, name, days) {
+            if(!currentUser) {
+                Swal.fire({ title: 'Login Required', text: 'দয়া করে আগে লগইন করুন।', icon: 'info', confirmButtonColor: '#7b61ff' })
+                .then(() => window.location.href = 'login.html');
+                return;
+            }
+            // ডাটা নিয়ে পেমেন্ট পেজে পাঠানো
+            const payData = encodeURIComponent(JSON.stringify({ usd, bdt, name, days }));
+            window.location.href = `payment.html?data=${payData}`;
+        }
+        init();
+    </script>
 </body>
 </html>
